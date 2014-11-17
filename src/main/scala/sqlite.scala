@@ -23,6 +23,7 @@ object Sqlite {
   def create(db: DB): File = {
     println(s"Let's create sqlite for db ${db.version} !")
     val dbFile = get(db.version)
+    dbFile.delete()
     new File(dbFile.getParent()).mkdirs
     withConnection(dbFile.getAbsolutePath) { implicit connection =>
       createCacheTable()
