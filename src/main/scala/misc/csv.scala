@@ -1,6 +1,7 @@
 package m.cheminot.misc
 
 import java.io.File
+import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
 import scala.util.parsing.combinator._
 
@@ -33,19 +34,15 @@ object CSVFile {
 }
 
 case class CSVFile(file: File) {
-  lazy val content = FileTools.read(file)
+  lazy val content = FileUtils.readFileToString(file, "UTF-8")
 
   def read(): CSVFile.Rows = CSV.parse(content)
 }
 
 case class CSVDirectory(directory: File) {
 
-  def onlyCSVFile(file: File): Boolean = {
-    file.getName.endsWith(".txt")
-  }
-
   def read(): Map[String, CSVFile.Rows] = {
-    directory.listFiles.filter(onlyCSVFile).map { csv =>
+    directory.listFiles.filter(_.getName.endsWith(".txt")).map { csv =>
       csv.getName -> CSVFile(csv).read()
     }
   }.toMap
