@@ -31,8 +31,10 @@ object Persist {
   def graphToFile(db: DB): File = {
     val graphFile = directory(db.version)("graph.json")
     graphFile.delete()
-    val content = Json.stringify(Json.toJson(db.graph))
-    FileUtils.write(graphFile, content)
+    val content = db.graph.foldRight(Json.obj()) { (vertice, acc) =>
+      acc ++ Json.obj(vertice.id -> vertice)
+    }
+    FileUtils.write(graphFile, Json.stringify(content))
     graphFile
   }
 

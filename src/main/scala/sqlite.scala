@@ -24,6 +24,10 @@ object Sqlite {
     SQL("CREATE TABLE trips (id unique, service, direction, stopTimes)").executeUpdate
   }
 
+  def createGraphTable()(implicit connection: Connection) {
+    SQL("CREATE TABLE graph (id unique, name, edges, stopTimes)").executeUpdate
+  }
+
   def insertTrips(trips: Seq[Trip])(implicit connection: Connection) {
     trips.foreach { trip =>
       SQL("INSERT INTO trips (id , service, direction, stopTimes) VALUES({id}, {service}, {direction}, {stopTimes})").on(
@@ -31,6 +35,17 @@ object Sqlite {
         'service -> Json.stringify(Json.toJson(trip.service)),
         'direction -> trip.direction,
         'stopTimes -> Json.stringify(Json.toJson(trip.stopTimes))
+      ).executeUpdate
+    }
+  }
+
+  def insertGraph(graph: Seq[Vertice])(implicit connection: Connection) {
+    graph.foreach { case Vertice(id, name, edges, stopTimes) =>
+      SQL("INSERT INTO graph (id, name, edges, stopTimes) VALUES({id}, {name}, {edges}, {stopTimes})").on(
+        'id -> id,
+        'name -> name,
+        'edges -> Json.stringify(Json.toJson(edges)),
+        'stopTimes -> Json.stringify(Json.toJson(stopTimes))
       ).executeUpdate
     }
   }
