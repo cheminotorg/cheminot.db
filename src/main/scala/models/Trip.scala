@@ -24,7 +24,7 @@ case class Trip(
   }
 }
 
-object Trip extends FormatReader {
+object Trip {
 
   def fromRow(data: List[String], routeId: String, service: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
     Trip(data(2), service, data(4), stopTimes)

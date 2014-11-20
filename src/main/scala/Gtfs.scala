@@ -4,12 +4,18 @@ import java.io.File
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits._
 import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import misc._
 import models._
 
 object Gtfs {
 
-  val archiveFileNames = Seq(
+  def apply(directory: File): Option[GtfsDirectory] =
+    if(check(directory))
+      Some(GtfsDirectory(CSVDirectory(directory).read()))
+    else None
+
+  val gtfsFiles = Seq(
     "agency.txt",
     "calendar.txt",
     "calendar_dates.txt",
@@ -20,36 +26,37 @@ object Gtfs {
     "trips.txt"
   )
 
-  def parseName(str: String): Option[DateTime] = {
-      scala.util.control.Exception.allCatch[DateTime] opt (DateTime.parse(str, Version.format))
-  }
-
-  val gtfsDirectoryOnly = new PartialFunction[File, (File, DateTime)] {
-    def apply(directory: File) = {
-      directory -> DateTime.parse(directory.getName, Version.format)
-    }
-
-    def isDefinedAt(directory: File) = {
-      directory.exists &&
-      directory.isDirectory &&
-      directory.canWrite &&
-      scala.util.control.Exception.allCatch[DateTime].opt {
-        DateTime.parse(directory.getName, Version.format)
-      }.isDefined &&
-      archiveFileNames.forall { fileName =>
-        directory.listFiles.toList.find(_.getName == fileName).isDefined
-      }
+  def check(directory: File): Boolean = {
+    directory.exists &&
+    directory.isDirectory &&
+    Version.fromDir(directory).isDefined &&
+    gtfsFiles.forall { name =>
+      directory.listFiles.toList.exists(_.getName == name)
     }
   }
 
-  def createDirectory(name: String): File = {
-    val directory = new File(Cheminot.gtfsDirectory + "/" + name)
-    directory.mkdirs
-    directory
+  def parseDateTime(str: String): DateTime = {
+    val formatter = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC
+    DateTime.parse(str, formatter)
+  }
+
+  def parseTime(str: String): DateTime = {
+    val TimeR = """(\d{2}):(\d{2}):(\d{2})""".r
+    str match {
+      case TimeR(hours, minutes, seconds) =>
+        val now = DateTime.now
+        val h = hours.toInt
+        if(hours.toInt > 23) {
+          now.plusDays(1).withTime(h - 24, minutes.toInt, seconds.toInt, 0)
+        } else {
+          now.withTime(h, minutes.toInt, seconds.toInt, 0)
+        }
+    }
   }
 }
 
 case class GtfsDirectory(gtfs: Map[String, CSVFile.Rows]) {
+
   lazy val stopTimes = {
     val rows = gtfs.get("stop_times.txt").getOrElse(Cheminot.oops("Invalid gtfs format: stop_times.txt not found!"))
     rows.drop(1).filter(_.size == 9)

@@ -2,6 +2,7 @@ package m.cheminot.models
 
 import org.joda.time.DateTime
 import play.api.libs.json._
+import m.cheminot.Gtfs
 
 case class StopTime(
   tripId: String,
@@ -11,13 +12,13 @@ case class StopTime(
   pos: Int
 )
 
-object StopTime extends FormatReader {
+object StopTime {
 
   def fromRow(data: List[String], stopId: String): StopTime = {
     StopTime(
       data(0),
-      asTime(data(1)),
-      asTime(data(2)),
+      Gtfs.parseTime(data(1)),
+      Gtfs.parseTime(data(2)),
       stopId,
       data(4).toInt
     )

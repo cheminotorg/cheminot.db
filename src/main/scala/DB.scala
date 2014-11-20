@@ -9,52 +9,24 @@ import scala.concurrent.ExecutionContext.Implicits._
 import misc._
 import models._
 
-case class DB(
-  version: String,
-  trips: Seq[Trip],
-  stops: Seq[Stop],
-  treeStops: TTreeNode[(String, String)],
-  graph: Seq[Vertice],
-  exceptions: Seq[CalendarDate]
-)
+case class DB(gtfs: GtfsDirectory) {
+  lazy val trips: List[Trip] = DB.buildTrips(gtfs)
+  lazy val treeStops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
+  lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
+  lazy val calendar: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
+}
 
 object DB {
 
-  def buildFrom(directory: File): DB = {
-    println(s"Let's build our database from: ${directory.getAbsolutePath}")
-    val start = System.currentTimeMillis
-
-    val gtfs = GtfsDirectory(CSVDirectory(directory).read())
-    val stops = gtfs.stops.map(Stop.fromRow)
-    val trips = flattenTrips(gtfs.trips, gtfs.calendar, gtfs.stopTimes, gtfs.stops)
-    val version = Version.generateFromDir(directory).map(_.value).getOrElse {
-      Cheminot.oops("Unable to generate version from directory")
-    }
-
-    val db = DB(
-      version,
-      trips,
-      stops,
-      buildTreeStops(gtfs.stops),
-      buildGraph(gtfs.stops, trips),
-      gtfs.calendarDates.map(CalendarDate.fromRow)
-    )
-
-    val end = System.currentTimeMillis
-    println(s"Build DONE ! [${end - start} ms]")
-    db
-  }
-
-  private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): Seq[Vertice] = {
+  /// BUILD GRAPH
+  private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {
     stopsRows.par.map { s =>
       val stopId = s(0)
       val stopName = s(1).substring(8)
-      val z = if(Stop.STOPS_PARIS.contains(stopId)) {
-        Stop.STOPS_PARIS.filterNot(_ == stopId)
-      } else {
-        Seq.empty[String]
-      }
-      val (edges, stopTimes) = trips.foldLeft((z, Seq.empty[StopTime])) { (acc, trip) =>
+      val z = if(Stop.parisStops.contains(stopId)) {
+        Stop.parisStops.filterNot(_ == stopId)
+      } else List.empty[String]
+      val (edges, stopTimes) = trips.foldLeft((z, List.empty[StopTime])) { (acc, trip) =>
         val (accEdges, accStopTimes) = acc
         val edges = trip.edgesOf(stopId)
         val stopTimes = trip.stopTimes.find(_.stopId == stopId).toList.map { st =>
@@ -66,6 +38,7 @@ object DB {
     }.toList
   }
 
+  /// BUILD TREE TERNARY TREE STOPS
   private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {
     TTreeNode(stopsRows.par.map { s =>
       val stopId = s(0)
@@ -74,13 +47,14 @@ object DB {
     }.toList)
   }
 
-  private def flattenTrips(tripsRows: CSVFile.Rows, calendarRows: CSVFile.Rows, stopTimesRows: CSVFile.Rows, stopsRows: CSVFile.Rows): List[Trip] = {
-    tripsRows.par.map { tripRow =>
+  // BUILD EAGER TRIPS
+  private def buildTrips(gtfs: GtfsDirectory): List[Trip] = {
+    gtfs.trips.par.map { tripRow =>
       val routeId = tripRow(0)
       val serviceId = tripRow(1)
       val tripId = tripRow(2)
-      val maybeService = calendarRows.view.find(_.head == serviceId).map(Calendar.fromRow)
-      val stopTimesForTrip = stopTimesRows.collect {
+      val maybeService = gtfs.calendar.view.find(_.head == serviceId).map(Calendar.fromRow)
+      val stopTimesForTrip = gtfs.stopTimes.collect {
         case stopTimeRow if(stopTimeRow.head == tripId) =>
           val stopId = stopTimeRow(3)
           StopTime.fromRow(stopTimeRow, stopId)
@@ -118,7 +92,7 @@ object Version {
     org.joda.time.format.DateTimeFormat.forPattern("YYYY-MM-dd_HH-mm-ss")
   }
 
-  def generateFromDir(dir: File): Option[Version] = {
+  def fromDir(dir: File): Option[Version] = {
     for {
       _ <- Option(dir).filter(_.isDirectory)
       value <- parse(dir.getName).map(_ => encode(dir.getName))

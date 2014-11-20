@@ -2,6 +2,7 @@ package m.cheminot.models
 
 import org.joda.time.DateTime
 import play.api.libs.json._
+import m.cheminot.Gtfs
 
 case class Calendar(
   serviceId: String,
@@ -16,7 +17,7 @@ case class Calendar(
   endDate: DateTime
 )
 
-object Calendar extends FormatReader {
+object Calendar {
   def fromRow(data: List[String]): Calendar = {
     Calendar(
       data.head,
@@ -27,8 +28,8 @@ object Calendar extends FormatReader {
       data(5),
       data(6),
       data(7),
-      asDateTime(data(8)),
-      asDateTime(data(9))
+      Gtfs.parseDateTime(data(8)),
+      Gtfs.parseDateTime(data(9))
     )
   }
 
@@ -43,11 +44,11 @@ case class CalendarDate(
   exceptionType: Int
 )
 
-object CalendarDate extends FormatReader {
+object CalendarDate {
   def fromRow(data: List[String]): CalendarDate = {
     CalendarDate(
       data.head,
-      asDateTime(data(1)),
+      Gtfs.parseDateTime(data(1)),
       data(2).toInt
     )
   }
