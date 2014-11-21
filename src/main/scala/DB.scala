@@ -22,6 +22,8 @@ object DB {
   def fromDir(directory: File): Option[DB] =
     Gtfs.apply(directory) map DB.apply
 
+  def fromDefault(): Option[DB] = ???
+
   /// BUILD GRAPH
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {
     stopsRows.par.map { s =>
@@ -68,13 +70,7 @@ object DB {
   }
 }
 
-case class Version(value: String) {
-  lazy val asDateTime = {
-    Exception.allCatch[DateTime].opt {
-      Version.format.parseDateTime(Version.decode(value))
-    }
-  }
-}
+case class Version(value: String, date: DateTime)
 
 object Version {
 
@@ -99,9 +95,9 @@ object Version {
   def fromDir(dir: File): Option[Version] = {
     for {
       _ <- Option(dir).filter(_.isDirectory)
-      value <- parse(dir.getName).map(_ => encode(dir.getName))
+      date <- parse(dir.getName)
     } yield {
-      Version(value)
+      Version(encode(dir.getName), date)
     }
   }
 }

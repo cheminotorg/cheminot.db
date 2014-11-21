@@ -7,7 +7,7 @@ import models._
 object Persist {
 
   private def directory(version: Version) = {
-    val dir = new File(Cheminot.dbDirectory + "/" + version.value)
+    val dir = new File("db/" + version.value)
     dir.mkdirs
     (file: String) => {
       val f = new File(dir.getPath + "/" + file)

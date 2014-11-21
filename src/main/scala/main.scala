@@ -10,7 +10,7 @@ object Main {
     parser.parse(args, Config()) foreach { config =>
       for {
         directory <- config.directory
-        db <- DB.fromDir(directory)
+        db <- DB.fromDir(directory) orElse DB.fromDefault()
       } yield {
         if(config.nothing) {
           Persist.sqlite(db.version, db.trips)
