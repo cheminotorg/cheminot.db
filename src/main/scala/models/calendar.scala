@@ -53,6 +53,10 @@ object CalendarDate {
     )
   }
 
+  def serialize(calendar: List[CalendarDate]): Array[Byte] = {
+    ???
+  }
+
   implicit val reader: Reads[CalendarDate] = Json.reads[CalendarDate]
   implicit val writer: Writes[CalendarDate] = Json.writes[CalendarDate]
 }

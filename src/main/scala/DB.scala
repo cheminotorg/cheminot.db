@@ -10,6 +10,7 @@ import misc._
 import models._
 
 case class DB(gtfs: GtfsDirectory) {
+  lazy val version: Version = gtfs.version
   lazy val trips: List[Trip] = DB.buildTrips(gtfs)
   lazy val treeStops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
   lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
@@ -17,6 +18,9 @@ case class DB(gtfs: GtfsDirectory) {
 }
 
 object DB {
+
+  def fromDir(directory: File): Option[DB] =
+    Gtfs.apply(directory) map DB.apply
 
   /// BUILD GRAPH
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {

@@ -11,9 +11,10 @@ import models._
 object Gtfs {
 
   def apply(directory: File): Option[GtfsDirectory] =
-    if(check(directory))
-      Some(GtfsDirectory(CSVDirectory(directory).read()))
-    else None
+    check(directory).map { version =>
+      val csvDir = CSVDirectory(directory).read()
+      GtfsDirectory(version, csvDir)
+    }
 
   val gtfsFiles = Seq(
     "agency.txt",
@@ -26,12 +27,13 @@ object Gtfs {
     "trips.txt"
   )
 
-  def check(directory: File): Boolean = {
-    directory.exists &&
-    directory.isDirectory &&
-    Version.fromDir(directory).isDefined &&
-    gtfsFiles.forall { name =>
-      directory.listFiles.toList.exists(_.getName == name)
+  def check(directory: File): Option[Version] = {
+    Option(directory).filter { dir =>
+      dir.exists && dir.isDirectory
+    } flatMap Version.fromDir filter { _ =>
+      gtfsFiles.forall { name =>
+        directory.listFiles.toList.exists(_.getName == name)
+      }
     }
   }
 
@@ -55,7 +57,7 @@ object Gtfs {
   }
 }
 
-case class GtfsDirectory(gtfs: Map[String, CSVFile.Rows]) {
+case class GtfsDirectory(version: Version, gtfs: Map[String, CSVFile.Rows]) {
 
   lazy val stopTimes = {
     val rows = gtfs.get("stop_times.txt").getOrElse(Cheminot.oops("Invalid gtfs format: stop_times.txt not found!"))

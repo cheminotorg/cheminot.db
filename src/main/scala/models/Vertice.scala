@@ -8,6 +8,10 @@ case class Vertice(id: String, name: String, edges: Seq[String], stopTimes: Seq[
 
 object Vertice {
 
+  def serialize(vertices: List[Vertice]): Array[Byte] = {
+    ???
+  }
+
   implicit val reader: Reads[Vertice] = (
     (__ \ "id").read[String] and
     (__ \ "name").read[String] and
