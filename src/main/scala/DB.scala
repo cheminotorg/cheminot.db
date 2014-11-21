@@ -14,7 +14,7 @@ case class DB(gtfs: GtfsDirectory) {
   lazy val trips: List[Trip] = DB.buildTrips(gtfs)
   lazy val treeStops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
   lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
-  lazy val calendar: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
+  lazy val calendarDates: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
 }
 
 object DB {

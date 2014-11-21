@@ -18,6 +18,7 @@ case class Calendar(
 )
 
 object Calendar {
+
   def fromRow(data: List[String]): Calendar = {
     Calendar(
       data.head,
@@ -33,7 +34,6 @@ object Calendar {
     )
   }
 
-  implicit val reader: Reads[Calendar] = Json.reads[Calendar]
   implicit val dateTimeWriter = play.api.libs.json.Writes.jodaDateWrites("dd/MM/YYYY")
   implicit val writer: Writes[Calendar] = Json.writes[Calendar]
 }
@@ -45,6 +45,9 @@ case class CalendarDate(
 )
 
 object CalendarDate {
+
+  import m.cheminot.data.CheminotBuf
+
   def fromRow(data: List[String]): CalendarDate = {
     CalendarDate(
       data.head,
@@ -53,10 +56,26 @@ object CalendarDate {
     )
   }
 
-  def serialize(calendar: List[CalendarDate]): Array[Byte] = {
-    ???
+  private def formatDate(date: DateTime): String = {
+    val formatter = org.joda.time.format.DateTimeFormat.forPattern("dd/MM/YYYY")
+    formatter.print(date)
   }
 
-  implicit val reader: Reads[CalendarDate] = Json.reads[CalendarDate]
-  implicit val writer: Writes[CalendarDate] = Json.writes[CalendarDate]
+  def serialize(calendarDate: CalendarDate): CheminotBuf.CalendarDate = {
+    val builder = CheminotBuf.CalendarDate.newBuilder()
+    builder.setServiceId(calendarDate.serviceId)
+           .setDate(formatDate(calendarDate.date))
+           .setExceptionType(calendarDate.exceptionType)
+
+    builder.build()
+  }
+
+  def serializeSeq(calendarDates: List[CalendarDate]): CheminotBuf.CalendarDates = {
+    val builder = CheminotBuf.CalendarDates.newBuilder()
+    calendarDates.zipWithIndex.foreach {
+      case (calendarDate, index) =>
+        builder.setCalendarDates(index, serialize(calendarDate))
+    }
+    builder.build()
+  }
 }

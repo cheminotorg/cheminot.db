@@ -1,0 +1,34 @@
+syntax = "proto2";
+
+option optimize_for = LITE_RUNTIME;
+
+package m.cheminot.data;
+
+message Graph {
+  map<string, Vertice> vertices = 1;
+}
+
+message Vertice {
+  required string id = 1;
+  required string name = 2;
+  repeated string edges = 3;
+  repeated StopTime stopTimes = 4;
+}
+
+message StopTime {
+  required string tripId = 1;
+  required string arrival = 2;
+  required string departure = 3;
+  required string stopId = 4;
+  required int32 pos = 5;
+}
+
+message CalendarDates {
+  repeated CalendarDate calendarDates = 1;
+}
+
+message CalendarDate {
+  required string serviceId = 1;
+  required string date = 2;
+  required int32 exceptionType = 3;
+}

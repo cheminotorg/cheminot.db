@@ -15,7 +15,7 @@ object Main {
         if(config.nothing) {
           Persist.sqlite(db.version, db.trips)
           Persist.graph(db.version, db.graph)
-          Persist.calendar(db.version, db.calendar)
+          Persist.calendarDates(db.version, db.calendarDates)
         } else {
           config.sqlite.foreach { _ =>
             Persist.sqlite(db.version, db.trips)
@@ -24,7 +24,7 @@ object Main {
             Persist.graph(db.version, db.graph)
           }
           config.calendar.foreach { _ =>
-            Persist.calendar(db.version, db.calendar)
+            Persist.calendarDates(db.version, db.calendarDates)
           }
         }
       }

@@ -1,7 +1,6 @@
 package m.cheminot
 
 import java.io.File
-import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 import models._
 
@@ -31,14 +30,14 @@ object Persist {
   def graph(version: Version, graph: List[Vertice]): File = {
     val file = directory(version)("graph")
     val output = new java.io.FileOutputStream(file)
-    output.write(Vertice.serialize(graph))
+    Vertice.serializeSeq(graph).writeTo(output)
     file
   }
 
-  def calendar(version: Version, calendar: List[CalendarDate]): File = {
+  def calendarDates(version: Version, calendarDates: List[CalendarDate]): File = {
     val file = directory(version)("calendar")
     val output = new java.io.FileOutputStream(file)
-    output.write(CalendarDate.serialize(calendar))
+    CalendarDate.serializeSeq(calendarDates).writeTo(output)
     file
   }
 }

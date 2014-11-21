@@ -1,28 +1,32 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
-import play.api.libs.json._
-import play.api.libs.functional.syntax._
 
 case class Vertice(id: String, name: String, edges: Seq[String], stopTimes: Seq[StopTime])
 
 object Vertice {
 
-  def serialize(vertices: List[Vertice]): Array[Byte] = {
-    ???
+  import m.cheminot.data.CheminotBuf
+
+  def serialize(vertice: Vertice): CheminotBuf.Vertice = {
+    val builder = CheminotBuf.Vertice.newBuilder()
+    builder.setId(vertice.id).setName(vertice.name)
+    vertice.edges.zipWithIndex.foreach {
+      case (edge, index) =>
+        builder.setEdges(index, edge)
+    }
+    vertice.stopTimes.zipWithIndex.foreach {
+      case(stopTime, index) =>
+        builder.setStopTimes(index, StopTime.serialize(stopTime))
+    }
+    builder.build()
   }
 
-  implicit val reader: Reads[Vertice] = (
-    (__ \ "id").read[String] and
-    (__ \ "name").read[String] and
-    (__ \ "edges").read[Seq[String]] and
-    (__ \ "stopTimes").read[Seq[StopTime]]
-  )(Vertice.apply _)
-
-  implicit val writer: Writes[Vertice] = (
-    (__ \ "id").write[String] and
-    (__ \ "name").write[String] and
-    (__ \ "edges").write[Seq[String]] and
-    (__ \ "stopTimes").write[Seq[StopTime]]
-  )(unlift(Vertice.unapply))
+  def serializeSeq(vertices: Seq[Vertice]): CheminotBuf.Graph = {
+    val builder = CheminotBuf.Graph.newBuilder()
+    vertices.foreach { vertice =>
+      builder.getMutableVertices().put(vertice.id, serialize(vertice))
+    }
+    builder.build()
+  }
 }

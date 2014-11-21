@@ -1,7 +1,6 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
-import play.api.libs.json._
 import m.cheminot.Gtfs
 
 case class StopTime(
@@ -14,6 +13,8 @@ case class StopTime(
 
 object StopTime {
 
+  import m.cheminot.data.CheminotBuf
+
   def fromRow(data: List[String], stopId: String): StopTime = {
     StopTime(
       data(0),
@@ -24,8 +25,18 @@ object StopTime {
     )
   }
 
-  implicit val reader = Json.reads[StopTime]
-  implicit val readerSeq: Reads[Seq[StopTime]] = Reads.seq(reader)
-  implicit val dateTimeWriter = play.api.libs.json.Writes.jodaDateWrites("HH:mm")
-  implicit val writer = Json.writes[StopTime]
+  def formatTime(time: DateTime): String = {
+    val formatter = org.joda.time.format.DateTimeFormat.forPattern("HH:mm")
+    formatter.print(time)
+  }
+
+  def serialize(stopTime: StopTime): CheminotBuf.StopTime = {
+    val builder = CheminotBuf.StopTime.newBuilder()
+    builder.setTripId(stopTime.tripId)
+      .setArrival(formatTime(stopTime.arrival))
+      .setDeparture(formatTime(stopTime.departure))
+      .setStopId(stopTime.stopId)
+      .setPos(stopTime.pos)
+    builder.build()
+  }
 }

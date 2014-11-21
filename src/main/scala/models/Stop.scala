@@ -1,7 +1,5 @@
 package m.cheminot.models
 
-import play.api.libs.json._
-
 case class Stop(id: String, name: String, lat: Double, lng: Double)
 
 object Stop {
@@ -34,7 +32,4 @@ object Stop {
       data(4).toDouble
     )
   }
-
-  implicit val reader: Reads[Stop] = Json.reads[Stop]
-  implicit val writer: Writes[Stop] = Json.writes[Stop]
 }

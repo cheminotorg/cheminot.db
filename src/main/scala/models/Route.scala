@@ -1,7 +1,5 @@
 package m.cheminot.models
 
-import play.api.libs.json._
-
 case class Route(
   id: String,
   shortName: String,
@@ -18,7 +16,4 @@ object Route {
       data(4)
     )
   }
-
-  implicit val reader: Reads[Route] = Json.reads[Route]
-  implicit val writer: Writes[Route] = Json.writes[Route]
 }
