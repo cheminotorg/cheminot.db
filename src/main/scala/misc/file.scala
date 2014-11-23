@@ -13,4 +13,10 @@ object FileTools {
     fis.close()
     new String(data, "UTF-8")
   }
+
+  def write(content: String, file: File): File = {
+    val output = new java.io.FileOutputStream(file)
+    output.write(content.getBytes("UTF-8"))
+    file
+  }
 }

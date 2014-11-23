@@ -8,57 +8,67 @@ object Main {
 
   def main(args: Array[String]) {
     parser.parse(args, Config()) foreach { config =>
-      for {
-        directory <- config.directory
-        db <- DB.fromDir(directory) orElse DB.fromDefault()
+      (for {
+        db <- (config.directory flatMap DB.fromDir) orElse DB.fromDefault()
       } yield {
         if(config.nothing) {
           Persist.sqlite(db.version, db.trips)
           Persist.graph(db.version, db.graph)
           Persist.calendarDates(db.version, db.calendarDates)
+          Persist.ttstops(db.version, db.ttstops)
         } else {
-          config.sqlite.foreach { _ =>
+          if(config.sqlite) {
             Persist.sqlite(db.version, db.trips)
           }
-          config.graph.foreach { _ =>
+          if(config.graph) {
             Persist.graph(db.version, db.graph)
           }
-          config.calendar.foreach { _ =>
+          if(config.calendar) {
             Persist.calendarDates(db.version, db.calendarDates)
           }
+          if(config.ttstops) {
+            Persist.ttstops(db.version, db.ttstops)
+          }
         }
+      }) getOrElse {
+         Console.err.println("Unable to find gtfs directory")
       }
     }
   }
 
-  val parser = new scopt.OptionParser[Config]("scopt") {
+  val parser = new scopt.OptionParser[Config]("cheminotdb") {
     head("cheminotdb", "0.1.0")
 
     help("help") text("prints this usage text")
 
-    opt[Boolean]('s', "sqlite") action { (input, config) =>
-      config.copy(sqlite = Some(input))
-    } text("Generate sqlite db")
+    opt[Unit]('s', "sqlite") action { (_, config) =>
+      config.copy(sqlite = true)
+    } text("Build sqlite db")
 
-    opt[Boolean]('g', "graph") action { (input, config) =>
-      config.copy(graph = Some(input))
-    } text("Serialize graph")
+    opt[Unit]('g', "graph") action { (_, config) =>
+      config.copy(graph = true)
+    } text("Build graph file")
 
-    opt[Boolean]('c', "calendar") action { (input, config) =>
-      config.copy(calendar = Some(input))
-    } text("Serialize calendar")
+    opt[Unit]('c', "calendar") action { (_, config) =>
+      config.copy(calendar = true)
+    } text("Build calendar dates file")
+
+    opt[Unit]('t', "ttstops") action { (_, config) =>
+      config.copy(ttstops = true)
+    } text("Build TTreeStops")
 
     opt[File]('d', "directory") action { (input, config) =>
       config.copy(directory = Some(input))
-    } text("Specify working directory")
+    } text("Specify gtfs directory")
   }
 }
 
 case class Config(
-  sqlite: Option[Boolean] = None,
-  graph: Option[Boolean] = None,
-  calendar: Option[Boolean] = None,
+  sqlite: Boolean = false,
+  graph: Boolean = false,
+  calendar: Boolean = false,
+  ttstops: Boolean = false,
   directory: Option[File] = None
 ) {
-  def nothing = sqlite.isEmpty && graph.isEmpty && calendar.isEmpty
+  def nothing = sqlite && graph && calendar
 }

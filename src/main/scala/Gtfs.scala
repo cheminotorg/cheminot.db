@@ -14,6 +14,7 @@ object Gtfs {
 
   def apply(directory: File): Option[GtfsDirectory] =
     check(directory).map { version =>
+      Console.out.println("Reading gtfs from ${directory}...")
       val csvDir = CSVDirectory(directory).read()
       GtfsDirectory(version, csvDir)
     }

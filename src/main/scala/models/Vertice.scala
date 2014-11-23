@@ -11,13 +11,11 @@ object Vertice {
   def serialize(vertice: Vertice): CheminotBuf.Vertice = {
     val builder = CheminotBuf.Vertice.newBuilder()
     builder.setId(vertice.id).setName(vertice.name)
-    vertice.edges.zipWithIndex.foreach {
-      case (edge, index) =>
-        builder.setEdges(index, edge)
+    vertice.edges.foreach { edge =>
+      builder.addEdges(edge)
     }
-    vertice.stopTimes.zipWithIndex.foreach {
-      case(stopTime, index) =>
-        builder.setStopTimes(index, StopTime.serialize(stopTime))
+    vertice.stopTimes.foreach { stopTime =>
+        builder.addStopTimes(StopTime.serialize(stopTime))
     }
     builder.build()
   }

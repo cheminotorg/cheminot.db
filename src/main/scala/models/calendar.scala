@@ -72,9 +72,8 @@ object CalendarDate {
 
   def serializeSeq(calendarDates: List[CalendarDate]): CheminotBuf.CalendarDates = {
     val builder = CheminotBuf.CalendarDates.newBuilder()
-    calendarDates.zipWithIndex.foreach {
-      case (calendarDate, index) =>
-        builder.setCalendarDates(index, serialize(calendarDate))
+    calendarDates.foreach { calendarDate =>
+        builder.addCalendarDates(serialize(calendarDate))
     }
     builder.build()
   }

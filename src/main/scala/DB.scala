@@ -15,6 +15,7 @@ case class DB(gtfs: GtfsDirectory) {
   lazy val treeStops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
   lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
   lazy val calendarDates: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
+  lazy val ttstops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
 }
 
 object DB {
@@ -22,10 +23,11 @@ object DB {
   def fromDir(directory: File): Option[DB] =
     Gtfs.apply(directory) map DB.apply
 
-  def fromDefault(): Option[DB] = ???
+  def fromDefault(): Option[DB] =
+    Gtfs.apply() map DB.apply
 
-  /// BUILD GRAPH
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {
+    Console.out.println("Building graph...")
     stopsRows.par.map { s =>
       val stopId = s(0)
       val stopName = s(1).substring(8)
@@ -44,8 +46,8 @@ object DB {
     }.toList
   }
 
-  /// BUILD TREE TERNARY TREE STOPS
   private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {
+    Console.out.println("Building TTreeStops...")
     TTreeNode(stopsRows.par.map { s =>
       val stopId = s(0)
       val stopName = s(1).substring(8)
@@ -53,8 +55,8 @@ object DB {
     }.toList)
   }
 
-  // BUILD EAGER TRIPS
   private def buildTrips(gtfs: GtfsDirectory): List[Trip] = {
+    Console.out.println("Building trips...")
     gtfs.trips.par.map { tripRow =>
       val routeId = tripRow(0)
       val serviceId = tripRow(1)
