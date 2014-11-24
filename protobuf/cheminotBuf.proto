@@ -1,7 +1,3 @@
-syntax = "proto2";
-
-option optimize_for = LITE_RUNTIME;
-
 package m.cheminot.data;
 
 message Graph {
