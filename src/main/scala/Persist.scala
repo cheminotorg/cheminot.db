@@ -32,7 +32,7 @@ object Persist {
     val file = directory(version)("graph")
     Console.out.println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
-    Vertice.serializeSeq(graph).writeTo(output)
+    Vertice.serializeGraph(graph).writeTo(output)
     file
   }
 
@@ -40,7 +40,7 @@ object Persist {
     val file = directory(version)("calendar_dates")
     Console.out.println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
-    CalendarDate.serializeSeq(calendarDates).writeTo(output)
+    CalendarDate.serializeCalendarDates(calendarDates).writeTo(output)
     file
   }
 

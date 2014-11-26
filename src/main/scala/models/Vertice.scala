@@ -20,7 +20,7 @@ object Vertice {
     builder.build()
   }
 
-  def serializeSeq(vertices: Seq[Vertice]): CheminotBuf.Graph = {
+  def serializeGraph(vertices: Seq[Vertice]): CheminotBuf.Graph = {
     val builder = CheminotBuf.Graph.newBuilder()
     vertices.foreach { vertice =>
       builder.getMutableVertices().put(vertice.id, serialize(vertice))

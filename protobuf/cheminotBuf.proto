@@ -20,6 +20,10 @@ message StopTime {
 }
 
 message CalendarDates {
+  map<string, CalendarExceptions> exceptionsByServiceId = 1;
+}
+
+message CalendarExceptions {
   repeated CalendarDate calendarDates = 1;
 }
 
