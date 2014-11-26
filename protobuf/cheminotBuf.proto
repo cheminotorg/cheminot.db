@@ -32,3 +32,16 @@ message CalendarDate {
   required string date = 2;
   required int32 exceptionType = 3;
 }
+
+message Calendar {
+  required string serviceId = 1;
+  required string monday = 2;
+  required string tuesday = 3;
+  required string wednesday = 4;
+  required string thursday = 5;
+  required string friday = 6;
+  required string saturday = 7;
+  required string sunday = 8;
+  required string startDate = 9;
+  required string endDate = 10;
+}

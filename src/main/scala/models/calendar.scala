@@ -1,7 +1,6 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
-import play.api.libs.json._
 import m.cheminot.Gtfs
 
 case class Calendar(
@@ -19,6 +18,8 @@ case class Calendar(
 
 object Calendar {
 
+  import m.cheminot.data.CheminotBuf
+
   def fromRow(data: List[String]): Calendar = {
     Calendar(
       data.head,
@@ -34,8 +35,26 @@ object Calendar {
     )
   }
 
-  implicit val dateTimeWriter = play.api.libs.json.Writes.jodaDateWrites("dd/MM/YYYY")
-  implicit val writer: Writes[Calendar] = Json.writes[Calendar]
+  private def formatDate(date: DateTime): String = {
+    val formatter = org.joda.time.format.DateTimeFormat.forPattern("dd/MM/YYYY")
+    formatter.print(date)
+  }
+
+  def serialize(calendar: Calendar): CheminotBuf.Calendar = {
+    val builder = CheminotBuf.Calendar.newBuilder()
+    builder
+      .setServiceId(calendar.serviceId)
+      .setMonday(calendar.monday)
+      .setTuesday(calendar.tuesday)
+      .setWednesday(calendar.wednesday)
+      .setThursday(calendar.thursday)
+      .setFriday(calendar.friday)
+      .setSaturday(calendar.saturday)
+      .setSunday(calendar.sunday)
+      .setStartDate(formatDate(calendar.startDate))
+      .setEndDate(formatDate(calendar.endDate))
+    builder.build()
+  }
 }
 
 case class CalendarDate(

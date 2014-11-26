@@ -2,7 +2,7 @@ package m.cheminot.models
 
 case class Trip(
   id: String,
-  service: Option[Calendar],
+  calendar: Option[Calendar],
   direction: String,
   stopTimes: Seq[StopTime]
 ) {
@@ -23,7 +23,7 @@ case class Trip(
 
 object Trip {
 
-  def fromRow(data: List[String], routeId: String, service: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
-    Trip(data(2), service, data(4), stopTimes)
+  def fromRow(data: List[String], routeId: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
+    Trip(data(2), calendar, data(4), stopTimes)
   }
 }
