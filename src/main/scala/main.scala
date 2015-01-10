@@ -70,5 +70,5 @@ case class Config(
   ttstops: Boolean = false,
   directory: Option[File] = None
 ) {
-  def nothing = sqlite && graph && calendar
+  def nothing = !(sqlite && graph && calendar)
 }
