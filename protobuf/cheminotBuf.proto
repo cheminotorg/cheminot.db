@@ -1,3 +1,5 @@
+syntax = "proto3";
+
 package m.cheminot.data;
 
 message Graph {
@@ -5,18 +7,18 @@ message Graph {
 }
 
 message Vertice {
-  required string id = 1;
-  required string name = 2;
+  string id = 1;
+  string name = 2;
   repeated string edges = 3;
   repeated StopTime stopTimes = 4;
 }
 
 message StopTime {
-  required string tripId = 1;
-  required string arrival = 2;
-  required string departure = 3;
-  required string stopId = 4;
-  required int32 pos = 5;
+  string tripId = 1;
+  string arrival = 2;
+  string departure = 3;
+  string stopId = 4;
+  int32 pos = 5;
 }
 
 message CalendarDates {
@@ -28,20 +30,20 @@ message CalendarExceptions {
 }
 
 message CalendarDate {
-  required string serviceId = 1;
-  required string date = 2;
-  required int32 exceptionType = 3;
+  string serviceId = 1;
+  string date = 2;
+  int32 exceptionType = 3;
 }
 
 message Calendar {
-  required string serviceId = 1;
-  required string monday = 2;
-  required string tuesday = 3;
-  required string wednesday = 4;
-  required string thursday = 5;
-  required string friday = 6;
-  required string saturday = 7;
-  required string sunday = 8;
-  required string startDate = 9;
-  required string endDate = 10;
+  string serviceId = 1;
+  string monday = 2;
+  string tuesday = 3;
+  string wednesday = 4;
+  string thursday = 5;
+  string friday = 6;
+  string saturday = 7;
+  string sunday = 8;
+  string startDate = 9;
+  string endDate = 10;
 }
