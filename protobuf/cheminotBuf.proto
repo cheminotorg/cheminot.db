@@ -47,3 +47,7 @@ message Calendar {
   string startDate = 9;
   string endDate = 10;
 }
+
+message TripStopIds {
+  repeated string stopIds = 1;
+}

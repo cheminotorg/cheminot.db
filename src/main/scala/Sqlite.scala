@@ -26,16 +26,27 @@ object Sqlite {
   }
 
   def createTripsTable()(implicit connection: Connection) {
-    SQL("CREATE TABLE trips (id TEXT PRIMARY KEY, calendar BLOB, direction TEXT)").executeUpdate
+    SQL("CREATE TABLE trips (id TEXT PRIMARY KEY, calendar BLOB, direction TEXT, stopIds TEXT)").executeUpdate
+    SQL("CREATE TABLE trips_stops (tripId TEXT, stopId TEXT, FOREIGN KEY (tripId) REFERENCES trips(id))").executeUpdate
   }
 
   def insertTrips(trips: Seq[Trip])(implicit connection: Connection) {
     trips.foreach { trip =>
-      SQL("INSERT INTO trips (id , calendar, direction) VALUES({id}, {calendar}, {direction})").on(
+      SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})").on(
         'id -> trip.id,
         'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray),
-        'direction -> trip.direction
+        'direction -> trip.direction,
+        'stopIds -> Trip.serializeStopIds(trip).toByteArray
       ).executeUpdate
+    }
+
+    trips.foreach { trip =>
+      trip.stopTimes.foreach { stopTime =>
+        SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})").on(
+          'tripId -> trip.id,
+          'stopId -> stopTime.stopId
+        ).executeUpdate
+      }
     }
   }
 
