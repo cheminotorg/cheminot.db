@@ -50,10 +50,15 @@ object Sqlite {
     }
   }
 
-  def setVersion(version: Version)(implicit connection: Connection) {
+  def initMeta(version: Version)(implicit connection: Connection) {
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "version",
       'value -> version.value
+    ).executeUpdate
+
+    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
+      'key -> "aborted",
+      'value -> false
     ).executeUpdate
   }
 }

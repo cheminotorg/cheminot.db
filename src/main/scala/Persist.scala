@@ -23,7 +23,7 @@ object Persist {
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
       Sqlite.insertTrips(trips)
-      Sqlite.setVersion(version)
+      Sqlite.initMeta(version)
       file
     }
   }
