@@ -1,6 +1,5 @@
 db
 gtfs
-project
 target
 src/main/scala/protobuf/
 protobuf/cpp

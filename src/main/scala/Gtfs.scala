@@ -10,7 +10,7 @@ import models._
 
 object Gtfs {
 
-  private lazy val defaultGtfsDir = new File("gtfs")
+  private lazy val defaultGtfsDir = Option(new File("gtfs")).filter(_.exists)
 
   def apply(directory: File): Option[GtfsDirectory] =
     check(directory).map { version =>
@@ -20,7 +20,7 @@ object Gtfs {
     }
 
   def apply(): Option[GtfsDirectory] =
-    defaultGtfsDir.listFiles.toList.filter (_.isDirectory)
+    defaultGtfsDir.map(_.listFiles).toList.flatten.filter (_.isDirectory)
       .filter(check(_).isDefined)
       .flatMap(dir => Version.fromDir(dir) map (dir -> _))
       .sortBy { case (_, version) => -version.date.getMillis }
