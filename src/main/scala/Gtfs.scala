@@ -10,17 +10,19 @@ import models._
 
 object Gtfs {
 
-  private lazy val defaultGtfsDir = Option(new File("gtfs")).filter(_.exists)
+  private def defaultGtfsDir: File = {
+    val f = new File("gtfs")
+    f.mkdirs
+    f
+  }
 
   def apply(directory: File): Option[GtfsDirectory] =
     check(directory).map { version =>
-      Console.out.println(s"Reading gtfs from ${directory}...")
-      val csvDir = CSVDirectory(directory).read()
-      GtfsDirectory(version, csvDir)
+      GtfsDirectory(version, directory)
     }
 
-  def apply(): Option[GtfsDirectory] =
-    defaultGtfsDir.map(_.listFiles).toList.flatten.filter (_.isDirectory)
+  def mostRecent(root: Option[File] = None): Option[GtfsDirectory] =
+    root.getOrElse(defaultGtfsDir).listFiles.toList.filter (_.isDirectory)
       .filter(check(_).isDefined)
       .flatMap(dir => Version.fromDir(dir) map (dir -> _))
       .sortBy { case (_, version) => -version.date.getMillis }
@@ -67,7 +69,14 @@ object Gtfs {
   }
 }
 
-case class GtfsDirectory(version: Version, gtfs: Map[String, CSVFile.Rows]) {
+case class GtfsDirectory(version: Version, directory: File) {
+
+  lazy val gtfs: Map[String, CSVFile.Rows] = {
+    Console.out.println(s"Reading gtfs from ${directory}...")
+    CSVDirectory(directory).read()
+  }
+
+  lazy val parentDir = new File(directory.getParent)
 
   private def oops(message: String) = throw new RuntimeException(message)
 

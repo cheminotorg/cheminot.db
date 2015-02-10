@@ -24,7 +24,7 @@ object DB {
     Gtfs.apply(directory) map DB.apply
 
   def fromDefault(): Option[DB] =
-    Gtfs.apply() map DB.apply
+    Gtfs.mostRecent() map DB.apply
 
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {
     Console.out.println("Building graph...")
@@ -86,11 +86,11 @@ object Version {
 
   private def parse(name: String): Option[DateTime] = {
     Exception.allCatch[DateTime].opt {
-      Version.format.parseDateTime(name)
+      Version.formatter.parseDateTime(name)
     }
   }
 
-  val format = {
+  val formatter = {
     org.joda.time.format.DateTimeFormat.forPattern("YYYY-MM-dd_HH-mm-ss")
   }
 

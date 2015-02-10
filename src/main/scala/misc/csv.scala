@@ -1,6 +1,7 @@
 package m.cheminot.misc
 
 import java.io.File
+import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
 import scala.util.parsing.combinator._
 
@@ -33,7 +34,7 @@ object CSVFile {
 }
 
 case class CSVFile(file: File) {
-  lazy val content = FileTools.read(file)
+  lazy val content = FileUtils.readFileToString(file, "utf-8")
 
   def read(): CSVFile.Rows = CSV.parse(content)
 }

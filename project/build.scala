@@ -13,8 +13,10 @@ object CheminotDB extends Build {
         "com.typesafe.play" %% "play-json" % "2.4.0-M1",
         "com.typesafe.play" %% "anorm" % "2.4.0-M1",
         "commons-codec" % "commons-codec" % "1.9",
+        "commons-io" % "commons-io" % "2.4",
         "org.xerial" % "sqlite-jdbc" % "3.8.6",
-        "com.github.scopt" %% "scopt" % "3.2.0"
+        "com.github.scopt" %% "scopt" % "3.2.0",
+        "org.scalaj" %% "scalaj-http" % "1.1.4"
       ),
       scalacOptions ++= Seq("-language:_", "-deprecation", "-unchecked"))
   ).settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)

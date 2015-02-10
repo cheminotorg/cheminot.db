@@ -1,6 +1,7 @@
 package m.cheminot
 
 import java.io.File
+import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 import models._
 
@@ -48,6 +49,7 @@ object Persist {
     val file = directory(version)("stops_ttree.json")
     Console.out.println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
-    misc.FileTools.write(content, file)
+    FileUtils.write(file, content, "utf-8")
+    file
   }
 }
