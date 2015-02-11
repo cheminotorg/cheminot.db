@@ -2,6 +2,8 @@ package m.cheminot
 
 import java.io.File
 import java.sql.{ Connection, DriverManager, PreparedStatement }
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
 import play.api.libs.json.Json
 import anorm._
 import misc._
@@ -50,7 +52,8 @@ object Sqlite {
     }
   }
 
-  def initMeta(version: Version)(implicit connection: Connection) {
+  def initMeta(version: Version, expiredAt: DateTime)(implicit connection: Connection) {
+    val formatter = DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "version",
       'value -> version.value
@@ -59,6 +62,16 @@ object Sqlite {
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "aborted",
       'value -> false
+    ).executeUpdate
+
+    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
+      'key -> "createdAt",
+      'value -> formatter.print(version.date)
+    ).executeUpdate
+
+    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
+      'key -> "expiredAt",
+      'value -> DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC.print(expiredAt)
     ).executeUpdate
   }
 }

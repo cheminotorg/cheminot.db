@@ -63,16 +63,11 @@ object AutoUpdate {
         gtfsDirectory() map { gtfs =>
           if(update.modified.isAfter(gtfs.version.date)) {
             val name = Version.formatter.print(update.modified)
-            val zip = downloadGtfsZip(update.url, name)
+            val zip = downloadGtfsZip(update.url, gtfs.parentDir.getAbsolutePath + "/" + name + ".zip")
             val dir = new File(gtfs.parentDir.getAbsolutePath + "/" + name)
             dir.mkdirs
             misc.ZipUtils.unzip(zip, dir)
-            DB.fromDir(dir).foreach { db =>
-              Persist.sqlite(db.version, db.trips)
-              Persist.graph(db.version, db.graph)
-              Persist.calendarDates(db.version, db.calendarDates)
-              Persist.ttstops(db.version, db.ttstops)
-            }
+            DB.fromDir(dir).foreach(Persist.all)
             twitterOAuth.foreach { oauth =>
               misc.Twitter.updateStatus(oauth, "@srenault_ Une nouvelle version de cheminot.db est disponible!")
             }

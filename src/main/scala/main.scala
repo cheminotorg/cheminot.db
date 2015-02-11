@@ -15,13 +15,10 @@ object Main {
           db <- (config.directory flatMap DB.fromDir) orElse DB.fromDefault()
         } yield {
           if(config.nothing) {
-            Persist.sqlite(db.version, db.trips)
-            Persist.graph(db.version, db.graph)
-            Persist.calendarDates(db.version, db.calendarDates)
-            Persist.ttstops(db.version, db.ttstops)
+            Persist.all(db)
           } else {
             if(config.sqlite) {
-              Persist.sqlite(db.version, db.trips)
+              Persist.sqlite(db.version, db.expiredAt, db.trips)
             }
             if(config.graph) {
               Persist.graph(db.version, db.graph)

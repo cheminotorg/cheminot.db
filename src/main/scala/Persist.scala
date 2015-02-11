@@ -3,6 +3,7 @@ package m.cheminot
 import java.io.File
 import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
+import org.joda.time.DateTime
 import models._
 
 object Persist {
@@ -17,14 +18,21 @@ object Persist {
     }
   }
 
-  def sqlite(version: Version, trips: List[Trip]): File = {
+  def all(db: DB) {
+    Persist.sqlite(db.version, db.expiredAt, db.trips)
+    Persist.graph(db.version, db.graph)
+    Persist.calendarDates(db.version, db.calendarDates)
+    Persist.ttstops(db.version, db.ttstops)
+  }
+
+  def sqlite(version: Version, expiredAt: DateTime, trips: List[Trip]): File = {
     val file = directory(version)("cheminot.db")
     Console.out.println("Storing trips to " + file)
     Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
       Sqlite.insertTrips(trips)
-      Sqlite.initMeta(version)
+      Sqlite.initMeta(version, expiredAt)
       file
     }
   }

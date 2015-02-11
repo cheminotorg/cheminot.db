@@ -16,6 +16,7 @@ case class DB(gtfs: GtfsDirectory) {
   lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
   lazy val calendarDates: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
   lazy val ttstops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
+  lazy val expiredAt: DateTime = calendarDates.sortBy(-_.date.getMillis).head.date
 }
 
 object DB {
