@@ -73,17 +73,11 @@ object DB {
   }
 }
 
-case class Version(value: String, date: DateTime)
+case class Version(date: DateTime) {
+  lazy val value: String = Version.formatter.print(date)
+}
 
 object Version {
-
-  private def encode(str: String): String = {
-    new String(Base64.encodeBase64(str.getBytes), "UTF-8")
-  }
-
-  private def decode(str: String): String = {
-    new String(Base64.decodeBase64(str.getBytes), "UTF-8")
-  }
 
   private def parse(name: String): Option[DateTime] = {
     Exception.allCatch[DateTime].opt {
@@ -91,16 +85,14 @@ object Version {
     }
   }
 
-  val formatter = {
-    org.joda.time.format.DateTimeFormat.forPattern("YYYY-MM-dd_HH-mm-ss")
-  }
+  val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyyMMddHHmmss")
 
   def fromDir(dir: File): Option[Version] = {
     for {
       _ <- Option(dir).filter(_.isDirectory)
       date <- parse(dir.getName)
     } yield {
-      Version(encode(dir.getName), date)
+      Version(date)
     }
   }
 }

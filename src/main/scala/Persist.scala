@@ -26,7 +26,7 @@ object Persist {
   }
 
   def sqlite(version: Version, expiredAt: DateTime, trips: List[Trip]): File = {
-    val file = directory(version)("cheminot.db")
+    val file = directory(version)(s"cheminot-${version.value}.db")
     Console.out.println("Storing trips to " + file)
     Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
       Sqlite.createMetaTable()
@@ -38,7 +38,7 @@ object Persist {
   }
 
   def graph(version: Version, graph: List[Vertice]): File = {
-    val file = directory(version)("graph")
+    val file = directory(version)(s"graph-${version.value}")
     Console.out.println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
     Vertice.serializeGraph(graph).writeTo(output)
@@ -46,7 +46,7 @@ object Persist {
   }
 
   def calendarDates(version: Version, calendarDates: List[CalendarDate]): File = {
-    val file = directory(version)("calendar_dates")
+    val file = directory(version)(s"calendardates-${version.value}")
     Console.out.println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
     CalendarDate.serializeCalendarDates(calendarDates).writeTo(output)
