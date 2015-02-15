@@ -10,11 +10,7 @@ import models._
 
 object Gtfs {
 
-  private def defaultGtfsDir: File = {
-    val f = new File("gtfs")
-    f.mkdirs
-    f
-  }
+  def defaultGtfsDir: File = new File("gtfs")
 
   def apply(directory: File): Option[GtfsDirectory] =
     check(directory).map { version =>

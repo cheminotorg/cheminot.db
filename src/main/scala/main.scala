@@ -8,8 +8,10 @@ object Main {
 
   def main(args: Array[String]) {
     parser.parse(args, Config()) foreach { config =>
+      val gtfsRootDir = config.directory getOrElse Gtfs.defaultGtfsDir
+      gtfsRootDir.mkdirs
       if(config.autoupdate) {
-        AutoUpdate.loop(config.twitterOAuth, () => Gtfs.mostRecent(config.directory))
+        AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, () => Gtfs.mostRecent(config.directory))
       } else {
         (for {
           db <- (config.directory flatMap DB.fromDir) orElse DB.fromDefault()
