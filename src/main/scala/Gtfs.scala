@@ -69,7 +69,9 @@ case class GtfsDirectory(version: Version, directory: File) {
 
   lazy val gtfs: Map[String, CSVFile.Rows] = {
     Console.out.println(s"Reading gtfs from ${directory}...")
-    CSVDirectory(directory).read()
+    val parsed = CSVDirectory(directory).read()
+    Console.out.println("OK")
+    parsed
   }
 
   lazy val parentDir = new File(directory.getParent)

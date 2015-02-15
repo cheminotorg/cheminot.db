@@ -21,6 +21,8 @@ case class DB(gtfs: GtfsDirectory) {
 
 object DB {
 
+  def defaultDbDir: File = new File("db")
+
   def fromDir(directory: File): Option[DB] =
     Gtfs.apply(directory) map DB.apply
 

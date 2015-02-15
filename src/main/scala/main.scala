@@ -8,28 +8,32 @@ object Main {
 
   def main(args: Array[String]) {
     parser.parse(args, Config()) foreach { config =>
-      val gtfsRootDir = config.directory getOrElse Gtfs.defaultGtfsDir
+
+      val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
+      val gtfsRootDir = config.gtfsdir getOrElse Gtfs.defaultGtfsDir
+      dbRootDir.mkdirs
       gtfsRootDir.mkdirs
+
       if(config.autoupdate) {
-        AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, () => Gtfs.mostRecent(config.directory))
+        AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
       } else {
         (for {
-          db <- (config.directory flatMap DB.fromDir) orElse DB.fromDefault()
+          db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefault()
         } yield {
           if(config.nothing) {
-            Persist.all(db)
+            Persist.all(dbRootDir, db)
           } else {
             if(config.sqlite) {
-              Persist.sqlite(db.version, db.expiredAt, db.trips)
+              Persist.sqlite(dbRootDir, db.version, db.expiredAt, db.trips)
             }
             if(config.graph) {
-              Persist.graph(db.version, db.graph)
+              Persist.graph(dbRootDir, db.version, db.graph)
             }
             if(config.calendar) {
-              Persist.calendarDates(db.version, db.calendarDates)
+              Persist.calendarDates(dbRootDir, db.version, db.calendarDates)
             }
             if(config.ttstops) {
-              Persist.ttstops(db.version, db.ttstops)
+              Persist.ttstops(dbRootDir, db.version, db.ttstops)
             }
           }
         }) getOrElse {
@@ -77,9 +81,13 @@ object Main {
       config.copy(ttstops = true)
     } text("Build TTreeStops")
 
-    opt[File]('d', "directory") action { (input, config) =>
-      config.copy(directory = Some(input))
-    } text("Specify gtfs directory")
+    opt[File]('d', "gtfs") action { (input, config) =>
+      config.copy(gtfsdir = Some(input))
+    } text("Specify gtfs root directory")
+
+    opt[File]('e', "db") action { (input, config) =>
+      config.copy(dbdir = Some(input))
+    } text("Specify db root directory")
   }
 }
 
@@ -89,7 +97,8 @@ case class Config(
   calendar: Boolean = false,
   ttstops: Boolean = false,
   autoupdate: Boolean = false,
-  directory: Option[File] = None,
+  gtfsdir: Option[File] = None,
+  dbdir: Option[File] = None,
   twitterConsumerKey: Option[String] = None,
   twitterConsumerSecret: Option[String] = None,
   twitterAccessKey: Option[String] = None,
