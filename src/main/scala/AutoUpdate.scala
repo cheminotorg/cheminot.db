@@ -46,6 +46,7 @@ object AutoUpdate {
   }
 
   def downloadGtfsZip(url: String, to: String): File = {
+    println("Downloading " + url)
     val source = new URL(url)
     val destination = new File(to)
     FileUtils.copyURLToFile(source, destination)
