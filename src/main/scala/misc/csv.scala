@@ -17,16 +17,17 @@ object CSV extends RegexParsers {
   def TXT     = "[^\",\r\n]".r
 
   def file: Parser[List[List[String]]] = repsep(record, CRLF) <~ opt(CRLF)
-  def record: Parser[List[String]] = rep1sep(field, COMMA)
+  def record: Parser[List[String]] = rep1sep(field, COMMA) ^^ { case x => { /*println(x);*/ x } }
   def field: Parser[String] = (escaped|nonescaped)
   def escaped: Parser[String] = (DQUOTE~>((TXT|COMMA|CR|LF|DQUOTE2)*)<~DQUOTE) ^^ { case ls => ls.mkString("")}
   def nonescaped: Parser[String] = (TXT*) ^^ { case ls => ls.mkString("") }
 
-  def parse(s: String): CSVFile.Rows =
-    parseAll(file, s) match {
+  def parse(s: String): CSVFile.Rows = {
+    parseAll(file, s.take(100000)) match {
       case Success(res, _) => res
       case _ => List[List[String]]()
     }
+  }
 }
 
 object CSVFile {
@@ -42,10 +43,14 @@ case class CSVFile(file: File) {
 case class CSVDirectory(directory: File) {
 
   def read(): Map[String, CSVFile.Rows] = {
-    directory.listFiles.filter(_.getName.endsWith(".txt")).map { csv =>
+    val start = System.currentTimeMillis
+    println(directory.getAbsolutePath)
+    val x = directory.listFiles.filter(_.getName.endsWith("stop_times.txt")).reverse.map { csv =>
       Console.out.println("Reading " + csv.getName)
       val rows = CSVFile(csv).read()
       csv.getName -> rows
     }
+    println(System.currentTimeMillis - start)
+    x
   }.toMap
 }

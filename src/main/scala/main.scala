@@ -7,39 +7,39 @@ object Main {
   Class.forName("org.sqlite.JDBC");
 
   def main(args: Array[String]) {
+    misc.CSVDirectory(new java.io.File("/Volumes/HOME/Projects/me/cheminot.db/gtfs/20150206093955")).read()
     parser.parse(args, Config()) foreach { config =>
+    //   val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
+    //   val gtfsRootDir = config.gtfsdir getOrElse Gtfs.defaultGtfsDir
+    //   dbRootDir.mkdirs
+    //   gtfsRootDir.mkdirs
 
-      val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
-      val gtfsRootDir = config.gtfsdir getOrElse Gtfs.defaultGtfsDir
-      dbRootDir.mkdirs
-      gtfsRootDir.mkdirs
-
-      if(config.autoupdate) {
-        AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
-      } else {
-        (for {
-          db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefault()
-        } yield {
-          if(config.nothing) {
-            Persist.all(dbRootDir, db)
-          } else {
-            if(config.sqlite) {
-              Persist.sqlite(dbRootDir, db.version, db.expiredAt, db.trips)
-            }
-            if(config.graph) {
-              Persist.graph(dbRootDir, db.version, db.graph)
-            }
-            if(config.calendar) {
-              Persist.calendarDates(dbRootDir, db.version, db.calendarDates)
-            }
-            if(config.ttstops) {
-              Persist.ttstops(dbRootDir, db.version, db.ttstops)
-            }
-          }
-        }) getOrElse {
-          Console.err.println("Unable to find gtfs directory")
-        }
-      }
+    //   if(config.autoupdate) {
+    //     AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
+    //   } else {
+    //     (for {
+    //       db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefault()
+    //     } yield {
+    //       if(config.nothing) {
+    //         Persist.all(dbRootDir, db)
+    //       } else {
+    //         if(config.sqlite) {
+    //           Persist.sqlite(dbRootDir, db.version, db.expiredAt, db.trips)
+    //         }
+    //         if(config.graph) {
+    //           Persist.graph(dbRootDir, db.version, db.graph)
+    //         }
+    //         if(config.calendar) {
+    //           Persist.calendarDates(dbRootDir, db.version, db.calendarDates)
+    //         }
+    //         if(config.ttstops) {
+    //           Persist.ttstops(dbRootDir, db.version, db.ttstops)
+    //         }
+    //       }
+    //     }) getOrElse {
+    //       Console.err.println("Unable to find gtfs directory")
+    //     }
+    //   }
     }
   }
 
