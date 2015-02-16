@@ -1,7 +1,6 @@
 package m.cheminot
 
 import java.io.File
-import org.apache.commons.codec.binary.Base64
 import org.joda.time.DateTime
 import scala.util.control.Exception
 import scala.concurrent.Future
@@ -30,7 +29,7 @@ object DB {
     Gtfs.mostRecent() map DB.apply
 
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] = {
-    Console.out.println("Building graph...")
+    println("Building graph...")
     stopsRows.par.map { s =>
       val stopId = s(0)
       val stopName = s(1).substring(8)
@@ -50,7 +49,7 @@ object DB {
   }
 
   private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {
-    Console.out.println("Building TTreeStops...")
+    println("Building TTreeStops...")
     TTreeNode(stopsRows.par.map { s =>
       val stopId = s(0)
       val stopName = s(1).substring(8)
@@ -59,7 +58,7 @@ object DB {
   }
 
   private def buildTrips(gtfs: GtfsDirectory): List[Trip] = {
-    Console.out.println("Building trips...")
+    println("Building trips...")
     gtfs.trips.par.map { tripRow =>
       val routeId = tripRow(0)
       val serviceId = tripRow(1)

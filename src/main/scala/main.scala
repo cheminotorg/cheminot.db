@@ -37,7 +37,7 @@ object Main {
             }
           }
         }) getOrElse {
-          Console.err.println("Unable to find gtfs directory")
+          println("Unable to find gtfs directory")
         }
       }
     }

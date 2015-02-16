@@ -27,7 +27,7 @@ object Persist {
 
   def sqlite(dbDir: File, version: Version, expiredAt: DateTime, trips: List[Trip]): File = {
     val file = directory(dbDir, version)(s"cheminot-${version.value}.db")
-    Console.out.println("Storing trips to " + file)
+    println("Storing trips to " + file)
     Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
@@ -39,7 +39,7 @@ object Persist {
 
   def graph(dbDir: File, version: Version, graph: List[Vertice]): File = {
     val file = directory(dbDir, version)(s"graph-${version.value}")
-    Console.out.println("Storing graph to " + file)
+    println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
     Vertice.serializeGraph(graph).writeTo(output)
     file
@@ -47,7 +47,7 @@ object Persist {
 
   def calendarDates(dbDir: File, version: Version, calendarDates: List[CalendarDate]): File = {
     val file = directory(dbDir, version)(s"calendardates-${version.value}")
-    Console.out.println("Storing calendar dates to " + file)
+    println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
     CalendarDate.serializeCalendarDates(calendarDates).writeTo(output)
     file
@@ -55,7 +55,7 @@ object Persist {
 
   def ttstops(dbDir: File, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
     val file = directory(dbDir, version)("stops_ttree.json")
-    Console.out.println("Storing ternary tree stops to " + file)
+    println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
     FileUtils.write(file, content, "utf-8")
     file

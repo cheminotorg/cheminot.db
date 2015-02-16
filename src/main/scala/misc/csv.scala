@@ -43,7 +43,7 @@ case class CSVDirectory(directory: File) {
 
   def read(): Map[String, CSVFile.Rows] = {
     directory.listFiles.filter(_.getName.endsWith(".txt")).map { csv =>
-      Console.out.println("Reading " + csv.getName)
+      println("Reading " + csv.getName)
       val rows = CSVFile(csv).read()
       csv.getName -> rows
     }

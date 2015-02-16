@@ -36,7 +36,7 @@ object Sqlite {
     trips.foreach { trip =>
       SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})").on(
         'id -> trip.id,
-        'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray),
+        'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray).getOrElse(Array()),
         'direction -> trip.direction,
         'stopIds -> Trip.serializeStopIds(trip).toByteArray
       ).executeUpdate

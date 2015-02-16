@@ -56,7 +56,7 @@ object AutoUpdate {
   def loop(twitterOAuth: Option[misc.TwitterOAuth], gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsDirectory], rate: Int = DEFAULT_RATE): Unit = {
     val bestRate: Int = rateLimiter(rate) {
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
-      Console.out.println(s"GET $url")
+      println(s"GET $url")
       val response = Http(url).asString
       scala.util.Try(Json.parse(response.body)).toOption map { json =>
         val update = Update(json)
