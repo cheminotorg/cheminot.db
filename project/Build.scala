@@ -18,6 +18,7 @@ object CheminotDB extends Build {
         "org.scalaj" %% "scalaj-http" % "1.1.4",
         "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3"
       ),
-      scalacOptions ++= Seq("-language:_", "-deprecation", "-unchecked"))
+      scalacOptions ++= Seq("-language:_", "-deprecation", "-unchecked", "-encoding", "UTF-8")
+    )
   ).settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 }

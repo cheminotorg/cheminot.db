@@ -23,6 +23,10 @@ object Sqlite {
     a
   }
 
+  def init()(implicit connection: Connection) {
+    SQL("PRAGMA synchronous = OFF").executeUpdate
+  }
+
   def createMetaTable()(implicit connection: Connection) {
     SQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)").executeUpdate
   }
@@ -33,8 +37,11 @@ object Sqlite {
   }
 
   def insertTrips(trips: Seq[Trip])(implicit connection: Connection) {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    val insertTripQuery = SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})")
     trips.foreach { trip =>
-      SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})").on(
+      insertTripQuery.on(
         'id -> trip.id,
         'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray).getOrElse(Array()),
         'direction -> trip.direction,
@@ -42,14 +49,19 @@ object Sqlite {
       ).executeUpdate
     }
 
+    val insertTripsStopsQuery = SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})")
     trips.foreach { trip =>
       trip.stopTimes.foreach { stopTime =>
-        SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})").on(
+        insertTripsStopsQuery.on(
           'tripId -> trip.id,
           'stopId -> stopTime.stopId
         ).executeUpdate
       }
     }
+
+    SQL("END TRANSACTION").executeUpdate
+
+    SQL("CREATE INDEX trips_stops_stop_index ON trips_stops (stopId)").executeUpdate
   }
 
   def initMeta(version: Version, expiredAt: DateTime)(implicit connection: Connection) {

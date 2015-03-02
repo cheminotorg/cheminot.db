@@ -29,10 +29,12 @@ object Persist {
     val file = directory(dbDir, version)(s"cheminot-${version.value}.db")
     println("Storing trips to " + file)
     Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
+      Sqlite.init();
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
       Sqlite.insertTrips(trips)
       Sqlite.initMeta(version, expiredAt)
+      connection.close()
       file
     }
   }
