@@ -15,7 +15,7 @@ object Main {
       gtfsRootDir.mkdirs
 
       if(config.autoupdate) {
-        AutoUpdate.loop(config.twitterOAuth, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
+        AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
       } else {
         (for {
           db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefault()
@@ -62,7 +62,10 @@ object Main {
       },
       opt[String]("twitter-access-secret") action { (accessSecret, config) =>
         config.copy(twitterAccessSecret = Some(accessSecret))
-      }
+      },
+      opt[String]("twitter-pseudo") action { (twitterPseudo, config) =>
+        config.copy(twitterPseudo = Some(twitterPseudo))
+      } text("Specify twitter pseudo to notify")
     )
 
     opt[Unit]('s', "sqlite") action { (_, config) =>
@@ -99,6 +102,7 @@ case class Config(
   autoupdate: Boolean = false,
   gtfsdir: Option[File] = None,
   dbdir: Option[File] = None,
+  twitterPseudo: Option[String] = None,
   twitterConsumerKey: Option[String] = None,
   twitterConsumerSecret: Option[String] = None,
   twitterAccessKey: Option[String] = None,

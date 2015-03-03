@@ -53,8 +53,17 @@ object AutoUpdate {
     destination
   }
 
+  def notify(config: Config, message: String) {
+    for {
+      oauth <- config.twitterOAuth
+      pseudo <- config.twitterPseudo
+    } yield {
+      misc.Twitter.updateStatus(oauth, "@" + pseudo + " " + message)
+    }
+  }
+
   @annotation.tailrec
-  def loop(twitterOAuth: Option[misc.TwitterOAuth], gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsDirectory], rate: Int = DEFAULT_RATE): Unit = {
+  def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsDirectory], rate: Int = DEFAULT_RATE): Unit = {
     val bestRate: Int = rateLimiter(rate) {
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
       println(s"GET $url")
@@ -68,10 +77,9 @@ object AutoUpdate {
           val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/" + name)
           bundleDir.mkdirs
           misc.ZipUtils.unzip(zip, bundleDir)
-          DB.fromDir(bundleDir).foreach(db => Persist.all(dbDir, db))
-          twitterOAuth.foreach { oauth =>
-            misc.Twitter.updateStatus(oauth, "@srenault_ Une nouvelle version de cheminot.db est disponible!")
-          }
+          notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")
+          val db = DB.fromDir(bundleDir).map { db => Persist.all(dbDir, db); db }
+          notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
           DEFAULT_RATE
         } else {
           val now = DateTime.now
@@ -83,6 +91,6 @@ object AutoUpdate {
         }
       } getOrElse DEFAULT_RATE
     }
-    loop(twitterOAuth, gtfsRootDir, dbDir, gtfsBundle, bestRate)
+    loop(config, gtfsRootDir, dbDir, gtfsBundle, bestRate)
   }
 }
