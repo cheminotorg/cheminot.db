@@ -35,6 +35,7 @@ object Persist {
       Sqlite.insertTrips(trips)
       Sqlite.initMeta(version, expiredAt)
       connection.close()
+      println("done!")
       file
     }
   }
@@ -44,6 +45,7 @@ object Persist {
     println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
     Vertice.serializeGraph(graph).writeTo(output)
+    println("done!")
     file
   }
 
@@ -52,6 +54,7 @@ object Persist {
     println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
     CalendarDate.serializeCalendarDates(calendarDates).writeTo(output)
+    println("done!")
     file
   }
 
@@ -60,6 +63,7 @@ object Persist {
     println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
     FileUtils.write(file, content, "utf-8")
+    println("done!")
     file
   }
 }

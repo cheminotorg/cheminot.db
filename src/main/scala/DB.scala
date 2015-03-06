@@ -67,8 +67,24 @@ object DB {
       TTreeNode(par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1).substring(8)
-        stopName.toLowerCase -> (stopId, stopName)
-      }.toList)
+        val compoundStopNames = stopName.split("""\.|-""")
+        val saintStopNames = {
+          val SaintReg = """^Saint([-|\s])(.*)$""".r
+          val StReg = """^St([-|\s])(.*)$""".r
+          stopName match {
+            case SaintReg(sep, n) =>
+              val st = List("St " + n, "St-" + n)
+              if(sep == " ") ("Saint-" + n) +: st else ("Saint " + n) +: st
+            case StReg(sep, n) =>
+              val saint = List("Saint " + n, "Saint-" + n)
+              if(sep == " ") ("St-" + n) +: saint else ("St " + n) +: saint
+            case _ => Nil
+          }
+        }
+        (stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
+          s.toLowerCase -> (stopId, stopName)
+        }
+      }.toList.flatten)
     }
 
   private def buildTrips(gtfs: GtfsDirectory): List[Trip] =

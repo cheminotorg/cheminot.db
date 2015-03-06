@@ -108,7 +108,7 @@ case class Config(
   twitterAccessKey: Option[String] = None,
   twitterAccessSecret: Option[String] = None
 ) {
-  def nothing = !(sqlite || graph || calendar || autoupdate)
+  def nothing = !(sqlite || graph || calendar || autoupdate || ttstops)
   val twitterOAuth =
     for {
       a <- twitterConsumerKey
