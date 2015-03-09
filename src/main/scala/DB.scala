@@ -12,7 +12,6 @@ import models._
 case class DB(gtfs: GtfsDirectory) {
   lazy val version: Version = gtfs.version
   lazy val trips: List[Trip] = DB.buildTrips(gtfs)
-  lazy val treeStops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
   lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
   lazy val calendarDates: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
   lazy val ttstops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
@@ -67,7 +66,7 @@ object DB {
       TTreeNode(par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1).substring(8)
-        val compoundStopNames = stopName.split("""\.|-""")
+
         val saintStopNames = {
           val SaintReg = """^Saint([-|\s])(.*)$""".r
           val StReg = """^St([-|\s])(.*)$""".r
@@ -81,6 +80,15 @@ object DB {
             case _ => Nil
           }
         }
+
+        val compoundStopNames = if(saintStopNames.isEmpty) {
+          val words = stopName.split("""\.|-""").toList
+          if(words.size > 1) {
+            if(words.contains(" ")) words.mkString("-") +: words
+            else words.mkString(" ") +: words
+          } else Nil
+        } else Nil
+
         (stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
           s.toLowerCase -> (stopId, stopName)
         }

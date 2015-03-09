@@ -88,7 +88,7 @@ case class GtfsDirectory(version: Version, directory: File) {
 
   lazy val stops = {
     val rows = gtfs.get("stops.txt").getOrElse(oops("Invalid gtfs format: stops.txt not found!"))
-    rows.drop(1).par.filter(row => row(0).startsWith("StopPoint:OCETrain") && row.size == 9).toList
+    rows.drop(1).par.filter(row => row(0).startsWith("StopPoint:OCETrain TER-") && row.size == 9).toList
   }
 
   lazy val calendar = {
