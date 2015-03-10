@@ -61,39 +61,52 @@ object DB {
       }.toList
     }
 
-  private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] =
+  private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {
+    def handleCompoundWords(stopName: String): List[String] = {
+      val spaceIndex = Option(stopName.indexOf(" ")).filterNot(_ == -1)
+      val dashIndex = Option(stopName.indexOf("-")).filterNot(_ == -1)
+      val (sep, newsep) = {
+        val isSpace = spaceIndex.getOrElse(stopName.size) < dashIndex.getOrElse(stopName.size)
+        if (isSpace) " " -> "-" else "-" -> " "
+      }
+      val splitStopName = stopName.split(sep).toList
+      if(!spaceIndex.isEmpty && !dashIndex.isEmpty) {
+        val x = stopName.split(newsep).toList match {
+          case h :: t => h.replaceAll(sep, newsep) + newsep + t.mkString(newsep)
+          case _ => sys.error("Unexpected case in handleCompoundWords")
+        }
+        x +: splitStopName
+      } else {
+        stopName.replaceAll(sep, newsep) +: splitStopName
+      }
+    }
+
+    def handleSaintWords(stopName: String): List[String] = {
+      val SaintReg = """^Saint([-|\s])(.*)$""".r
+      val StReg = """^St([-|\s])(.*)$""".r
+      stopName match {
+        case SaintReg(sep, n) =>
+          val st = List("St " + n, "St-" + n)
+          if(sep == " ") ("Saint-" + n) +: st else ("Saint " + n) +: st
+        case StReg(sep, n) =>
+          val saint = List("Saint " + n, "Saint-" + n)
+          if(sep == " ") ("St-" + n) +: saint else ("St " + n) +: saint
+        case _ => Nil
+      }
+    }
+
     Measure.duration("TTreeStops") {
       TTreeNode(par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1).substring(8)
-
-        val saintStopNames = {
-          val SaintReg = """^Saint([-|\s])(.*)$""".r
-          val StReg = """^St([-|\s])(.*)$""".r
-          stopName match {
-            case SaintReg(sep, n) =>
-              val st = List("St " + n, "St-" + n)
-              if(sep == " ") ("Saint-" + n) +: st else ("Saint " + n) +: st
-            case StReg(sep, n) =>
-              val saint = List("Saint " + n, "Saint-" + n)
-              if(sep == " ") ("St-" + n) +: saint else ("St " + n) +: saint
-            case _ => Nil
-          }
-        }
-
-        val compoundStopNames = if(saintStopNames.isEmpty) {
-          val words = stopName.split("""\.|-""").toList
-          if(words.size > 1) {
-            if(words.contains(" ")) words.mkString("-") +: words
-            else words.mkString(" ") +: words
-          } else Nil
-        } else Nil
-
+        val saintStopNames = handleSaintWords(stopName)
+        val compoundStopNames = if(saintStopNames.isEmpty) handleCompoundWords(stopName) else Nil
         (stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
           s.toLowerCase -> (stopId, stopName)
         }
       }.toList.flatten)
     }
+  }
 
   private def buildTrips(gtfs: GtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
