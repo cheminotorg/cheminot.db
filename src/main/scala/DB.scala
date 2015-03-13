@@ -43,13 +43,11 @@ object DB {
 
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
-      par(stopsRows) { s =>
+      var paris = Vertice(Stop.STOP_PARIS, "Paris", Nil, Nil)
+      val vertices = par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1).substring(8)
-        val z = if(Stop.parisStops.contains(stopId)) {
-          Stop.parisStops.filterNot(_ == stopId)
-        } else List.empty[String]
-        val (edges, stopTimes) = trips.foldLeft((z, List.empty[StopTime])) { (acc, trip) =>
+        val (edges, stopTimes) = trips.foldLeft((List.empty[String], List.empty[StopTime])) { (acc, trip) =>
           val (accEdges, accStopTimes) = acc
           val edges = trip.edgesOf(stopId)
           val stopTimes = trip.stopTimes.find(_.stopId == stopId).toList.map { st =>
@@ -57,8 +55,12 @@ object DB {
           }
           (edges ++: accEdges) -> (stopTimes ++: accStopTimes)
         }
+        if(Stop.parisStops.contains(stopId)) {
+          paris = paris.copy(edges = (edges ++: paris.edges).distinct, stopTimes = (stopTimes ++: paris.stopTimes).distinct)
+        }
         Vertice(stopId, stopName, edges.distinct, stopTimes.distinct)
       }.toList
+      paris +: vertices
     }
 
   private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {

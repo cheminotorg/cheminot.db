@@ -4,14 +4,16 @@ case class Stop(id: String, name: String, lat: Double, lng: Double)
 
 object Stop {
 
-  private val STOP_PARIS_MONTP_VAUG = "StopArea:OCE87391102"
-  private val STOP_PARIS_MONTP = "StopArea:OCE87391003"
-  private val STOP_PARIS_BERCY = "StopArea:OCE87686667"
-  private val STOP_PARIS_LYON = "StopArea:OCE87686006"
-  private val STOP_PARIS_EST = "StopArea:OCE87113001"
-  private val STOP_PARIS_NORD = "StopArea:OCE87271007"
-  private val STOP_PARIS_LAZARE = "StopArea:OCE87384008"
-  private val STOP_PARIS_AUSTERLITZ = "StopArea:OCE87547000"
+  private val STOP_PARIS_MONTP_VAUG = "StopPoint:OCETrain TER-87391102"
+  private val STOP_PARIS_MONTP = "StopPoint:OCETrain TER-87391003"
+  private val STOP_PARIS_BERCY = "StopPoint:OCETrain TER-87686667"
+  private val STOP_PARIS_LYON = "StopPoint:OCETrain TER-87686006"
+  private val STOP_PARIS_EST = "StopPoint:OCETrain TER-87113001"
+  private val STOP_PARIS_NORD = "StopPoint:OCETrain TER-87271007"
+  private val STOP_PARIS_LAZARE = "StopPoint:OCETrain TER-87384008"
+  private val STOP_PARIS_AUSTERLITZ = "StopPoint:OCETrain TER-87547000"
+
+  val STOP_PARIS = "StopPoint:OCETrain TER-PARISXXX"
 
   val parisStops = Seq(
     STOP_PARIS_MONTP_VAUG,
