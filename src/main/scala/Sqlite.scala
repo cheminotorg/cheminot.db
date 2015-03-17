@@ -64,7 +64,7 @@ object Sqlite {
     SQL("CREATE INDEX trips_stops_stop_index ON trips_stops (stopId)").executeUpdate
   }
 
-  def initMeta(version: Version, expiredAt: DateTime)(implicit connection: Connection) {
+  def initMeta(version: Version) (implicit connection: Connection) {
     val formatter = DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "version",
@@ -79,11 +79,6 @@ object Sqlite {
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "createdAt",
       'value -> formatter.print(version.date)
-    ).executeUpdate
-
-    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
-      'key -> "expiredAt",
-      'value -> DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC.print(expiredAt)
     ).executeUpdate
   }
 }

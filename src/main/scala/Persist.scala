@@ -19,13 +19,13 @@ object Persist {
   }
 
   def all(dbDir: File, db: DB) {
-    Persist.sqlite(dbDir, db.version, db.expiredAt, db.trips)
+    Persist.sqlite(dbDir, db.version, db.trips)
     Persist.graph(dbDir, db.version, db.graph)
     Persist.calendarDates(dbDir, db.version, db.calendarDates)
     Persist.ttstops(dbDir, db.version, db.ttstops)
   }
 
-  def sqlite(dbDir: File, version: Version, expiredAt: DateTime, trips: List[Trip]): File = {
+  def sqlite(dbDir: File, version: Version, trips: List[Trip]): File = {
     val file = directory(dbDir, version)(s"cheminot-${version.value}.db")
     println("Storing trips to " + file)
     Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
@@ -33,7 +33,7 @@ object Persist {
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
       Sqlite.insertTrips(trips)
-      Sqlite.initMeta(version, expiredAt)
+      Sqlite.initMeta(version)
       connection.close()
       println("done!")
       file

@@ -16,7 +16,7 @@ object CSV extends RegexParsers {
   def CRLF    = "\r\n"
   def TXT     = "[^\",\r\n]".r
 
-  def file: Parser[List[List[String]]] = repsep(record, CRLF) <~ opt(CRLF)
+  def file: Parser[List[List[String]]] = repsep(record, CRLF|CR|LF) <~ opt(CRLF)
   def record: Parser[List[String]] = rep1sep(field, COMMA)
   def field: Parser[String] = (escaped|nonescaped)
   def escaped: Parser[String] = (DQUOTE~>((TXT|COMMA|CR|LF|DQUOTE2)*)<~DQUOTE) ^^ { case ls => ls.mkString("")}
@@ -36,7 +36,9 @@ object CSVFile {
 case class CSVFile(file: File) {
   lazy val content = FileUtils.readFileToString(file, "utf-8")
 
-  def read(): CSVFile.Rows = CSV.parse(content)
+  def read(): CSVFile.Rows = {
+    CSV.parse(content)
+  }
 }
 
 case class CSVDirectory(directory: File) {

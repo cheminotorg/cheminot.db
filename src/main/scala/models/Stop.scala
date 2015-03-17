@@ -16,6 +16,7 @@ object Stop {
   val STOP_PARIS = "StopPoint:OCETrain TER-PARISXXX"
 
   val parisStops = Seq(
+    STOP_PARIS,
     STOP_PARIS_MONTP_VAUG,
     STOP_PARIS_MONTP,
     STOP_PARIS_BERCY,

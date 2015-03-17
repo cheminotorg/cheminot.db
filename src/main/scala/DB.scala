@@ -9,13 +9,20 @@ import scala.concurrent.duration._
 import misc._
 import models._
 
-case class DB(gtfs: GtfsDirectory) {
-  lazy val version: Version = gtfs.version
-  lazy val trips: List[Trip] = DB.buildTrips(gtfs)
-  lazy val graph: List[Vertice] = DB.buildGraph(gtfs.stops, trips)
-  lazy val calendarDates: List[CalendarDate] = gtfs.calendarDates.map(CalendarDate.fromRow)
-  lazy val ttstops: TTreeNode[(String, String)] = DB.buildTreeStops(gtfs.stops)
-  lazy val expiredAt: DateTime = calendarDates.sortBy(-_.date.getMillis).head.date
+case class DB(gtfsBundle: GtfsBundle) {
+  lazy val version = gtfsBundle.version
+
+  lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter)
+
+  lazy val graph: List[Vertice] =
+    DB.buildGraph(gtfsBundle.ter.stops, trips)
+
+  lazy val calendarDates: List[CalendarDate] =
+    gtfsBundle.ter.calendarDates.map(CalendarDate.fromRow)
+
+  lazy val ttstops: TTreeNode[(String, String)] = {
+    DB.buildTreeStops(gtfsBundle.ter.stops)
+  }
 }
 
 object DB {
@@ -36,17 +43,17 @@ object DB {
   def defaultDbDir: File = new File("db")
 
   def fromDir(directory: File): Option[DB] =
-    Gtfs.apply(directory) map DB.apply
+    GtfsBundle.mostRecent(root = Some(directory)).map(DB.apply)
 
-  def fromDefault(): Option[DB] =
-    Gtfs.mostRecent() map DB.apply
+  def fromDefaultDir(): Option[DB] =
+    GtfsBundle.mostRecent().map(DB.apply)
 
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
       var paris = Vertice(Stop.STOP_PARIS, "Paris", Nil, Nil)
       val vertices = par(stopsRows) { s =>
         val stopId = s(0)
-        val stopName = s(1).substring(8)
+        val stopName = s(1)
         val (edges, stopTimes) = trips.foldLeft((List.empty[String], List.empty[StopTime])) { (acc, trip) =>
           val (accEdges, accStopTimes) = acc
           val edges = trip.edgesOf(stopId)
@@ -110,14 +117,14 @@ object DB {
     }
   }
 
-  private def buildTrips(gtfs: GtfsDirectory): List[Trip] =
+  private def buildTrips(ter: GtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
-      par(gtfs.trips) { tripRow =>
+      par(ter.trips) { tripRow =>
         val routeId = tripRow(0)
         val serviceId = tripRow(1)
         val tripId = tripRow(2)
-        val maybeService = gtfs.calendar.view.find(_.head == serviceId).map(Calendar.fromRow)
-        val stopTimesForTrip = gtfs.stopTimes.collect {
+        val maybeService = ter.calendar.view.find(_.head == serviceId).map(Calendar.fromRow)
+        val stopTimesForTrip = ter.stopTimes.collect {
           case stopTimeRow if(stopTimeRow.head == tripId) =>
             val stopId = stopTimeRow(3)
             StopTime.fromRow(stopTimeRow, stopId)

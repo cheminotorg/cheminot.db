@@ -63,7 +63,7 @@ object AutoUpdate {
   }
 
   @annotation.tailrec
-  def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsDirectory], rate: Int = DEFAULT_RATE): Unit = {
+  def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsBundle], rate: Int = DEFAULT_RATE): Unit = {
     val bestRate: Int = rateLimiter(rate) {
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
       println(s"GET $url")
@@ -74,7 +74,7 @@ object AutoUpdate {
         if(bundle.exists(gtfs => update.modified.isAfter(gtfs.version.date)) || bundle.isEmpty) {
           val name = Version.formatter.print(update.modified)
           val zip = downloadGtfsZip(update.url, gtfsRootDir.getAbsolutePath + "/" + name + ".zip")
-          val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/" + name)
+          val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/TER/" + name)
           bundleDir.mkdirs
           misc.ZipUtils.unzip(zip, bundleDir)
           notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")

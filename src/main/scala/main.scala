@@ -10,21 +10,21 @@ object Main {
     parser.parse(args, Config()) foreach { config =>
 
       val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
-      val gtfsRootDir = config.gtfsdir getOrElse Gtfs.defaultGtfsDir
+      val gtfsRootDir = config.gtfsdir getOrElse GtfsBundle.defaultRoot
       dbRootDir.mkdirs
       gtfsRootDir.mkdirs
 
       if(config.autoupdate) {
-        AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => Gtfs.mostRecent(config.gtfsdir))
+        AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => GtfsBundle.mostRecent(config.gtfsdir))
       } else {
         (for {
-          db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefault()
+          db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir()
         } yield {
           if(config.nothing) {
             Persist.all(dbRootDir, db)
           } else {
             if(config.sqlite) {
-              Persist.sqlite(dbRootDir, db.version, db.expiredAt, db.trips)
+              Persist.sqlite(dbRootDir, db.version, db.trips)
             }
             if(config.graph) {
               Persist.graph(dbRootDir, db.version, db.graph)
