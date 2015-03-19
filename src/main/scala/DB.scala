@@ -107,7 +107,7 @@ object DB {
     }
 
     Measure.duration("TTreeStops") {
-      TTreeNode(par(stopsRows) { s =>
+      TTreeNode(("paris" -> (Stop.STOP_PARIS, "Paris")) +: par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1)
         val saintStopNames = handleSaintWords(stopName)
