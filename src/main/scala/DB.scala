@@ -54,7 +54,9 @@ object DB {
       val vertices = par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1)
-        val (edges, stopTimes) = trips.foldLeft((List.empty[String], List.empty[StopTime])) { (acc, trip) =>
+        val zStopTimes = Subway.stopTimes.get(stopId).getOrElse(Nil)
+        val zEdges = Stop.parisStops.filterNot(_ == stopId).toList
+        val (edges, stopTimes) = trips.foldLeft((zEdges, zStopTimes)) { (acc, trip) =>
           val (accEdges, accStopTimes) = acc
           val edges = trip.edgesOf(stopId)
           val stopTimes = trip.stopTimes.find(_.stopId == stopId).toList.map { st =>
@@ -107,7 +109,7 @@ object DB {
     Measure.duration("TTreeStops") {
       TTreeNode(par(stopsRows) { s =>
         val stopId = s(0)
-        val stopName = s(1).substring(8)
+        val stopName = s(1)
         val saintStopNames = handleSaintWords(stopName)
         val compoundStopNames = if(saintStopNames.isEmpty) handleCompoundWords(stopName) else Nil
         (stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>

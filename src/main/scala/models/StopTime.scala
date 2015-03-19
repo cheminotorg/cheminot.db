@@ -5,8 +5,8 @@ import m.cheminot.Gtfs
 
 case class StopTime(
   tripId: String,
-  arrival: DateTime,
-  departure: DateTime,
+  arrival: Option[DateTime],
+  departure: Option[DateTime],
   stopId: String,
   pos: Int
 )
@@ -18,8 +18,8 @@ object StopTime {
   def fromRow(data: List[String], stopId: String): StopTime = {
     StopTime(
       data(0),
-      Gtfs.parseTime(data(1)),
-      Gtfs.parseTime(data(2)),
+      Some(Gtfs.parseTime(data(1))),
+      Some(Gtfs.parseTime(data(2))),
       stopId,
       data(4).toInt
     )
@@ -32,11 +32,19 @@ object StopTime {
 
   def serialize(stopTime: StopTime): CheminotBuf.StopTime = {
     val builder = CheminotBuf.StopTime.newBuilder()
+
     builder.setTripId(stopTime.tripId)
-      .setArrival(formatTime(stopTime.arrival))
-      .setDeparture(formatTime(stopTime.departure))
       .setStopId(stopTime.stopId)
       .setPos(stopTime.pos)
+
+    stopTime.arrival.foreach { arrival =>
+      builder.setArrival(formatTime(arrival))
+    }
+
+    stopTime.departure.foreach { departure =>
+      builder.setDeparture(formatTime(departure))
+    }
+
     builder.build()
   }
 }

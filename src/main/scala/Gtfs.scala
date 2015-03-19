@@ -40,7 +40,6 @@ object GtfsBundle {
     for {
       version <- Version.fromDir(directory)
       terDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/ter"))
-      subwayDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/subway"))
     } yield {
       GtfsBundle(version, GtfsDirectory.ter(terDir))
     }
