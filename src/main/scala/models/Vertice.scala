@@ -2,7 +2,7 @@ package m.cheminot.models
 
 import org.joda.time.DateTime
 
-case class Vertice(id: String, name: String, edges: Seq[String], stopTimes: Seq[StopTime])
+case class Vertice(id: String, name: String, lat: Double, lng: Double, edges: Seq[String], stopTimes: Seq[StopTime])
 
 object Vertice {
 
@@ -10,13 +10,20 @@ object Vertice {
 
   def serialize(vertice: Vertice): CheminotBuf.Vertice = {
     val builder = CheminotBuf.Vertice.newBuilder()
-    builder.setId(vertice.id).setName(vertice.name)
+    builder
+      .setId(vertice.id)
+      .setName(vertice.name)
+      .setLat(vertice.lat)
+      .setLng(vertice.lng)
+
     vertice.edges.foreach { edge =>
       builder.addEdges(edge)
     }
+
     vertice.stopTimes.foreach { stopTime =>
         builder.addStopTimes(StopTime.serialize(stopTime))
     }
+
     builder.build()
   }
 

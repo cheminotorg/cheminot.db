@@ -487,44 +487,54 @@ public final class CheminotBuf {
         getNameBytes();
 
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>optional double lat = 3;</code>
+     */
+    double getLat();
+
+    /**
+     * <code>optional double lng = 4;</code>
+     */
+    double getLng();
+
+    /**
+     * <code>repeated string edges = 5;</code>
      */
     com.google.protobuf.ProtocolStringList
         getEdgesList();
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     int getEdgesCount();
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     java.lang.String getEdges(int index);
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     com.google.protobuf.ByteString
         getEdgesBytes(int index);
 
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     java.util.List<m.cheminot.data.CheminotBuf.StopTime> 
         getStopTimesList();
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     m.cheminot.data.CheminotBuf.StopTime getStopTimes(int index);
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     int getStopTimesCount();
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     java.util.List<? extends m.cheminot.data.CheminotBuf.StopTimeOrBuilder> 
         getStopTimesOrBuilderList();
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     m.cheminot.data.CheminotBuf.StopTimeOrBuilder getStopTimesOrBuilder(
         int index);
@@ -543,6 +553,8 @@ public final class CheminotBuf {
     private Vertice() {
       id_ = "";
       name_ = "";
+      lat_ = 0D;
+      lng_ = 0D;
       edges_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       stopTimes_ = java.util.Collections.emptyList();
     }
@@ -583,19 +595,29 @@ public final class CheminotBuf {
               name_ = bs;
               break;
             }
-            case 26: {
+            case 25: {
+
+              lat_ = input.readDouble();
+              break;
+            }
+            case 33: {
+
+              lng_ = input.readDouble();
+              break;
+            }
+            case 42: {
               com.google.protobuf.ByteString bs = input.readBytes();
-              if (!((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+              if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 edges_ = new com.google.protobuf.LazyStringArrayList();
-                mutable_bitField0_ |= 0x00000004;
+                mutable_bitField0_ |= 0x00000010;
               }
               edges_.add(bs);
               break;
             }
-            case 34: {
-              if (!((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+            case 50: {
+              if (!((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
                 stopTimes_ = new java.util.ArrayList<m.cheminot.data.CheminotBuf.StopTime>();
-                mutable_bitField0_ |= 0x00000008;
+                mutable_bitField0_ |= 0x00000020;
               }
               stopTimes_.add(input.readMessage(m.cheminot.data.CheminotBuf.StopTime.PARSER, extensionRegistry));
               break;
@@ -609,10 +631,10 @@ public final class CheminotBuf {
             new com.google.protobuf.InvalidProtocolBufferException(
                 e.getMessage()).setUnfinishedMessage(this));
       } finally {
-        if (((mutable_bitField0_ & 0x00000004) == 0x00000004)) {
+        if (((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
           edges_ = edges_.getUnmodifiableView();
         }
-        if (((mutable_bitField0_ & 0x00000008) == 0x00000008)) {
+        if (((mutable_bitField0_ & 0x00000020) == 0x00000020)) {
           stopTimes_ = java.util.Collections.unmodifiableList(stopTimes_);
         }
         makeExtensionsImmutable();
@@ -727,64 +749,82 @@ public final class CheminotBuf {
       }
     }
 
-    public static final int EDGES_FIELD_NUMBER = 3;
+    public static final int LAT_FIELD_NUMBER = 3;
+    private double lat_;
+    /**
+     * <code>optional double lat = 3;</code>
+     */
+    public double getLat() {
+      return lat_;
+    }
+
+    public static final int LNG_FIELD_NUMBER = 4;
+    private double lng_;
+    /**
+     * <code>optional double lng = 4;</code>
+     */
+    public double getLng() {
+      return lng_;
+    }
+
+    public static final int EDGES_FIELD_NUMBER = 5;
     private com.google.protobuf.LazyStringList edges_;
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     public com.google.protobuf.ProtocolStringList
         getEdgesList() {
       return edges_;
     }
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     public int getEdgesCount() {
       return edges_.size();
     }
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     public java.lang.String getEdges(int index) {
       return edges_.get(index);
     }
     /**
-     * <code>repeated string edges = 3;</code>
+     * <code>repeated string edges = 5;</code>
      */
     public com.google.protobuf.ByteString
         getEdgesBytes(int index) {
       return edges_.getByteString(index);
     }
 
-    public static final int STOPTIMES_FIELD_NUMBER = 4;
+    public static final int STOPTIMES_FIELD_NUMBER = 6;
     private java.util.List<m.cheminot.data.CheminotBuf.StopTime> stopTimes_;
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     public java.util.List<m.cheminot.data.CheminotBuf.StopTime> getStopTimesList() {
       return stopTimes_;
     }
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     public java.util.List<? extends m.cheminot.data.CheminotBuf.StopTimeOrBuilder> 
         getStopTimesOrBuilderList() {
       return stopTimes_;
     }
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     public int getStopTimesCount() {
       return stopTimes_.size();
     }
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     public m.cheminot.data.CheminotBuf.StopTime getStopTimes(int index) {
       return stopTimes_.get(index);
     }
     /**
-     * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+     * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
      */
     public m.cheminot.data.CheminotBuf.StopTimeOrBuilder getStopTimesOrBuilder(
         int index) {
@@ -809,11 +849,17 @@ public final class CheminotBuf {
       if (!getNameBytes().isEmpty()) {
         output.writeBytes(2, getNameBytes());
       }
+      if (lat_ != 0D) {
+        output.writeDouble(3, lat_);
+      }
+      if (lng_ != 0D) {
+        output.writeDouble(4, lng_);
+      }
       for (int i = 0; i < edges_.size(); i++) {
-        output.writeBytes(3, edges_.getByteString(i));
+        output.writeBytes(5, edges_.getByteString(i));
       }
       for (int i = 0; i < stopTimes_.size(); i++) {
-        output.writeMessage(4, stopTimes_.get(i));
+        output.writeMessage(6, stopTimes_.get(i));
       }
     }
 
@@ -831,6 +877,14 @@ public final class CheminotBuf {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(2, getNameBytes());
       }
+      if (lat_ != 0D) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(3, lat_);
+      }
+      if (lng_ != 0D) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeDoubleSize(4, lng_);
+      }
       {
         int dataSize = 0;
         for (int i = 0; i < edges_.size(); i++) {
@@ -842,7 +896,7 @@ public final class CheminotBuf {
       }
       for (int i = 0; i < stopTimes_.size(); i++) {
         size += com.google.protobuf.CodedOutputStream
-          .computeMessageSize(4, stopTimes_.get(i));
+          .computeMessageSize(6, stopTimes_.get(i));
       }
       memoizedSerializedSize = size;
       return size;
@@ -960,11 +1014,15 @@ public final class CheminotBuf {
 
         name_ = "";
 
+        lat_ = 0D;
+
+        lng_ = 0D;
+
         edges_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000010);
         if (stopTimesBuilder_ == null) {
           stopTimes_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000008);
+          bitField0_ = (bitField0_ & ~0x00000020);
         } else {
           stopTimesBuilder_.clear();
         }
@@ -994,15 +1052,17 @@ public final class CheminotBuf {
         int to_bitField0_ = 0;
         result.id_ = id_;
         result.name_ = name_;
-        if (((bitField0_ & 0x00000004) == 0x00000004)) {
+        result.lat_ = lat_;
+        result.lng_ = lng_;
+        if (((bitField0_ & 0x00000010) == 0x00000010)) {
           edges_ = edges_.getUnmodifiableView();
-          bitField0_ = (bitField0_ & ~0x00000004);
+          bitField0_ = (bitField0_ & ~0x00000010);
         }
         result.edges_ = edges_;
         if (stopTimesBuilder_ == null) {
-          if (((bitField0_ & 0x00000008) == 0x00000008)) {
+          if (((bitField0_ & 0x00000020) == 0x00000020)) {
             stopTimes_ = java.util.Collections.unmodifiableList(stopTimes_);
-            bitField0_ = (bitField0_ & ~0x00000008);
+            bitField0_ = (bitField0_ & ~0x00000020);
           }
           result.stopTimes_ = stopTimes_;
         } else {
@@ -1032,10 +1092,16 @@ public final class CheminotBuf {
           name_ = other.name_;
           onChanged();
         }
+        if (other.getLat() != 0D) {
+          setLat(other.getLat());
+        }
+        if (other.getLng() != 0D) {
+          setLng(other.getLng());
+        }
         if (!other.edges_.isEmpty()) {
           if (edges_.isEmpty()) {
             edges_ = other.edges_;
-            bitField0_ = (bitField0_ & ~0x00000004);
+            bitField0_ = (bitField0_ & ~0x00000010);
           } else {
             ensureEdgesIsMutable();
             edges_.addAll(other.edges_);
@@ -1046,7 +1112,7 @@ public final class CheminotBuf {
           if (!other.stopTimes_.isEmpty()) {
             if (stopTimes_.isEmpty()) {
               stopTimes_ = other.stopTimes_;
-              bitField0_ = (bitField0_ & ~0x00000008);
+              bitField0_ = (bitField0_ & ~0x00000020);
             } else {
               ensureStopTimesIsMutable();
               stopTimes_.addAll(other.stopTimes_);
@@ -1059,7 +1125,7 @@ public final class CheminotBuf {
               stopTimesBuilder_.dispose();
               stopTimesBuilder_ = null;
               stopTimes_ = other.stopTimes_;
-              bitField0_ = (bitField0_ & ~0x00000008);
+              bitField0_ = (bitField0_ & ~0x00000020);
               stopTimesBuilder_ = 
                 com.google.protobuf.GeneratedMessage.alwaysUseFieldBuilders ?
                    getStopTimesFieldBuilder() : null;
@@ -1235,41 +1301,93 @@ public final class CheminotBuf {
         return this;
       }
 
+      private double lat_ ;
+      /**
+       * <code>optional double lat = 3;</code>
+       */
+      public double getLat() {
+        return lat_;
+      }
+      /**
+       * <code>optional double lat = 3;</code>
+       */
+      public Builder setLat(double value) {
+        
+        lat_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double lat = 3;</code>
+       */
+      public Builder clearLat() {
+        
+        lat_ = 0D;
+        onChanged();
+        return this;
+      }
+
+      private double lng_ ;
+      /**
+       * <code>optional double lng = 4;</code>
+       */
+      public double getLng() {
+        return lng_;
+      }
+      /**
+       * <code>optional double lng = 4;</code>
+       */
+      public Builder setLng(double value) {
+        
+        lng_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>optional double lng = 4;</code>
+       */
+      public Builder clearLng() {
+        
+        lng_ = 0D;
+        onChanged();
+        return this;
+      }
+
       private com.google.protobuf.LazyStringList edges_ = com.google.protobuf.LazyStringArrayList.EMPTY;
       private void ensureEdgesIsMutable() {
-        if (!((bitField0_ & 0x00000004) == 0x00000004)) {
+        if (!((bitField0_ & 0x00000010) == 0x00000010)) {
           edges_ = new com.google.protobuf.LazyStringArrayList(edges_);
-          bitField0_ |= 0x00000004;
+          bitField0_ |= 0x00000010;
          }
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public com.google.protobuf.ProtocolStringList
           getEdgesList() {
         return edges_.getUnmodifiableView();
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public int getEdgesCount() {
         return edges_.size();
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public java.lang.String getEdges(int index) {
         return edges_.get(index);
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public com.google.protobuf.ByteString
           getEdgesBytes(int index) {
         return edges_.getByteString(index);
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public Builder setEdges(
           int index, java.lang.String value) {
@@ -1282,7 +1400,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public Builder addEdges(
           java.lang.String value) {
@@ -1295,7 +1413,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public Builder addAllEdges(
           java.lang.Iterable<java.lang.String> values) {
@@ -1306,16 +1424,16 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public Builder clearEdges() {
         edges_ = com.google.protobuf.LazyStringArrayList.EMPTY;
-        bitField0_ = (bitField0_ & ~0x00000004);
+        bitField0_ = (bitField0_ & ~0x00000010);
         onChanged();
         return this;
       }
       /**
-       * <code>repeated string edges = 3;</code>
+       * <code>repeated string edges = 5;</code>
        */
       public Builder addEdgesBytes(
           com.google.protobuf.ByteString value) {
@@ -1331,9 +1449,9 @@ public final class CheminotBuf {
       private java.util.List<m.cheminot.data.CheminotBuf.StopTime> stopTimes_ =
         java.util.Collections.emptyList();
       private void ensureStopTimesIsMutable() {
-        if (!((bitField0_ & 0x00000008) == 0x00000008)) {
+        if (!((bitField0_ & 0x00000020) == 0x00000020)) {
           stopTimes_ = new java.util.ArrayList<m.cheminot.data.CheminotBuf.StopTime>(stopTimes_);
-          bitField0_ |= 0x00000008;
+          bitField0_ |= 0x00000020;
          }
       }
 
@@ -1341,7 +1459,7 @@ public final class CheminotBuf {
           m.cheminot.data.CheminotBuf.StopTime, m.cheminot.data.CheminotBuf.StopTime.Builder, m.cheminot.data.CheminotBuf.StopTimeOrBuilder> stopTimesBuilder_;
 
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public java.util.List<m.cheminot.data.CheminotBuf.StopTime> getStopTimesList() {
         if (stopTimesBuilder_ == null) {
@@ -1351,7 +1469,7 @@ public final class CheminotBuf {
         }
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public int getStopTimesCount() {
         if (stopTimesBuilder_ == null) {
@@ -1361,7 +1479,7 @@ public final class CheminotBuf {
         }
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public m.cheminot.data.CheminotBuf.StopTime getStopTimes(int index) {
         if (stopTimesBuilder_ == null) {
@@ -1371,7 +1489,7 @@ public final class CheminotBuf {
         }
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder setStopTimes(
           int index, m.cheminot.data.CheminotBuf.StopTime value) {
@@ -1388,7 +1506,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder setStopTimes(
           int index, m.cheminot.data.CheminotBuf.StopTime.Builder builderForValue) {
@@ -1402,7 +1520,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder addStopTimes(m.cheminot.data.CheminotBuf.StopTime value) {
         if (stopTimesBuilder_ == null) {
@@ -1418,7 +1536,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder addStopTimes(
           int index, m.cheminot.data.CheminotBuf.StopTime value) {
@@ -1435,7 +1553,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder addStopTimes(
           m.cheminot.data.CheminotBuf.StopTime.Builder builderForValue) {
@@ -1449,7 +1567,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder addStopTimes(
           int index, m.cheminot.data.CheminotBuf.StopTime.Builder builderForValue) {
@@ -1463,7 +1581,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder addAllStopTimes(
           java.lang.Iterable<? extends m.cheminot.data.CheminotBuf.StopTime> values) {
@@ -1478,12 +1596,12 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder clearStopTimes() {
         if (stopTimesBuilder_ == null) {
           stopTimes_ = java.util.Collections.emptyList();
-          bitField0_ = (bitField0_ & ~0x00000008);
+          bitField0_ = (bitField0_ & ~0x00000020);
           onChanged();
         } else {
           stopTimesBuilder_.clear();
@@ -1491,7 +1609,7 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public Builder removeStopTimes(int index) {
         if (stopTimesBuilder_ == null) {
@@ -1504,14 +1622,14 @@ public final class CheminotBuf {
         return this;
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public m.cheminot.data.CheminotBuf.StopTime.Builder getStopTimesBuilder(
           int index) {
         return getStopTimesFieldBuilder().getBuilder(index);
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public m.cheminot.data.CheminotBuf.StopTimeOrBuilder getStopTimesOrBuilder(
           int index) {
@@ -1521,7 +1639,7 @@ public final class CheminotBuf {
         }
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public java.util.List<? extends m.cheminot.data.CheminotBuf.StopTimeOrBuilder> 
            getStopTimesOrBuilderList() {
@@ -1532,14 +1650,14 @@ public final class CheminotBuf {
         }
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public m.cheminot.data.CheminotBuf.StopTime.Builder addStopTimesBuilder() {
         return getStopTimesFieldBuilder().addBuilder(
             m.cheminot.data.CheminotBuf.StopTime.getDefaultInstance());
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public m.cheminot.data.CheminotBuf.StopTime.Builder addStopTimesBuilder(
           int index) {
@@ -1547,7 +1665,7 @@ public final class CheminotBuf {
             index, m.cheminot.data.CheminotBuf.StopTime.getDefaultInstance());
       }
       /**
-       * <code>repeated .m.cheminot.data.StopTime stopTimes = 4;</code>
+       * <code>repeated .m.cheminot.data.StopTime stopTimes = 6;</code>
        */
       public java.util.List<m.cheminot.data.CheminotBuf.StopTime.Builder> 
            getStopTimesBuilderList() {
@@ -1560,7 +1678,7 @@ public final class CheminotBuf {
           stopTimesBuilder_ = new com.google.protobuf.RepeatedFieldBuilder<
               m.cheminot.data.CheminotBuf.StopTime, m.cheminot.data.CheminotBuf.StopTime.Builder, m.cheminot.data.CheminotBuf.StopTimeOrBuilder>(
                   stopTimes_,
-                  ((bitField0_ & 0x00000008) == 0x00000008),
+                  ((bitField0_ & 0x00000020) == 0x00000020),
                   getParentForChildren(),
                   isClean());
           stopTimes_ = null;
@@ -6548,26 +6666,27 @@ public final class CheminotBuf {
       "\005Graph\0226\n\010vertices\030\001 \003(\0132$.m.cheminot.da" +
       "ta.Graph.VerticesEntry\032I\n\rVerticesEntry\022" +
       "\013\n\003key\030\001 \001(\t\022\'\n\005value\030\002 \001(\0132\030.m.cheminot" +
-      ".data.Vertice:\0028\001\"`\n\007Vertice\022\n\n\002id\030\001 \001(\t" +
-      "\022\014\n\004name\030\002 \001(\t\022\r\n\005edges\030\003 \003(\t\022,\n\tstopTim" +
-      "es\030\004 \003(\0132\031.m.cheminot.data.StopTime\"[\n\010S" +
-      "topTime\022\016\n\006tripId\030\001 \001(\t\022\017\n\007arrival\030\002 \001(\t" +
-      "\022\021\n\tdeparture\030\003 \001(\t\022\016\n\006stopId\030\004 \001(\t\022\013\n\003p" +
-      "os\030\005 \001(\005\"\314\001\n\rCalendarDates\022X\n\025exceptions",
-      "ByServiceId\030\001 \003(\01329.m.cheminot.data.Cale" +
-      "ndarDates.ExceptionsByServiceIdEntry\032a\n\032" +
-      "ExceptionsByServiceIdEntry\022\013\n\003key\030\001 \001(\t\022" +
-      "2\n\005value\030\002 \001(\0132#.m.cheminot.data.Calenda" +
-      "rExceptions:\0028\001\"J\n\022CalendarExceptions\0224\n" +
-      "\rcalendarDates\030\001 \003(\0132\035.m.cheminot.data.C" +
-      "alendarDate\"F\n\014CalendarDate\022\021\n\tserviceId" +
-      "\030\001 \001(\t\022\014\n\004date\030\002 \001(\t\022\025\n\rexceptionType\030\003 " +
-      "\001(\005\"\271\001\n\010Calendar\022\021\n\tserviceId\030\001 \001(\t\022\016\n\006m" +
-      "onday\030\002 \001(\t\022\017\n\007tuesday\030\003 \001(\t\022\021\n\twednesda",
-      "y\030\004 \001(\t\022\020\n\010thursday\030\005 \001(\t\022\016\n\006friday\030\006 \001(" +
-      "\t\022\020\n\010saturday\030\007 \001(\t\022\016\n\006sunday\030\010 \001(\t\022\021\n\ts" +
-      "tartDate\030\t \001(\t\022\017\n\007endDate\030\n \001(\t\"\036\n\013TripS" +
-      "topIds\022\017\n\007stopIds\030\001 \003(\tB\002H\001b\006proto3"
+      ".data.Vertice:\0028\001\"z\n\007Vertice\022\n\n\002id\030\001 \001(\t" +
+      "\022\014\n\004name\030\002 \001(\t\022\013\n\003lat\030\003 \001(\001\022\013\n\003lng\030\004 \001(\001" +
+      "\022\r\n\005edges\030\005 \003(\t\022,\n\tstopTimes\030\006 \003(\0132\031.m.c" +
+      "heminot.data.StopTime\"[\n\010StopTime\022\016\n\006tri" +
+      "pId\030\001 \001(\t\022\017\n\007arrival\030\002 \001(\t\022\021\n\tdeparture\030" +
+      "\003 \001(\t\022\016\n\006stopId\030\004 \001(\t\022\013\n\003pos\030\005 \001(\005\"\314\001\n\rC",
+      "alendarDates\022X\n\025exceptionsByServiceId\030\001 " +
+      "\003(\01329.m.cheminot.data.CalendarDates.Exce" +
+      "ptionsByServiceIdEntry\032a\n\032ExceptionsBySe" +
+      "rviceIdEntry\022\013\n\003key\030\001 \001(\t\0222\n\005value\030\002 \001(\013" +
+      "2#.m.cheminot.data.CalendarExceptions:\0028" +
+      "\001\"J\n\022CalendarExceptions\0224\n\rcalendarDates" +
+      "\030\001 \003(\0132\035.m.cheminot.data.CalendarDate\"F\n" +
+      "\014CalendarDate\022\021\n\tserviceId\030\001 \001(\t\022\014\n\004date" +
+      "\030\002 \001(\t\022\025\n\rexceptionType\030\003 \001(\005\"\271\001\n\010Calend" +
+      "ar\022\021\n\tserviceId\030\001 \001(\t\022\016\n\006monday\030\002 \001(\t\022\017\n",
+      "\007tuesday\030\003 \001(\t\022\021\n\twednesday\030\004 \001(\t\022\020\n\010thu" +
+      "rsday\030\005 \001(\t\022\016\n\006friday\030\006 \001(\t\022\020\n\010saturday\030" +
+      "\007 \001(\t\022\016\n\006sunday\030\010 \001(\t\022\021\n\tstartDate\030\t \001(\t" +
+      "\022\017\n\007endDate\030\n \001(\t\"\036\n\013TripStopIds\022\017\n\007stop" +
+      "Ids\030\001 \003(\tB\002H\001b\006proto3"
     };
     com.google.protobuf.Descriptors.FileDescriptor.InternalDescriptorAssigner assigner =
         new com.google.protobuf.Descriptors.FileDescriptor.    InternalDescriptorAssigner() {
@@ -6598,7 +6717,7 @@ public final class CheminotBuf {
     internal_static_m_cheminot_data_Vertice_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessage.FieldAccessorTable(
         internal_static_m_cheminot_data_Vertice_descriptor,
-        new java.lang.String[] { "Id", "Name", "Edges", "StopTimes", });
+        new java.lang.String[] { "Id", "Name", "Lat", "Lng", "Edges", "StopTimes", });
     internal_static_m_cheminot_data_StopTime_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_m_cheminot_data_StopTime_fieldAccessorTable = new

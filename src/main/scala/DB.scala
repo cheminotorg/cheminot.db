@@ -50,10 +50,12 @@ object DB {
 
   private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
-      var paris = Vertice(Stop.STOP_PARIS, "Paris", Nil, Nil)
+      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
       val vertices = par(stopsRows) { s =>
         val stopId = s(0)
         val stopName = s(1)
+        val lat = s(3).toDouble
+        val lng = s(4).toDouble
         val zStopTimes = Subway.stopTimes.get(stopId).getOrElse(Nil)
         val zEdges = Stop.parisStops.filterNot(_ == stopId).toList
         val (edges, stopTimes) = trips.foldLeft((zEdges, zStopTimes)) { (acc, trip) =>
@@ -67,7 +69,7 @@ object DB {
         if(Stop.parisStops.contains(stopId)) {
           paris = paris.copy(edges = (edges ++: paris.edges).distinct, stopTimes = (stopTimes ++: paris.stopTimes).distinct)
         }
-        Vertice(stopId, stopName, edges.distinct, stopTimes.distinct)
+        Vertice(stopId, stopName, lat, lng, edges.distinct, stopTimes.distinct)
       }.toList
       paris +: vertices
     }

@@ -10,8 +10,10 @@ message Graph {
 message Vertice {
   string id = 1;
   string name = 2;
-  repeated string edges = 3;
-  repeated StopTime stopTimes = 4;
+  double lat = 3;
+  double lng= 4;
+  repeated string edges = 5;
+  repeated StopTime stopTimes = 6;
 }
 
 message StopTime {
