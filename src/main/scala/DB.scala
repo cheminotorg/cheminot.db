@@ -17,6 +17,9 @@ case class DB(gtfsBundle: GtfsBundle) {
   lazy val graph: List[Vertice] =
     DB.buildGraph(gtfsBundle.ter.stops, trips)
 
+  lazy val calendar: List[Calendar] =
+    gtfsBundle.ter.calendar.map(Calendar.fromRow)
+
   lazy val calendarDates: List[CalendarDate] =
     gtfsBundle.ter.calendarDates.map(CalendarDate.fromRow)
 

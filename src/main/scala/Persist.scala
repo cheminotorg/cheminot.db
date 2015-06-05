@@ -21,7 +21,7 @@ object Persist {
   def all(dbDir: File, db: DB) {
     Persist.sqlite(dbDir, db.version, db.trips)
     Persist.graph(dbDir, db.version, db.graph)
-    Persist.calendarDates(dbDir, db.version, db.calendarDates)
+    Persist.calendarDates(dbDir, db.version, db.calendarDates, db.calendar)
     Persist.ttstops(dbDir, db.version, db.ttstops)
   }
 
@@ -49,11 +49,11 @@ object Persist {
     file
   }
 
-  def calendarDates(dbDir: File, version: Version, calendarDates: List[CalendarDate]): File = {
+  def calendarDates(dbDir: File, version: Version, calendarDates: List[CalendarDate], calendar: Seq[Calendar]): File = {
     val file = directory(dbDir, version)(s"calendardates-${version.value}")
     println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
-    CalendarDate.serializeCalendarDates(calendarDates).writeTo(output)
+    CalendarDate.serializeCalendarDates(calendarDates, calendar).writeTo(output)
     println("done!")
     file
   }

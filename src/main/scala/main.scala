@@ -4,7 +4,7 @@ import java.io.File
 
 object Main {
 
-  Class.forName("org.sqlite.JDBC");
+  Class.forName("org.sqlite.JDBC")
 
   def main(args: Array[String]) {
     parser.parse(args, Config()) foreach { config =>
@@ -30,7 +30,7 @@ object Main {
               Persist.graph(dbRootDir, db.version, db.graph)
             }
             if(config.calendar) {
-              Persist.calendarDates(dbRootDir, db.version, db.calendarDates)
+              Persist.calendarDates(dbRootDir, db.version, db.calendarDates, db.calendar)
             }
             if(config.ttstops) {
               Persist.ttstops(dbRootDir, db.version, db.ttstops)

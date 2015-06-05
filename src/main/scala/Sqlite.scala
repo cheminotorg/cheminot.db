@@ -72,11 +72,6 @@ object Sqlite {
     ).executeUpdate
 
     SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
-      'key -> "aborted",
-      'value -> false
-    ).executeUpdate
-
-    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
       'key -> "createdAt",
       'value -> formatter.print(version.date)
     ).executeUpdate

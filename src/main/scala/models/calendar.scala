@@ -97,24 +97,16 @@ object CalendarDate {
     builder.build()
   }
 
-  def serializeCalendarDates(calendarDates: List[CalendarDate]): CheminotBuf.CalendarDates = {
+  def serializeCalendarDates(calendarDates: List[CalendarDate], calendar: Seq[Calendar]): CheminotBuf.CalendarDates = {
     val builder = CheminotBuf.CalendarDates.newBuilder()
     calendarDates.groupBy(_.serviceId).foreach {
       case (serviceId, dates) =>
         builder.getMutableExceptionsByServiceId().put(serviceId, serializeCalendarExceptions(dates))
     }
+    val unknown = calendar.map(_.serviceId).diff(calendarDates.map(_.serviceId))
+    unknown.foreach { serviceId =>
+      builder.getMutableExceptionsByServiceId().put(serviceId, serializeCalendarExceptions(Nil))
+    }
     builder.build()
   }
 }
-
-//   def dateExceptionsToFile(db: DB): File = {
-//     val dateExceptionsFile = directory(db.version)("date_exceptions.json")
-//     dateExceptionsFile.delete()
-//     val json = db.exceptions.groupBy(_.serviceId).foldRight(Json.obj()) {
-//       case ((serviceId, exceptions), acc) =>
-//         acc ++ Json.obj(serviceId -> Json.toJson(exceptions))
-//     }
-//     FileUtils.write(dateExceptionsFile, Json.stringify(json))
-//     dateExceptionsFile
-//   }
-// }
