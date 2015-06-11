@@ -25,7 +25,7 @@ object AutoUpdate {
         description match {
           case UpdateReg(_, updateTime) =>
             val formatter = DateTimeFormat.forPattern("dd MMMM yyyy").withLocale(java.util.Locale.FRENCH)
-            formatter.parseDateTime(updateTime)
+            formatter.parseDateTime(updateTime.replaceAll("""\u00a0""", " "))
           case _ => sys.error("Unable to parse next update date from: " + description)
         }
       }
@@ -50,6 +50,7 @@ object AutoUpdate {
     val source = new URL(url)
     val destination = new File(to)
     FileUtils.copyURLToFile(source, destination)
+    println("Downloading done");
     destination
   }
 
@@ -74,11 +75,12 @@ object AutoUpdate {
         if(bundle.exists(gtfs => update.modified.isAfter(gtfs.version.date)) || bundle.isEmpty) {
           val name = Version.formatter.print(update.modified)
           val zip = downloadGtfsZip(update.url, gtfsRootDir.getAbsolutePath + "/" + name + ".zip")
-          val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/TER/" + name)
-          bundleDir.mkdirs
-          misc.ZipUtils.unzip(zip, bundleDir)
+          val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/" + name)
+          val terDir = new File(bundleDir.getAbsolutePath + "/ter/")
+          terDir.mkdirs
+          misc.ZipUtils.unzip(zip, terDir)
           notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")
-          val db = DB.fromDir(bundleDir).map { db => Persist.all(dbDir, db); db }
+          val db = DB.fromDir(gtfsRootDir).map { db => Persist.all(dbDir, db); db }
           notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
           DEFAULT_RATE
         } else {
