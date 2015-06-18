@@ -59,12 +59,12 @@ public final class CheminotBuf {
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 vertices_ = com.google.protobuf.MapField.newMapField(
-                    verticesDefaultEntry);
+                    VerticesDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
               }
               com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>
               vertices = input.readMessage(
-                  verticesDefaultEntry.getParserForType(), extensionRegistry);
+                  VerticesDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
               vertices_.getMutableMap().put(vertices.getKey(), vertices.getValue());
               break;
             }
@@ -103,40 +103,25 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.Graph.class, m.cheminot.data.CheminotBuf.Graph.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<Graph> PARSER =
-        new com.google.protobuf.AbstractParser<Graph>() {
-      public Graph parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new Graph(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Graph> getParserForType() {
-      return PARSER;
-    }
-
     public static final int VERTICES_FIELD_NUMBER = 1;
-    private static final com.google.protobuf.MapEntry<
-        java.lang.String, m.cheminot.data.CheminotBuf.Vertice> verticesDefaultEntry;
+    private static final class VerticesDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, m.cheminot.data.CheminotBuf.Vertice> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>newDefaultInstance(
+                  m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_Graph_VerticesEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  m.cheminot.data.CheminotBuf.Vertice.getDefaultInstance());
+    }
     private com.google.protobuf.MapField<
         java.lang.String, m.cheminot.data.CheminotBuf.Vertice> vertices_;
     private com.google.protobuf.MapField<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>
     internalGetVertices() {
       if (vertices_ == null) {
         return com.google.protobuf.MapField.emptyMapField(
-            verticesDefaultEntry);
+            VerticesDefaultEntryHolder.defaultEntry);
      }
       return vertices_;
     }
@@ -163,7 +148,7 @@ public final class CheminotBuf {
       for (java.util.Map.Entry<java.lang.String, m.cheminot.data.CheminotBuf.Vertice> entry
            : internalGetVertices().getMap().entrySet()) {
         com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>
-        vertices = verticesDefaultEntry.newBuilderForType()
+        vertices = VerticesDefaultEntryHolder.defaultEntry.newBuilderForType()
             .setKey(entry.getKey())
             .setValue(entry.getValue())
             .build();
@@ -180,7 +165,7 @@ public final class CheminotBuf {
       for (java.util.Map.Entry<java.lang.String, m.cheminot.data.CheminotBuf.Vertice> entry
            : internalGetVertices().getMap().entrySet()) {
         com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>
-        vertices = verticesDefaultEntry.newBuilderForType()
+        vertices = VerticesDefaultEntryHolder.defaultEntry.newBuilderForType()
             .setKey(entry.getKey())
             .setValue(entry.getValue())
             .build();
@@ -247,13 +232,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.Graph prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -344,7 +329,8 @@ public final class CheminotBuf {
       public m.cheminot.data.CheminotBuf.Graph buildPartial() {
         m.cheminot.data.CheminotBuf.Graph result = new m.cheminot.data.CheminotBuf.Graph(this);
         int from_bitField0_ = bitField0_;
-        result.vertices_ = internalGetVertices().copy();
+        result.vertices_ = internalGetVertices();
+        result.vertices_.makeImmutable();
         onBuilt();
         return result;
       }
@@ -395,7 +381,7 @@ public final class CheminotBuf {
       internalGetVertices() {
         if (vertices_ == null) {
           return com.google.protobuf.MapField.emptyMapField(
-              verticesDefaultEntry);
+              VerticesDefaultEntryHolder.defaultEntry);
        }
         return vertices_;
       }
@@ -404,8 +390,11 @@ public final class CheminotBuf {
         onChanged();;
         if (vertices_ == null) {
           vertices_ = com.google.protobuf.MapField.newMapField(
-              verticesDefaultEntry);
-       }
+              VerticesDefaultEntryHolder.defaultEntry);
+        }
+        if (!vertices_.isMutable()) {
+          vertices_ = vertices_.copy();
+        }
         return vertices_;
       }
       /**
@@ -436,30 +425,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.Graph)
-    private static final m.cheminot.data.CheminotBuf.Graph defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.Graph DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.Graph();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.Graph();
     }
 
     public static m.cheminot.data.CheminotBuf.Graph getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<Graph> PARSER =
+        new com.google.protobuf.AbstractParser<Graph>() {
+      public Graph parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new Graph(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Graph> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.Graph getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-      verticesDefaultEntry =
-          com.google.protobuf.MapEntry
-          .<java.lang.String, m.cheminot.data.CheminotBuf.Vertice>newDefaultInstance(
-              m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_Graph_VerticesEntry_descriptor, 
-              com.google.protobuf.WireFormat.FieldType.STRING,
-              "",
-              com.google.protobuf.WireFormat.FieldType.MESSAGE,
-              m.cheminot.data.CheminotBuf.Vertice.getDefaultInstance());
-
-    }
   }
 
   public interface VerticeOrBuilder extends
@@ -652,33 +654,9 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.Vertice.class, m.cheminot.data.CheminotBuf.Vertice.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<Vertice> PARSER =
-        new com.google.protobuf.AbstractParser<Vertice>() {
-      public Vertice parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new Vertice(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Vertice> getParserForType() {
-      return PARSER;
-    }
-
     private int bitField0_;
     public static final int ID_FIELD_NUMBER = 1;
-    private java.lang.Object id_;
+    private volatile java.lang.Object id_;
     /**
      * <code>optional string id = 1;</code>
      */
@@ -714,7 +692,7 @@ public final class CheminotBuf {
     }
 
     public static final int NAME_FIELD_NUMBER = 2;
-    private java.lang.Object name_;
+    private volatile java.lang.Object name_;
     /**
      * <code>optional string name = 2;</code>
      */
@@ -958,13 +936,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.Vertice prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -1700,21 +1678,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.Vertice)
-    private static final m.cheminot.data.CheminotBuf.Vertice defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.Vertice DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.Vertice();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.Vertice();
     }
 
     public static m.cheminot.data.CheminotBuf.Vertice getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<Vertice> PARSER =
+        new com.google.protobuf.AbstractParser<Vertice>() {
+      public Vertice parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new Vertice(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Vertice> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.Vertice getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
   public interface StopTimeOrBuilder extends
@@ -1862,32 +1862,8 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.StopTime.class, m.cheminot.data.CheminotBuf.StopTime.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<StopTime> PARSER =
-        new com.google.protobuf.AbstractParser<StopTime>() {
-      public StopTime parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new StopTime(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<StopTime> getParserForType() {
-      return PARSER;
-    }
-
     public static final int TRIPID_FIELD_NUMBER = 1;
-    private java.lang.Object tripId_;
+    private volatile java.lang.Object tripId_;
     /**
      * <code>optional string tripId = 1;</code>
      */
@@ -1923,7 +1899,7 @@ public final class CheminotBuf {
     }
 
     public static final int ARRIVAL_FIELD_NUMBER = 2;
-    private java.lang.Object arrival_;
+    private volatile java.lang.Object arrival_;
     /**
      * <code>optional string arrival = 2;</code>
      */
@@ -1959,7 +1935,7 @@ public final class CheminotBuf {
     }
 
     public static final int DEPARTURE_FIELD_NUMBER = 3;
-    private java.lang.Object departure_;
+    private volatile java.lang.Object departure_;
     /**
      * <code>optional string departure = 3;</code>
      */
@@ -1995,7 +1971,7 @@ public final class CheminotBuf {
     }
 
     public static final int STOPID_FIELD_NUMBER = 4;
-    private java.lang.Object stopId_;
+    private volatile java.lang.Object stopId_;
     /**
      * <code>optional string stopId = 4;</code>
      */
@@ -2154,13 +2130,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.StopTime prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -2622,21 +2598,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.StopTime)
-    private static final m.cheminot.data.CheminotBuf.StopTime defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.StopTime DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.StopTime();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.StopTime();
     }
 
     public static m.cheminot.data.CheminotBuf.StopTime getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<StopTime> PARSER =
+        new com.google.protobuf.AbstractParser<StopTime>() {
+      public StopTime parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new StopTime(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StopTime> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.StopTime getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
   public interface CalendarDatesOrBuilder extends
@@ -2690,12 +2688,12 @@ public final class CheminotBuf {
             case 10: {
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 exceptionsByServiceId_ = com.google.protobuf.MapField.newMapField(
-                    exceptionsByServiceIdDefaultEntry);
+                    ExceptionsByServiceIdDefaultEntryHolder.defaultEntry);
                 mutable_bitField0_ |= 0x00000001;
               }
               com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>
               exceptionsByServiceId = input.readMessage(
-                  exceptionsByServiceIdDefaultEntry.getParserForType(), extensionRegistry);
+                  ExceptionsByServiceIdDefaultEntryHolder.defaultEntry.getParserForType(), extensionRegistry);
               exceptionsByServiceId_.getMutableMap().put(exceptionsByServiceId.getKey(), exceptionsByServiceId.getValue());
               break;
             }
@@ -2734,40 +2732,25 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.CalendarDates.class, m.cheminot.data.CheminotBuf.CalendarDates.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<CalendarDates> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarDates>() {
-      public CalendarDates parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new CalendarDates(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CalendarDates> getParserForType() {
-      return PARSER;
-    }
-
     public static final int EXCEPTIONSBYSERVICEID_FIELD_NUMBER = 1;
-    private static final com.google.protobuf.MapEntry<
-        java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> exceptionsByServiceIdDefaultEntry;
+    private static final class ExceptionsByServiceIdDefaultEntryHolder {
+      static final com.google.protobuf.MapEntry<
+          java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> defaultEntry =
+              com.google.protobuf.MapEntry
+              .<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>newDefaultInstance(
+                  m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_CalendarDates_ExceptionsByServiceIdEntry_descriptor, 
+                  com.google.protobuf.WireFormat.FieldType.STRING,
+                  "",
+                  com.google.protobuf.WireFormat.FieldType.MESSAGE,
+                  m.cheminot.data.CheminotBuf.CalendarExceptions.getDefaultInstance());
+    }
     private com.google.protobuf.MapField<
         java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> exceptionsByServiceId_;
     private com.google.protobuf.MapField<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>
     internalGetExceptionsByServiceId() {
       if (exceptionsByServiceId_ == null) {
         return com.google.protobuf.MapField.emptyMapField(
-            exceptionsByServiceIdDefaultEntry);
+            ExceptionsByServiceIdDefaultEntryHolder.defaultEntry);
      }
       return exceptionsByServiceId_;
     }
@@ -2794,7 +2777,7 @@ public final class CheminotBuf {
       for (java.util.Map.Entry<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> entry
            : internalGetExceptionsByServiceId().getMap().entrySet()) {
         com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>
-        exceptionsByServiceId = exceptionsByServiceIdDefaultEntry.newBuilderForType()
+        exceptionsByServiceId = ExceptionsByServiceIdDefaultEntryHolder.defaultEntry.newBuilderForType()
             .setKey(entry.getKey())
             .setValue(entry.getValue())
             .build();
@@ -2811,7 +2794,7 @@ public final class CheminotBuf {
       for (java.util.Map.Entry<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> entry
            : internalGetExceptionsByServiceId().getMap().entrySet()) {
         com.google.protobuf.MapEntry<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>
-        exceptionsByServiceId = exceptionsByServiceIdDefaultEntry.newBuilderForType()
+        exceptionsByServiceId = ExceptionsByServiceIdDefaultEntryHolder.defaultEntry.newBuilderForType()
             .setKey(entry.getKey())
             .setValue(entry.getValue())
             .build();
@@ -2878,13 +2861,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.CalendarDates prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -2975,7 +2958,8 @@ public final class CheminotBuf {
       public m.cheminot.data.CheminotBuf.CalendarDates buildPartial() {
         m.cheminot.data.CheminotBuf.CalendarDates result = new m.cheminot.data.CheminotBuf.CalendarDates(this);
         int from_bitField0_ = bitField0_;
-        result.exceptionsByServiceId_ = internalGetExceptionsByServiceId().copy();
+        result.exceptionsByServiceId_ = internalGetExceptionsByServiceId();
+        result.exceptionsByServiceId_.makeImmutable();
         onBuilt();
         return result;
       }
@@ -3026,7 +3010,7 @@ public final class CheminotBuf {
       internalGetExceptionsByServiceId() {
         if (exceptionsByServiceId_ == null) {
           return com.google.protobuf.MapField.emptyMapField(
-              exceptionsByServiceIdDefaultEntry);
+              ExceptionsByServiceIdDefaultEntryHolder.defaultEntry);
        }
         return exceptionsByServiceId_;
       }
@@ -3035,8 +3019,11 @@ public final class CheminotBuf {
         onChanged();;
         if (exceptionsByServiceId_ == null) {
           exceptionsByServiceId_ = com.google.protobuf.MapField.newMapField(
-              exceptionsByServiceIdDefaultEntry);
-       }
+              ExceptionsByServiceIdDefaultEntryHolder.defaultEntry);
+        }
+        if (!exceptionsByServiceId_.isMutable()) {
+          exceptionsByServiceId_ = exceptionsByServiceId_.copy();
+        }
         return exceptionsByServiceId_;
       }
       /**
@@ -3067,30 +3054,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.CalendarDates)
-    private static final m.cheminot.data.CheminotBuf.CalendarDates defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.CalendarDates DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.CalendarDates();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.CalendarDates();
     }
 
     public static m.cheminot.data.CheminotBuf.CalendarDates getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<CalendarDates> PARSER =
+        new com.google.protobuf.AbstractParser<CalendarDates>() {
+      public CalendarDates parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new CalendarDates(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CalendarDates> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.CalendarDates getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-      exceptionsByServiceIdDefaultEntry =
-          com.google.protobuf.MapEntry
-          .<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions>newDefaultInstance(
-              m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_CalendarDates_ExceptionsByServiceIdEntry_descriptor, 
-              com.google.protobuf.WireFormat.FieldType.STRING,
-              "",
-              com.google.protobuf.WireFormat.FieldType.MESSAGE,
-              m.cheminot.data.CheminotBuf.CalendarExceptions.getDefaultInstance());
-
-    }
   }
 
   public interface CalendarExceptionsOrBuilder extends
@@ -3193,30 +3193,6 @@ public final class CheminotBuf {
       return m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_CalendarExceptions_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               m.cheminot.data.CheminotBuf.CalendarExceptions.class, m.cheminot.data.CheminotBuf.CalendarExceptions.Builder.class);
-    }
-
-    public static final com.google.protobuf.Parser<CalendarExceptions> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarExceptions>() {
-      public CalendarExceptions parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new CalendarExceptions(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CalendarExceptions> getParserForType() {
-      return PARSER;
     }
 
     public static final int CALENDARDATES_FIELD_NUMBER = 1;
@@ -3341,13 +3317,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.CalendarExceptions prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -3753,21 +3729,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.CalendarExceptions)
-    private static final m.cheminot.data.CheminotBuf.CalendarExceptions defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.CalendarExceptions DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.CalendarExceptions();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.CalendarExceptions();
     }
 
     public static m.cheminot.data.CheminotBuf.CalendarExceptions getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<CalendarExceptions> PARSER =
+        new com.google.protobuf.AbstractParser<CalendarExceptions>() {
+      public CalendarExceptions parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new CalendarExceptions(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CalendarExceptions> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.CalendarExceptions getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
   public interface CalendarDateOrBuilder extends
@@ -3881,32 +3879,8 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.CalendarDate.class, m.cheminot.data.CheminotBuf.CalendarDate.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<CalendarDate> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarDate>() {
-      public CalendarDate parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new CalendarDate(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<CalendarDate> getParserForType() {
-      return PARSER;
-    }
-
     public static final int SERVICEID_FIELD_NUMBER = 1;
-    private java.lang.Object serviceId_;
+    private volatile java.lang.Object serviceId_;
     /**
      * <code>optional string serviceId = 1;</code>
      */
@@ -3942,7 +3916,7 @@ public final class CheminotBuf {
     }
 
     public static final int DATE_FIELD_NUMBER = 2;
-    private java.lang.Object date_;
+    private volatile java.lang.Object date_;
     /**
      * <code>optional string date = 2;</code>
      */
@@ -4087,13 +4061,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.CalendarDate prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -4401,21 +4375,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.CalendarDate)
-    private static final m.cheminot.data.CheminotBuf.CalendarDate defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.CalendarDate DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.CalendarDate();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.CalendarDate();
     }
 
     public static m.cheminot.data.CheminotBuf.CalendarDate getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<CalendarDate> PARSER =
+        new com.google.protobuf.AbstractParser<CalendarDate>() {
+      public CalendarDate parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new CalendarDate(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<CalendarDate> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.CalendarDate getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
   public interface CalendarOrBuilder extends
@@ -4654,32 +4650,8 @@ public final class CheminotBuf {
               m.cheminot.data.CheminotBuf.Calendar.class, m.cheminot.data.CheminotBuf.Calendar.Builder.class);
     }
 
-    public static final com.google.protobuf.Parser<Calendar> PARSER =
-        new com.google.protobuf.AbstractParser<Calendar>() {
-      public Calendar parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new Calendar(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<Calendar> getParserForType() {
-      return PARSER;
-    }
-
     public static final int SERVICEID_FIELD_NUMBER = 1;
-    private java.lang.Object serviceId_;
+    private volatile java.lang.Object serviceId_;
     /**
      * <code>optional string serviceId = 1;</code>
      */
@@ -4715,7 +4687,7 @@ public final class CheminotBuf {
     }
 
     public static final int MONDAY_FIELD_NUMBER = 2;
-    private java.lang.Object monday_;
+    private volatile java.lang.Object monday_;
     /**
      * <code>optional string monday = 2;</code>
      */
@@ -4751,7 +4723,7 @@ public final class CheminotBuf {
     }
 
     public static final int TUESDAY_FIELD_NUMBER = 3;
-    private java.lang.Object tuesday_;
+    private volatile java.lang.Object tuesday_;
     /**
      * <code>optional string tuesday = 3;</code>
      */
@@ -4787,7 +4759,7 @@ public final class CheminotBuf {
     }
 
     public static final int WEDNESDAY_FIELD_NUMBER = 4;
-    private java.lang.Object wednesday_;
+    private volatile java.lang.Object wednesday_;
     /**
      * <code>optional string wednesday = 4;</code>
      */
@@ -4823,7 +4795,7 @@ public final class CheminotBuf {
     }
 
     public static final int THURSDAY_FIELD_NUMBER = 5;
-    private java.lang.Object thursday_;
+    private volatile java.lang.Object thursday_;
     /**
      * <code>optional string thursday = 5;</code>
      */
@@ -4859,7 +4831,7 @@ public final class CheminotBuf {
     }
 
     public static final int FRIDAY_FIELD_NUMBER = 6;
-    private java.lang.Object friday_;
+    private volatile java.lang.Object friday_;
     /**
      * <code>optional string friday = 6;</code>
      */
@@ -4895,7 +4867,7 @@ public final class CheminotBuf {
     }
 
     public static final int SATURDAY_FIELD_NUMBER = 7;
-    private java.lang.Object saturday_;
+    private volatile java.lang.Object saturday_;
     /**
      * <code>optional string saturday = 7;</code>
      */
@@ -4931,7 +4903,7 @@ public final class CheminotBuf {
     }
 
     public static final int SUNDAY_FIELD_NUMBER = 8;
-    private java.lang.Object sunday_;
+    private volatile java.lang.Object sunday_;
     /**
      * <code>optional string sunday = 8;</code>
      */
@@ -4967,7 +4939,7 @@ public final class CheminotBuf {
     }
 
     public static final int STARTDATE_FIELD_NUMBER = 9;
-    private java.lang.Object startDate_;
+    private volatile java.lang.Object startDate_;
     /**
      * <code>optional string startDate = 9;</code>
      */
@@ -5003,7 +4975,7 @@ public final class CheminotBuf {
     }
 
     public static final int ENDDATE_FIELD_NUMBER = 10;
-    private java.lang.Object endDate_;
+    private volatile java.lang.Object endDate_;
     /**
      * <code>optional string endDate = 10;</code>
      */
@@ -5188,13 +5160,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.Calendar prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -6086,21 +6058,43 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.Calendar)
-    private static final m.cheminot.data.CheminotBuf.Calendar defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.Calendar DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.Calendar();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.Calendar();
     }
 
     public static m.cheminot.data.CheminotBuf.Calendar getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<Calendar> PARSER =
+        new com.google.protobuf.AbstractParser<Calendar>() {
+      public Calendar parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new Calendar(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<Calendar> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.Calendar getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
   public interface TripStopIdsOrBuilder extends
@@ -6199,30 +6193,6 @@ public final class CheminotBuf {
       return m.cheminot.data.CheminotBuf.internal_static_m_cheminot_data_TripStopIds_fieldAccessorTable
           .ensureFieldAccessorsInitialized(
               m.cheminot.data.CheminotBuf.TripStopIds.class, m.cheminot.data.CheminotBuf.TripStopIds.Builder.class);
-    }
-
-    public static final com.google.protobuf.Parser<TripStopIds> PARSER =
-        new com.google.protobuf.AbstractParser<TripStopIds>() {
-      public TripStopIds parsePartialFrom(
-          com.google.protobuf.CodedInputStream input,
-          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
-          throws com.google.protobuf.InvalidProtocolBufferException {
-        try {
-          return new TripStopIds(input, extensionRegistry);
-        } catch (RuntimeException e) {
-          if (e.getCause() instanceof
-              com.google.protobuf.InvalidProtocolBufferException) {
-            throw (com.google.protobuf.InvalidProtocolBufferException)
-                e.getCause();
-          }
-          throw e;
-        }
-      }
-    };
-
-    @java.lang.Override
-    public com.google.protobuf.Parser<TripStopIds> getParserForType() {
-      return PARSER;
     }
 
     public static final int STOPIDS_FIELD_NUMBER = 1;
@@ -6346,13 +6316,13 @@ public final class CheminotBuf {
 
     public Builder newBuilderForType() { return newBuilder(); }
     public static Builder newBuilder() {
-      return defaultInstance.toBuilder();
+      return DEFAULT_INSTANCE.toBuilder();
     }
     public static Builder newBuilder(m.cheminot.data.CheminotBuf.TripStopIds prototype) {
-      return defaultInstance.toBuilder().mergeFrom(prototype);
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
     }
     public Builder toBuilder() {
-      return this == defaultInstance
+      return this == DEFAULT_INSTANCE
           ? new Builder() : new Builder().mergeFrom(this);
     }
 
@@ -6586,69 +6556,91 @@ public final class CheminotBuf {
     }
 
     // @@protoc_insertion_point(class_scope:m.cheminot.data.TripStopIds)
-    private static final m.cheminot.data.CheminotBuf.TripStopIds defaultInstance;
+    private static final m.cheminot.data.CheminotBuf.TripStopIds DEFAULT_INSTANCE;
     static {
-      defaultInstance = new m.cheminot.data.CheminotBuf.TripStopIds();
+      DEFAULT_INSTANCE = new m.cheminot.data.CheminotBuf.TripStopIds();
     }
 
     public static m.cheminot.data.CheminotBuf.TripStopIds getDefaultInstance() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
+    }
+
+    public static final com.google.protobuf.Parser<TripStopIds> PARSER =
+        new com.google.protobuf.AbstractParser<TripStopIds>() {
+      public TripStopIds parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        try {
+          return new TripStopIds(input, extensionRegistry);
+        } catch (RuntimeException e) {
+          if (e.getCause() instanceof
+              com.google.protobuf.InvalidProtocolBufferException) {
+            throw (com.google.protobuf.InvalidProtocolBufferException)
+                e.getCause();
+          }
+          throw e;
+        }
+      }
+    };
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<TripStopIds> getParserForType() {
+      return PARSER;
     }
 
     public m.cheminot.data.CheminotBuf.TripStopIds getDefaultInstanceForType() {
-      return defaultInstance;
+      return DEFAULT_INSTANCE;
     }
 
-    static {
-    }
   }
 
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_Graph_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_Graph_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_Graph_VerticesEntry_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_Graph_VerticesEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_Vertice_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_Vertice_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_StopTime_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_StopTime_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_CalendarDates_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_CalendarDates_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_CalendarDates_ExceptionsByServiceIdEntry_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_CalendarDates_ExceptionsByServiceIdEntry_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_CalendarExceptions_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_CalendarExceptions_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_CalendarDate_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_CalendarDate_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_Calendar_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable
       internal_static_m_cheminot_data_Calendar_fieldAccessorTable;
-  private static final com.google.protobuf.Descriptors.Descriptor
+  private static com.google.protobuf.Descriptors.Descriptor
     internal_static_m_cheminot_data_TripStopIds_descriptor;
   private static
     com.google.protobuf.GeneratedMessage.FieldAccessorTable

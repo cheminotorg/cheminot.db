@@ -16,7 +16,8 @@ object CheminotDB extends Build {
         "org.xerial" % "sqlite-jdbc" % "3.8.6",
         "com.github.scopt" %% "scopt" % "3.2.0",
         "org.scalaj" %% "scalaj-http" % "1.1.4",
-        "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3"
+        "org.scala-lang.modules" %% "scala-parser-combinators" % "1.0.3",
+        "com.google.protobuf" % "protobuf-java" % "3.0.0-alpha-3"
       ),
       scalacOptions ++= Seq("-language:_", "-deprecation", "-unchecked", "-encoding", "UTF-8")
     )
