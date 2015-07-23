@@ -84,6 +84,7 @@ object AutoUpdate {
           notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
           DEFAULT_RATE
         } else {
+          println(s"Nothing to update. Next time is ${update.next}")
           val now = DateTime.now
           if(update.next.getYear == now.getYear && update.next.getDayOfYear == now.getDayOfYear) {
             INTENSE_RATE
