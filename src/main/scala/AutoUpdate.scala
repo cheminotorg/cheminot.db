@@ -12,25 +12,14 @@ import scalaj.http._
 object AutoUpdate {
 
   val DEFAULT_RATE: Int = 3600 * 1000
-  val INTENSE_RATE: Int = 5 * 60 * 1000
 
-  case class Update(url: String, modified: DateTime, next: DateTime)
+  case class Update(url: String, modified: DateTime)
 
   object Update {
     def apply(json: JsValue): Update = {
       val modified = (json \ "metas" \ "modified").as[String]
-      val next = {
-        val description = (json \ "metas" \ "description").as[String]
-        val UpdateReg = """(.|\s)*?<p>Prochaine mise à jour : (.*)?</p>""".r
-        description match {
-          case UpdateReg(_, updateTime) =>
-            val formatter = DateTimeFormat.forPattern("dd MMMM yyyy").withLocale(java.util.Locale.FRENCH)
-            formatter.parseDateTime(updateTime.replaceAll("""\u00a0""", " "))
-          case _ => sys.error("Unable to parse next update date from: " + description)
-        }
-      }
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/attachments/export_ter_gtfs_last_zip/"
-      Update(url, DateTime.parse(modified), next)
+      Update(url, DateTime.parse(modified))
     }
   }
 
@@ -84,13 +73,9 @@ object AutoUpdate {
           notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
           DEFAULT_RATE
         } else {
-          println(s"Nothing to update. Next time is ${update.next}")
+          println(s"Nothing to update")
           val now = DateTime.now
-          if(update.next.getYear == now.getYear && update.next.getDayOfYear == now.getDayOfYear) {
-            INTENSE_RATE
-          } else {
-            DEFAULT_RATE
-          }
+          DEFAULT_RATE
         }
       } getOrElse DEFAULT_RATE
     }
