@@ -43,8 +43,8 @@ case class CSVFile(file: File) {
 
 case class CSVDirectory(directory: File) {
 
-  def read(): Map[String, CSVFile.Rows] = {
-    directory.listFiles.filter(_.getName.endsWith(".txt")).map { csv =>
+  def read(p: String => Boolean): Map[String, CSVFile.Rows] = {
+    directory.listFiles.filter(f => f.getName.endsWith(".txt") && p(f.getName)).map { csv =>
       println("Reading " + csv.getName)
       val rows = CSVFile(csv).read()
       csv.getName -> rows

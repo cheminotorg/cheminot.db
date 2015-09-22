@@ -12,19 +12,19 @@ import models._
 case class DB(gtfsBundle: GtfsBundle) {
   lazy val version = gtfsBundle.version
 
-  lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter)
+  lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter, gtfsBundle.trans)
 
   lazy val graph: List[Vertice] =
-    DB.buildGraph(gtfsBundle.ter.stops, trips)
+    DB.buildGraph(gtfsBundle.ter.stops ++: gtfsBundle.trans.stops, trips)
 
   lazy val calendar: List[Calendar] =
-    gtfsBundle.ter.calendar.map(Calendar.fromRow)
+    (gtfsBundle.ter.calendar ++: gtfsBundle.trans.calendar).map(Calendar.fromRow)
 
   lazy val calendarDates: List[CalendarDate] =
-    gtfsBundle.ter.calendarDates.map(CalendarDate.fromRow)
+    (gtfsBundle.ter.calendarDates ++: gtfsBundle.trans.calendarDates).map(CalendarDate.fromRow)
 
   lazy val ttstops: TTreeNode[(String, String)] = {
-    DB.buildTreeStops(gtfsBundle.ter.stops)
+    DB.buildTreeStops(gtfsBundle.ter.stops ++: gtfsBundle.trans.stops)
   }
 }
 
@@ -124,14 +124,14 @@ object DB {
     }
   }
 
-  private def buildTrips(ter: GtfsDirectory): List[Trip] =
+  private def buildTrips(ter: GtfsDirectory, trans: GtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
-      par(ter.trips) { tripRow =>
+      par(ter.trips ++: trans.trips) { tripRow =>
         val routeId = tripRow(0)
         val serviceId = tripRow(1)
         val tripId = tripRow(2)
-        val maybeService = ter.calendar.view.find(_.head == serviceId).map(Calendar.fromRow)
-        val stopTimesForTrip = ter.stopTimes.collect {
+        val maybeService = (ter.calendar ++: trans.calendar).view.find(_.head == serviceId).map(Calendar.fromRow)
+        val stopTimesForTrip = (ter.stopTimes ++: trans.stopTimes).collect {
           case stopTimeRow if(stopTimeRow.head == tripId) =>
             val stopId = stopTimeRow(3)
             StopTime.fromRow(stopTimeRow, stopId)
