@@ -2,10 +2,8 @@ package m.cheminot
 
 import java.io.File
 import org.joda.time.DateTime
-import java.util.concurrent.Executors
 import scala.util.control.Exception
-import scala.concurrent.{ Await, Future, ExecutionContext }
-import scala.concurrent.duration._
+import scala.concurrent.Future
 import misc._
 import models._
 
@@ -29,19 +27,6 @@ case class DB(gtfsBundle: GtfsBundle) {
 }
 
 object DB {
-
-  private val THREADS_PER_POOL = Option(System.getProperty("threads")).map(_.toInt).getOrElse(5)
-  private implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(THREADS_PER_POOL))
-
-  private def par[A, B](aaa: Seq[A])(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] =
-    Await.result(
-      Future.sequence {
-        aaa.grouped(THREADS_PER_POOL).toSeq.map { group =>
-          Future(group.map(f))
-        }
-      }.map(_.flatten),
-      1.hours
-    )
 
   def defaultDbDir: File = new File("db")
 

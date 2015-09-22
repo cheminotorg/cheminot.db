@@ -44,7 +44,7 @@ object GtfsBundle {
       transDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/trans"))
     } yield {
       val (gtfsTer, terConnections) = GtfsDirectory.ter(terDir)
-      val (gtfsTrans, transConnections) = GtfsDirectory.trans(transDir, terConnections)
+      val gtfsTrans = GtfsDirectory.trans(transDir, terConnections)
       GtfsBundle(version, gtfsTer, gtfsTrans)
     }
 
@@ -71,23 +71,33 @@ object GtfsDirectory {
     val terConnections: TerConnections = MMap()
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
-      case x => x
+      case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, shapeDistTraveled) =>
+        record
     }
 
     val trips = GtfsDirReader.trips(dir) {
-      case x => x
+      case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId, shapeId) =>
+        record
     }
 
     val stops = GtfsDirReader.stops(dir) {
-      case x => x
+      case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCETrain TER-")) =>
+        stopId match {
+          case TerStopId(normalizedId) =>
+            terConnections += (normalizedId -> stopId)
+          case _ =>
+        }
+        List(stopId, stopName.substring(8), stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation)
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
-      case x => x
+      case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
+        record
     }
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
-      case x => x
+      case record@List(serviceId, date, exceptionType) =>
+        record
     }
 
     val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -95,33 +105,53 @@ object GtfsDirectory {
     parsed -> terConnections
   }
 
-  def trans(dir: File, terConnections: TerConnections): (ParsedGtfsDirectory, TransConnections) = {
-
-    val transConnections: TransConnections = MMap()
+  def trans(dir: File, terConnections: TerConnections): ParsedGtfsDirectory = {
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
-      case x => x
+      case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType) =>
+
+        val maybeUpdatedStopId = for {
+          commonId <- stopId match {
+            case TransStopId(normalizedId) =>
+              Some(normalizedId)
+            case _ =>
+              println("Unable to normalize trans id")
+              None
+          }
+          terId <- terConnections.get(commonId)
+        } yield terId
+
+        List(tripId, arrival, departure, maybeUpdatedStopId.getOrElse(stopId), stopSeq, stopHeadSign, pickUpType, dropOffType)
     }
 
     val trips = GtfsDirReader.trips(dir) {
-      case x => x
+      case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId) =>
+        record
     }
 
     val stops = GtfsDirReader.stops(dir) {
-      case x => x
+      case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:DUA")) =>
+        stopId match {
+          case TransStopId(normalizedId) if(terConnections.get(normalizedId).isEmpty) =>
+            List(stopId, stopName.toLowerCase.capitalize, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation)
+
+          case _ =>
+            println("Unable to normalize trans id")
+            List.empty
+        }
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
-      case x => x
+      case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
+        record
     }
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
-      case x => x
+      case record@List(serviceId, date, exceptionType) =>
+        record
     }
 
-    val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
-
-    parsed -> transConnections
+    ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
   }
 
   val gtfsFiles = Seq(
