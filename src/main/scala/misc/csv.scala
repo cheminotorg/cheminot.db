@@ -6,6 +6,9 @@ import scala.language.postfixOps
 import scala.util.parsing.combinator._
 
 object CSV extends RegexParsers {
+
+  import CSVFile._
+
   override protected val whiteSpace = """[\t]""".r
 
   def COMMA   = ","
@@ -16,38 +19,31 @@ object CSV extends RegexParsers {
   def CRLF    = "\r\n"
   def TXT     = "[^\",\r\n]".r
 
-  def file: Parser[List[List[String]]] = repsep(record, CRLF|CR|LF) <~ opt(CRLF)
-  def record: Parser[List[String]] = rep1sep(field, COMMA)
+  def file(collect: PartialFunction[Record, Record]): Parser[List[Record]] = repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)
+  def record(collect: PartialFunction[Record, Record]): Parser[Record] = rep1sep(field, COMMA).filter(collect.isDefinedAt).map(collect)
   def field: Parser[String] = (escaped|nonescaped)
   def escaped: Parser[String] = (DQUOTE~>((TXT|COMMA|CR|LF|DQUOTE2)*)<~DQUOTE) ^^ { case ls => ls.mkString("")}
   def nonescaped: Parser[String] = (TXT*) ^^ { case ls => ls.mkString("") }
 
-  def parse(s: String): CSVFile.Rows =
-    parseAll(file, s) match {
+  def parse(s: String, collect: PartialFunction[Record, Record]): Records =
+    parseAll(file(collect), s) match {
       case Success(res, _) => res
       case _ => List[List[String]]()
     }
 }
 
 object CSVFile {
-  type Rows = List[List[String]]
+  type Record = List[String]
+  type Records = List[Record]
 }
 
 case class CSVFile(file: File) {
+
+  import CSVFile._
+
   lazy val content = FileUtils.readFileToString(file, "utf-8")
 
-  def read(): CSVFile.Rows = {
-    CSV.parse(content)
+  def read(collect: PartialFunction[Record, Record]): Records = {
+    CSV.parse(content, collect)
   }
-}
-
-case class CSVDirectory(directory: File) {
-
-  def read(p: String => Boolean): Map[String, CSVFile.Rows] = {
-    directory.listFiles.filter(f => f.getName.endsWith(".txt") && p(f.getName)).map { csv =>
-      println("Reading " + csv.getName)
-      val rows = CSVFile(csv).read()
-      csv.getName -> rows
-    }
-  }.toMap
 }

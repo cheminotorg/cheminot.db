@@ -51,7 +51,7 @@ object DB {
   def fromDefaultDir(): Option[DB] =
     GtfsBundle.mostRecent().map(DB.apply)
 
-  private def buildGraph(stopsRows: CSVFile.Rows, trips: List[Trip]): List[Vertice] =
+  private def buildGraph(stopsRows: CSVFile.Records, trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
       var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
       val vertices = par(stopsRows) { s =>
@@ -77,7 +77,7 @@ object DB {
       paris +: vertices
     }
 
-  private def buildTreeStops(stopsRows: CSVFile.Rows): TTreeNode[(String, String)] = {
+  private def buildTreeStops(stopsRows: CSVFile.Records): TTreeNode[(String, String)] = {
     def handleCompoundWords(stopName: String): List[String] = {
       val spaceIndex = Option(stopName.indexOf(" ")).filterNot(_ == -1)
       val dashIndex = Option(stopName.indexOf("-")).filterNot(_ == -1)
@@ -124,7 +124,7 @@ object DB {
     }
   }
 
-  private def buildTrips(ter: GtfsDirectory, trans: GtfsDirectory): List[Trip] =
+  private def buildTrips(ter: ParsedGtfsDirectory, trans: ParsedGtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
       par(ter.trips ++: trans.trips) { tripRow =>
         val routeId = tripRow(0)

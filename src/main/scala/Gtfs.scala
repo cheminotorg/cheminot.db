@@ -31,7 +31,7 @@ object Gtfs {
   }
 }
 
-case class GtfsBundle(version: Version, ter: GtfsDirectory, trans: GtfsDirectory)
+case class GtfsBundle(version: Version, ter: ParsedGtfsDirectory, trans: ParsedGtfsDirectory)
 
 object GtfsBundle {
 
@@ -66,97 +66,62 @@ object GtfsDirectory {
 
   val TransStopId = """StopPoint:DUA(.*)""".r
 
-  def ter(dir: File): (GtfsDirectory, TerConnections) = {
+  def ter(dir: File): (ParsedGtfsDirectory, TerConnections) = {
 
     val terConnections: TerConnections = MMap()
 
-    val gtfsDir = GtfsDirectory(dir)
-
-    val gtfs = new GtfsDirectory(dir) {
-      override lazy val stopTimes =
-        gtfsDir.stopTimes.drop(1).filter(_.size == 9)
-
-      override lazy val trips =
-        gtfsDir.trips.drop(1).dropRight(1).filter(_.size == 7)
-
-      override lazy val stops =
-        gtfsDir.stops.par.collect {
-          case List(id, name, desc, lat, lng, zone, url, location, parent) if(id.startsWith("StopPoint:OCETrain TER-")) =>
-            id match {
-              case TerStopId(normalizedId) =>
-                terConnections += (normalizedId -> id)
-              case _ =>
-                println("Unable to normalize ter id")
-            }
-            List(id, name.substring(8), desc, lat, lng, zone, url, location, parent)
-        }.toList
-
-      override lazy val calendar =
-        gtfsDir.calendar.drop(1).dropRight(1).filter(_.size == 10)
-
-      override lazy val calendarDates =
-        gtfsDir.calendarDates.drop(1).filter(_.size == 3)
+    val stopTimes = GtfsDirReader.stopTimes(dir) {
+      case x => x
     }
 
-    gtfs -> terConnections
+    val trips = GtfsDirReader.trips(dir) {
+      case x => x
+    }
+
+    val stops = GtfsDirReader.stops(dir) {
+      case x => x
+    }
+
+    val calendar = GtfsDirReader.calendar(dir) {
+      case x => x
+    }
+
+    val calendarDates = GtfsDirReader.calendarDates(dir) {
+      case x => x
+    }
+
+    val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
+
+    parsed -> terConnections
   }
 
-  def trans(dir: File, terConnections: TerConnections): (GtfsDirectory, TransConnections) = {
-
-    val transDir = GtfsDirectory(dir)
+  def trans(dir: File, terConnections: TerConnections): (ParsedGtfsDirectory, TransConnections) = {
 
     val transConnections: TransConnections = MMap()
 
-    val gtfs = new GtfsDirectory(dir) {
-
-      override lazy val stopTimes = {
-        transDir.stopTimes.drop(1).par.collect {
-          case List(tripId, arrivalTime, departureTime, stopId, stopSeq, stopHeadSign, pickupType, dropOffType) =>
-            val updatedStopId = (for {
-              commonId <- {
-                stopId match {
-                  case TransStopId(normalizedId) =>
-                    Some(normalizedId)
-                  case _ =>
-                    println("Unable to normalize trans id")
-                    None
-                }
-              }
-              terId <- terConnections.get(commonId)
-            } yield terId) getOrElse stopId
-            List(tripId, arrivalTime, departureTime, updatedStopId, stopSeq, stopHeadSign, pickupType, dropOffType)
-        }.toList
-      }
-
-      override lazy val trips =
-        transDir.trips.drop(1).dropRight(1).filter(_.size == 6)
-
-      lazy val stops = {
-        transDir.stops.par.collect {
-          case List(id, name, desc, lat, lng, zone, url, location, parent) if(id.startsWith("StopPoint:DUA")) =>
-            id match {
-              case TransStopId(normalizedId) if(terConnections.get(normalizedId).isEmpty) =>
-                List(id, name.toLowerCase.capitalize, desc, lat, lng, zone, url, location, parent)
-
-              case TransStopId(normalizedId) =>
-                transConnections += (id -> normalizedId)
-                List.empty
-
-              case _ =>
-                println("Unable to normalize trans id")
-                List.empty
-            }
-        }.toList
-      }
-
-      override lazy val calendar =
-        transDir.calendar.drop(1).dropRight(1).filter(_.size == 10)
-
-      override lazy val calendarDates =
-        transDir.calendarDates.drop(1).filter(_.size == 3)
+    val stopTimes = GtfsDirReader.stopTimes(dir) {
+      case x => x
     }
 
-    gtfs -> transConnections
+    val trips = GtfsDirReader.trips(dir) {
+      case x => x
+    }
+
+    val stops = GtfsDirReader.stops(dir) {
+      case x => x
+    }
+
+    val calendar = GtfsDirReader.calendar(dir) {
+      case x => x
+    }
+
+    val calendarDates = GtfsDirReader.calendarDates(dir) {
+      case x => x
+    }
+
+    val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
+
+    parsed -> transConnections
   }
 
   val gtfsFiles = Seq(
@@ -181,29 +146,33 @@ object GtfsDirectory {
   }
 }
 
-case class GtfsDirectory(directory: File) {
+case class ParsedGtfsDirectory(
+  stopTimes: CSVFile.Records,
+  trips: CSVFile.Records,
+  stops: CSVFile.Records,
+  calendar: CSVFile.Records,
+  calendarDates: CSVFile.Records
+)
 
-  lazy val fileNames = Seq("stop_times.txt", "trips.txt", "stops.txt", "calendar.txt", "calendar_dates.txt")
 
-  lazy val gtfs: Map[String, CSVFile.Rows] = {
-    println(s"Reading gtfs from ${directory.getAbsolutePath}...")
-    CSVDirectory(directory).read(n => fileNames.exists(_ == n))
+object GtfsDirReader {
+
+  private def file(root: File, name: String): File = {
+    new File(root.getAbsolutePath() + "/" + name)
   }
 
-  private def oops(message: String) = throw new RuntimeException(message)
+  def stopTimes(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+    CSVFile(file(gtfsDir, "stop_times.txt")).read(collect)
 
-  lazy val stopTimes: CSVFile.Rows =
-    gtfs.get("stop_times.txt").getOrElse(oops("Invalid gtfs format: stop_times.txt not found!"))
+  def trips(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+    CSVFile(file(gtfsDir, "trips.txt")).read(collect)
 
-  lazy val trips: CSVFile.Rows =
-    gtfs.get("trips.txt").getOrElse(oops("Invalid gtfs format: trips.txt not found!"))
+  def stops(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+    CSVFile(file(gtfsDir, "stops.txt")).read(collect)
 
-  lazy val stops: CSVFile.Rows =
-    gtfs.get("stops.txt").getOrElse(oops("Invalid gtfs format: stops.txt not found!"))
+  def calendar(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+    CSVFile(file(gtfsDir, "calendar.txt")).read(collect)
 
-  lazy val calendar: CSVFile.Rows =
-    gtfs.get("calendar.txt").getOrElse(oops("Invalid gtfs format: calendar.txt not found!"))
-
-  lazy val calendarDates: CSVFile.Rows =
-    gtfs.get("calendar_dates.txt").getOrElse(oops("Invalid gtfs format: calendar_dates.txt not found!"))
+  def calendarDates(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+    CSVFile(file(gtfsDir, "calendar_dates.txt")).read(collect)
 }
