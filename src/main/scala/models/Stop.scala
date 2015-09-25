@@ -1,6 +1,7 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
+import m.cheminot.StopRecord
 
 case class Stop(id: String, name: String, lat: Double, lng: Double)
 
@@ -27,12 +28,12 @@ object Stop {
     STOP_PARIS_AUSTERLITZ
   )
 
-  def fromRow(data: List[String]): Stop = {
+  def fromRecord(record: StopRecord): Stop = {
     Stop(
-      data(0),
-      data(1),
-      data(3).toDouble,
-      data(4).toDouble
+      record.stopId,
+      record.stopName,
+      record.stopLat,
+      record.stopLong
     )
   }
 }

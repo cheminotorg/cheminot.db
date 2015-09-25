@@ -9,6 +9,42 @@ import misc._
 import models._
 import scala.collection.mutable.{ Map => MMap }
 
+object Normalizer {
+
+  def handleCompoundWords(stopName: String): List[String] = {
+    val spaceIndex = Option(stopName.indexOf(" ")).filterNot(_ == -1)
+    val dashIndex = Option(stopName.indexOf("-")).filterNot(_ == -1)
+    val (sep, newsep) = {
+      val isSpace = spaceIndex.getOrElse(stopName.size) < dashIndex.getOrElse(stopName.size)
+      if (isSpace) " " -> "-" else "-" -> " "
+    }
+    val splitStopName = stopName.split(sep).toList
+    if(!spaceIndex.isEmpty && !dashIndex.isEmpty) {
+      val x = stopName.split(newsep).toList match {
+        case h :: t => h.replaceAll(sep, newsep) + newsep + t.mkString(newsep)
+        case _ => sys.error("Unexpected case in handleCompoundWords")
+      }
+      x +: splitStopName
+    } else {
+      stopName.replaceAll(sep, newsep) +: splitStopName
+    }
+  }
+
+  def handleSaintWords(stopName: String): List[String] = {
+    val SaintReg = """^Saint([-|\s])(.*)$""".r
+    val StReg = """^St([-|\s])(.*)$""".r
+    stopName match {
+      case SaintReg(sep, n) =>
+        val st = List("St " + n, "St-" + n)
+        if(sep == " ") ("Saint-" + n) +: st else ("Saint " + n) +: st
+      case StReg(sep, n) =>
+        val saint = List("Saint " + n, "Saint-" + n)
+        if(sep == " ") ("St-" + n) +: saint else ("St " + n) +: saint
+      case _ => Nil
+    }
+  }
+}
+
 object Gtfs {
 
   def parseDateTime(str: String): DateTime = {
@@ -29,6 +65,14 @@ object Gtfs {
         }
     }
   }
+
+  def parseBoolean(str: String): Boolean = {
+    str match {
+      case "0" => false
+      case "1" => true
+      case _ => sys.error("Unable to parse boolean from: " + str)
+    }
+  }
 }
 
 case class GtfsBundle(version: Version, ter: ParsedGtfsDirectory, trans: ParsedGtfsDirectory)
@@ -44,8 +88,7 @@ object GtfsBundle {
       transDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/trans"))
     } yield {
       val (gtfsTer, terConnections) = GtfsDirectory.ter(terDir)
-      val gtfsTrans = GtfsDirectory.trans(transDir, terConnections)
-      GtfsBundle(version, gtfsTer, gtfsTrans)
+      GtfsBundle(version, gtfsTer, GtfsDirectory.trans(transDir, terConnections))
     }
 
   def mostRecent(root: Option[File] = None): Option[GtfsBundle] =
@@ -58,9 +101,9 @@ object GtfsBundle {
 
 object GtfsDirectory {
 
-  type TerConnections = MMap[String, String] // common id, ter stopId
+  import Gtfs._
 
-  type TransConnections = MMap[String, String] // trans stopId, common id
+  type TerConnections = Map[String, String] // common id, ter stopId
 
   val TerStopId = """StopPoint:OCETrain TER-(.*).""".r
 
@@ -68,36 +111,48 @@ object GtfsDirectory {
 
   def ter(dir: File): (ParsedGtfsDirectory, TerConnections) = {
 
-    val terConnections: TerConnections = MMap()
+    var terConnections: TerConnections = Map()
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
-      case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, shapeDistTraveled) =>
-        record
+      case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, _) =>
+        StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), stopId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId, shapeId) =>
-        record
+        TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
     }
 
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCETrain TER-")) =>
         stopId match {
           case TerStopId(normalizedId) =>
-            terConnections += (normalizedId -> stopId)
+            terConnections = terConnections + (normalizedId -> stopId)
           case _ =>
+            println(s"** Unable to normalize ter id for: $stopId")
         }
-        List(stopId, stopName.substring(8), stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation)
+        StopRecord(stopId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
       case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
-        record
+        CalendarRecord(
+          serviceId,
+          parseBoolean(monday),
+          parseBoolean(tuesday),
+          parseBoolean(wednesday),
+          parseBoolean(thursday),
+          parseBoolean(friday),
+          parseBoolean(saturday),
+          parseBoolean(sunday),
+          parseDateTime(startDate),
+          parseDateTime(endDate)
+        )
     }
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
       case record@List(serviceId, date, exceptionType) =>
-        record
+        CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
     }
 
     val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -109,46 +164,54 @@ object GtfsDirectory {
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType) =>
-
         val maybeUpdatedStopId = for {
-          commonId <- stopId match {
+          commonStopId <- stopId match {
             case TransStopId(normalizedId) =>
               Some(normalizedId)
             case _ =>
-              println("Unable to normalize trans id")
+              println(s"** Unable to normalize trans id for: $stopId")
               None
           }
-          terId <- terConnections.get(commonId)
-        } yield terId
+          terStopId <- terConnections.get(commonStopId)
+        } yield terStopId
 
-        List(tripId, arrival, departure, maybeUpdatedStopId.getOrElse(stopId), stopSeq, stopHeadSign, pickUpType, dropOffType)
+        StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), maybeUpdatedStopId.getOrElse(stopId), stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId) =>
-        record
+        TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
     }
 
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:DUA")) =>
         stopId match {
           case TransStopId(normalizedId) if(terConnections.get(normalizedId).isEmpty) =>
-            List(stopId, stopName.toLowerCase.capitalize, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation)
-
+            StopRecord(stopId, stopName.toLowerCase.capitalize, stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case _ =>
-            println("Unable to normalize trans id")
-            List.empty
+            sys.error(s"** Unable to normalize trans id for: $stopId")
         }
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
       case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
-        record
+        CalendarRecord(
+          serviceId,
+          parseBoolean(monday),
+          parseBoolean(tuesday),
+          parseBoolean(wednesday),
+          parseBoolean(thursday),
+          parseBoolean(friday),
+          parseBoolean(saturday),
+          parseBoolean(sunday),
+          parseDateTime(startDate),
+          parseDateTime(endDate)
+        )
     }
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
       case record@List(serviceId, date, exceptionType) =>
-        record
+        CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
     }
 
     ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -177,12 +240,19 @@ object GtfsDirectory {
 }
 
 case class ParsedGtfsDirectory(
-  stopTimes: CSVFile.Records,
-  trips: CSVFile.Records,
-  stops: CSVFile.Records,
-  calendar: CSVFile.Records,
-  calendarDates: CSVFile.Records
+  stopTimes: List[StopTimeRecord],
+  trips: List[TripRecord],
+  stops: List[StopRecord],
+  calendar: List[CalendarRecord],
+  calendarDates: List[CalendarDateRecord]
 )
+
+object ParsedGtfsDirectory {
+
+  def empty = ParsedGtfsDirectory(
+    Nil, Nil, Nil, Nil, Nil
+  )
+}
 
 
 object GtfsDirReader {
@@ -191,18 +261,69 @@ object GtfsDirReader {
     new File(root.getAbsolutePath() + "/" + name)
   }
 
-  def stopTimes(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+  def stopTimes(gtfsDir: File)(collect: CSVFile.CollectFunct[StopTimeRecord]): List[StopTimeRecord] =
     CSVFile(file(gtfsDir, "stop_times.txt")).read(collect)
 
-  def trips(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+  def trips(gtfsDir: File)(collect: CSVFile.CollectFunct[TripRecord]): List[TripRecord] =
     CSVFile(file(gtfsDir, "trips.txt")).read(collect)
 
-  def stops(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+  def stops(gtfsDir: File)(collect: CSVFile.CollectFunct[StopRecord]): List[StopRecord] =
     CSVFile(file(gtfsDir, "stops.txt")).read(collect)
 
-  def calendar(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+  def calendar(gtfsDir: File)(collect: CSVFile.CollectFunct[CalendarRecord]): List[CalendarRecord] =
     CSVFile(file(gtfsDir, "calendar.txt")).read(collect)
 
-  def calendarDates(gtfsDir: File)(collect: PartialFunction[CSVFile.Record, CSVFile.Record]): CSVFile.Records =
+  def calendarDates(gtfsDir: File)(collect: CSVFile.CollectFunct[CalendarDateRecord]): List[CalendarDateRecord] =
     CSVFile(file(gtfsDir, "calendar_dates.txt")).read(collect)
 }
+
+case class StopTimeRecord(
+  tripId: String,
+  arrival: DateTime,
+  departure: DateTime,
+  stopId: String,
+  stopSeq: Int,
+  stopHeadSign: String,
+  pickUpType: String,
+  dropOffType: String
+)
+
+case class TripRecord(
+  routeId: String,
+  serviceId: String,
+  tripId: String,
+  tripHeadSign: String,
+  directionId: String,
+  blockId: String
+)
+
+case class StopRecord(
+  stopId: String,
+  stopName: String,
+  stopDesc: String,
+  stopLat: Double,
+  stopLong: Double,
+  zone: String,
+  stopUrl: String,
+  locationType: String,
+  parentStation: String
+)
+
+case class CalendarRecord(
+  serviceId: String,
+  monday: Boolean,
+  tuesday: Boolean,
+  wednesday: Boolean,
+  thursday: Boolean,
+  friday: Boolean,
+  saturday: Boolean,
+  sunday: Boolean,
+  startDate: DateTime,
+  endDate: DateTime
+)
+
+case class CalendarDateRecord(
+  serviceId: String,
+  date: DateTime,
+  exceptionType: Int
+)

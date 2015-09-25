@@ -19,31 +19,33 @@ object CSV extends RegexParsers {
   def CRLF    = "\r\n"
   def TXT     = "[^\",\r\n]".r
 
-  def file(collect: PartialFunction[Record, Record]): Parser[List[Record]] = repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)
-  def record(collect: PartialFunction[Record, Record]): Parser[Record] = rep1sep(field, COMMA).filter(collect.isDefinedAt).map(collect)
+  def file[A](collect: CollectFunct[A]): Parser[List[A]] = (repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)) ^^ (_.flatten)
+  def record[A](collect: CollectFunct[A]): Parser[Option[A]] = rep1sep(field, COMMA) ^^ {
+    case record =>
+      scala.util.Try { collect(record) }.toOption
+  }
   def field: Parser[String] = (escaped|nonescaped)
   def escaped: Parser[String] = (DQUOTE~>((TXT|COMMA|CR|LF|DQUOTE2)*)<~DQUOTE) ^^ { case ls => ls.mkString("")}
   def nonescaped: Parser[String] = (TXT*) ^^ { case ls => ls.mkString("") }
 
-  def parse(s: String, collect: PartialFunction[Record, Record]): Records =
+  def parse[A](s: String, collect: CollectFunct[A]): List[A] =
     parseAll(file(collect), s) match {
       case Success(res, _) => res
-      case _ => List[List[String]]()
+      case _ => Nil
     }
 }
 
 object CSVFile {
-  type Record = List[String]
-  type Records = List[Record]
+  type Record[A] = List[A]
+  type CSVRecord = Record[String]
+  type CollectFunct[A] = CSVRecord => A
 }
 
 case class CSVFile(file: File) {
 
-  import CSVFile._
-
   lazy val content = FileUtils.readFileToString(file, "utf-8")
 
-  def read(collect: PartialFunction[Record, Record]): Records = {
+  def read[A](collect: CSVFile.CollectFunct[A]): List[A] = {
     CSV.parse(content, collect)
   }
 }

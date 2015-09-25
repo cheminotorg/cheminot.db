@@ -1,11 +1,9 @@
 package m.cheminot.models
 
-case class Trip(
-  id: String,
-  calendar: Option[Calendar],
-  direction: String,
-  stopTimes: Seq[StopTime]
-) {
+import m.cheminot.TripRecord
+
+case class Trip(id: String, calendar: Option[Calendar], direction: String, stopTimes: Seq[StopTime]) {
+
   lazy val stops: Seq[String] = {
     stopTimes.map(_.stopId).distinct
   }
@@ -25,8 +23,8 @@ object Trip {
 
   import m.cheminot.data.CheminotBuf
 
-  def fromRow(data: List[String], routeId: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
-    Trip(data(2), calendar, data(4), stopTimes)
+  def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
+    Trip(record.tripId, calendar, record.directionId, stopTimes)
   }
 
   def serializeStopIds(trip: Trip): CheminotBuf.TripStopIds = {

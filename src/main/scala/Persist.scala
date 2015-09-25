@@ -21,8 +21,8 @@ object Persist {
   def all(dbDir: File, db: DB) {
     Persist.sqlite(dbDir, db.version, db.trips)
     Persist.graph(dbDir, db.version, db.graph)
-    Persist.calendarDates(dbDir, db.version, db.calendarDates, db.calendar)
-    Persist.ttstops(dbDir, db.version, db.ttstops)
+    Persist.calendarDates(dbDir, db)
+    Persist.ttstops(dbDir, db)
   }
 
   def sqlite(dbDir: File, version: Version, trips: List[Trip]): File = {
@@ -49,8 +49,13 @@ object Persist {
     file
   }
 
-  def calendarDates(dbDir: File, version: Version, calendarDates: List[CalendarDate], calendar: Seq[Calendar]): File = {
-    val file = directory(dbDir, version)(s"calendardates-${version.value}")
+  def calendarDates(dbDir: File, db: DB): File = {
+    calendarDates(dbDir, db.ter.id, db.version, db.ter.calendarDates, db.ter.calendar)
+    calendarDates(dbDir, db.trans.id, db.version, db.trans.calendarDates, db.trans.calendar)
+  }
+
+  private def calendarDates(dbDir: File, id: String, version: Version, calendarDates: List[CalendarDate], calendar: Seq[Calendar]): File = {
+    val file = directory(dbDir, version)(s"${id}-calendardates-${version.value}")
     println("Storing calendar dates to " + file)
     val output = new java.io.FileOutputStream(file)
     CalendarDate.serializeCalendarDates(calendarDates, calendar).writeTo(output)
@@ -58,8 +63,13 @@ object Persist {
     file
   }
 
-  def ttstops(dbDir: File, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
-    val file = directory(dbDir, version)("stops_ttree.json")
+  def ttstops(dbDir: File, db: DB): File = {
+    ttstops(dbDir, db.ter.id, db.version, db.ter.ttstops)
+    ttstops(dbDir, db.trans.id, db.version, db.trans.ttstops)
+  }
+
+  private def ttstops(dbDir: File, id: String, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
+    val file = directory(dbDir, version)("${id}-stops_ttree.json")
     println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
     FileUtils.write(file, content, "utf-8")

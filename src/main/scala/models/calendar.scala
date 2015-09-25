@@ -2,16 +2,17 @@ package m.cheminot.models
 
 import org.joda.time.DateTime
 import m.cheminot.Gtfs
+import m.cheminot.{ CalendarRecord, CalendarDateRecord }
 
 case class Calendar(
   serviceId: String,
-  monday: String,
-  tuesday: String,
-  wednesday: String,
-  thursday: String,
-  friday: String,
-  saturday: String,
-  sunday: String,
+  monday: Boolean,
+  tuesday: Boolean,
+  wednesday: Boolean,
+  thursday: Boolean,
+  friday: Boolean,
+  saturday: Boolean,
+  sunday: Boolean,
   startDate: DateTime,
   endDate: DateTime
 )
@@ -20,18 +21,18 @@ object Calendar {
 
   import m.cheminot.data.CheminotBuf
 
-  def fromRow(data: List[String]): Calendar = {
+  def fromRecord(record: CalendarRecord): Calendar = {
     Calendar(
-      data.head,
-      data(1),
-      data(2),
-      data(3),
-      data(4),
-      data(5),
-      data(6),
-      data(7),
-      Gtfs.parseDateTime(data(8)),
-      Gtfs.parseDateTime(data(9))
+      record.serviceId,
+      record.monday,
+      record.tuesday,
+      record.wednesday,
+      record.thursday,
+      record.friday,
+      record.saturday,
+      record.sunday,
+      record.startDate,
+      record.endDate
     )
   }
 
@@ -40,17 +41,20 @@ object Calendar {
     formatter.print(date)
   }
 
+  private def formatBoolean(bool: Boolean): String =
+    if(bool) "1" else "0"
+
   def serialize(calendar: Calendar): CheminotBuf.Calendar = {
     val builder = CheminotBuf.Calendar.newBuilder()
     builder
       .setServiceId(calendar.serviceId)
-      .setMonday(calendar.monday)
-      .setTuesday(calendar.tuesday)
-      .setWednesday(calendar.wednesday)
-      .setThursday(calendar.thursday)
-      .setFriday(calendar.friday)
-      .setSaturday(calendar.saturday)
-      .setSunday(calendar.sunday)
+      .setMonday(formatBoolean(calendar.monday))
+      .setTuesday(formatBoolean(calendar.tuesday))
+      .setWednesday(formatBoolean(calendar.wednesday))
+      .setThursday(formatBoolean(calendar.thursday))
+      .setFriday(formatBoolean(calendar.friday))
+      .setSaturday(formatBoolean(calendar.saturday))
+      .setSunday(formatBoolean(calendar.sunday))
       .setStartDate(formatDate(calendar.startDate))
       .setEndDate(formatDate(calendar.endDate))
     builder.build()
@@ -67,11 +71,11 @@ object CalendarDate {
 
   import m.cheminot.data.CheminotBuf
 
-  def fromRow(data: List[String]): CalendarDate = {
+  def fromRecord(record: CalendarDateRecord): CalendarDate = {
     CalendarDate(
-      data.head,
-      Gtfs.parseDateTime(data(1)),
-      data(2).toInt
+      record.serviceId,
+      record.date,
+      record.exceptionType
     )
   }
 

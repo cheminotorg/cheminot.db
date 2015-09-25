@@ -2,6 +2,7 @@ package m.cheminot.models
 
 import org.joda.time.DateTime
 import m.cheminot.Gtfs
+import m.cheminot.StopTimeRecord
 
 case class StopTime(
   tripId: String,
@@ -15,13 +16,13 @@ object StopTime {
 
   import m.cheminot.data.CheminotBuf
 
-  def fromRow(data: List[String], stopId: String): StopTime = {
+  def fromRecord(record: StopTimeRecord): StopTime = {
     StopTime(
-      data(0),
-      Some(Gtfs.parseTime(data(1))),
-      Some(Gtfs.parseTime(data(2))),
-      stopId,
-      data(4).toInt
+      record.tripId,
+      Some(record.arrival),
+      Some(record.departure),
+      record.stopId,
+      record.stopSeq
     )
   }
 

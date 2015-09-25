@@ -11,8 +11,10 @@ object Main {
 
       val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
       val gtfsRootDir = config.gtfsdir getOrElse GtfsBundle.defaultRoot
+
       dbRootDir.mkdirs
       gtfsRootDir.mkdirs
+
       if(config.autoupdate) {
         AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => GtfsBundle.mostRecent(config.gtfsdir))
       } else {
@@ -29,10 +31,10 @@ object Main {
               Persist.graph(dbRootDir, db.version, db.graph)
             }
             if(config.calendar) {
-              Persist.calendarDates(dbRootDir, db.version, db.calendarDates, db.calendar)
+              Persist.calendarDates(dbRootDir, db)
             }
             if(config.ttstops) {
-              Persist.ttstops(dbRootDir, db.version, db.ttstops)
+              Persist.ttstops(dbRootDir, db)
             }
           }
         }) getOrElse {
