@@ -81,19 +81,24 @@ object GtfsBundle {
 
   def defaultRoot: File = new File("gtfs")
 
-  def fromDir(directory: File): Option[GtfsBundle] =
+  private def open(directory: File): Option[(Version, File, File)] = {
     for {
       version <- Version.fromDir(directory)
       terDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/ter"))
       transDir <- GtfsDirectory.check(new File(directory.getAbsolutePath + "/trans"))
-    } yield {
-      val (gtfsTer, terConnections) = GtfsDirectory.ter(terDir)
-      GtfsBundle(version, gtfsTer, GtfsDirectory.trans(transDir, terConnections))
+    } yield (version, terDir, transDir)
+  }
+
+  private def fromDir(directory: File): Option[GtfsBundle] =
+    open(directory) map {
+      case (version, terDir, transDir) =>
+        val (gtfsTer, terConnections) = GtfsDirectory.ter(terDir)
+        GtfsBundle(version, gtfsTer, GtfsDirectory.trans(transDir, terConnections))
     }
 
   def mostRecent(root: Option[File] = None): Option[GtfsBundle] =
     root.getOrElse(defaultRoot).listFiles.toList.filter (_.isDirectory)
-      .filter(d => fromDir(d).isDefined)
+      .filter(d => open(d).isDefined)
       .flatMap(dir => Version.fromDir(dir) map (dir -> _))
       .sortBy { case (_, version) => -version.date.getMillis }
       .headOption flatMap { case (dir, _) => fromDir(dir) }
@@ -110,6 +115,7 @@ object GtfsDirectory {
   val TransStopId = """StopPoint:DUA(.*)""".r
 
   def ter(dir: File): (ParsedGtfsDirectory, TerConnections) = {
+    println("[GTFS] Reading ter")
 
     var terConnections: TerConnections = Map()
 
@@ -129,7 +135,7 @@ object GtfsDirectory {
           case TerStopId(normalizedId) =>
             terConnections = terConnections + (normalizedId -> stopId)
           case _ =>
-            println(s"** Unable to normalize ter id for: $stopId")
+            println(s"** Reading stops: unable to normalize ter id for: $stopId")
         }
         StopRecord(stopId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
     }
@@ -161,6 +167,7 @@ object GtfsDirectory {
   }
 
   def trans(dir: File, terConnections: TerConnections): ParsedGtfsDirectory = {
+    println("[GTFS] Reading trans")
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType) =>
@@ -169,7 +176,7 @@ object GtfsDirectory {
             case TransStopId(normalizedId) =>
               Some(normalizedId)
             case _ =>
-              println(s"** Unable to normalize trans id for: $stopId")
+              println(s"** Reading stopTimes : unable to normalize trans id for: $stopId")
               None
           }
           terStopId <- terConnections.get(commonStopId)
@@ -189,7 +196,7 @@ object GtfsDirectory {
           case TransStopId(normalizedId) if(terConnections.get(normalizedId).isEmpty) =>
             StopRecord(stopId, stopName.toLowerCase.capitalize, stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case _ =>
-            sys.error(s"** Unable to normalize trans id for: $stopId")
+            sys.error(s"** Reading stops: unable to normalize trans id for: $stopId")
         }
     }
 

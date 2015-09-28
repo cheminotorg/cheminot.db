@@ -41,12 +41,16 @@ object Sqlite {
 
     val insertTripQuery = SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})")
     trips.foreach { trip =>
+      try {
       insertTripQuery.on(
         'id -> trip.id,
         'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray).getOrElse(Array()),
         'direction -> trip.direction,
         'stopIds -> Trip.serializeStopIds(trip).toByteArray
       ).executeUpdate
+      } catch {
+        case _ => println("######## ", trip.id)
+      }
     }
 
     val insertTripsStopsQuery = SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})")

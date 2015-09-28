@@ -20,7 +20,7 @@ object Persist {
 
   def all(dbDir: File, db: DB) {
     Persist.sqlite(dbDir, db.version, db.trips)
-    Persist.graph(dbDir, db.version, db.graph)
+    Persist.graph(dbDir, db)
     Persist.calendarDates(dbDir, db)
     Persist.ttstops(dbDir, db)
   }
@@ -40,8 +40,13 @@ object Persist {
     }
   }
 
-  def graph(dbDir: File, version: Version, graph: List[Vertice]): File = {
-    val file = directory(dbDir, version)(s"graph-${version.value}")
+  def graph(dbDir: File, db: DB): File = {
+    graph(dbDir, db.ter.id, db.version, db.ter.graph)
+    graph(dbDir, db.trans.id, db.version, db.trans.graph)
+  }
+
+  private def graph(dbDir: File, id: String, version: Version, graph: List[Vertice]): File = {
+    val file = directory(dbDir, version)(s"${id}-graph-${version.value}")
     println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
     Vertice.serializeGraph(graph).writeTo(output)
@@ -69,7 +74,7 @@ object Persist {
   }
 
   private def ttstops(dbDir: File, id: String, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
-    val file = directory(dbDir, version)("${id}-stops_ttree.json")
+    val file = directory(dbDir, version)(s"${id}-stops_ttree.json")
     println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
     FileUtils.write(file, content, "utf-8")

@@ -28,7 +28,7 @@ object Main {
               Persist.sqlite(dbRootDir, db.version, db.trips)
             }
             if(config.graph) {
-              Persist.graph(dbRootDir, db.version, db.graph)
+              Persist.graph(dbRootDir, db)
             }
             if(config.calendar) {
               Persist.calendarDates(dbRootDir, db)

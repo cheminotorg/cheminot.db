@@ -7,11 +7,11 @@ import scala.concurrent.Future
 import misc._
 import models._
 
-case class TerDB(calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
+case class TerDB(graph: List[Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
   lazy val id = "ter"
 }
 
-case class TransDB(calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
+case class TransDB(graph: List[Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
   lazy val id = "trans"
 }
 
@@ -21,16 +21,15 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter, gtfsBundle.trans)
 
-  lazy val graph: List[Vertice] =
-    DB.buildGraph(gtfsBundle.ter.stops ++: gtfsBundle.trans.stops, trips)
-
   lazy val trans = TransDB(
+    DB.buildGraph(gtfsBundle.trans.stops, trips),
     gtfsBundle.trans.calendar.map(Calendar.fromRecord),
     gtfsBundle.trans.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.trans.stops)
   )
 
   lazy val ter = TerDB(
+    DB.buildGraph(gtfsBundle.ter.stops, trips),
     gtfsBundle.ter.calendar.map(Calendar.fromRecord),
     gtfsBundle.ter.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.ter.stops)
@@ -84,8 +83,10 @@ object DB {
   private def buildTrips(parsedTer: ParsedGtfsDirectory, parsedTrans: ParsedGtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
       val calendar = parsedTer.calendar ++: parsedTrans.calendar
-      val stopTimes = (parsedTer.stopTimes ++: parsedTrans.stopTimes)
-      par(parsedTer.trips ++: parsedTrans.trips) { tripRecord =>
+      val stopTimes = parsedTer.stopTimes ++: parsedTrans.stopTimes
+      val trips = parsedTer.trips ++: parsedTrans.trips
+      println(s"** Trips: ${trips.size}\n** StopTimes: ${stopTimes.size}\n** Calendar: ${calendar.size}")
+      par(trips, debug = true) { tripRecord =>
         val maybeService = calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
         val stopTimesForTrip = stopTimes.collect {
           case stopTimeRecord if(stopTimeRecord.tripId == tripRecord.tripId) =>
