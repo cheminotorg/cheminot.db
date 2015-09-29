@@ -49,7 +49,7 @@ object Sqlite {
         'stopIds -> Trip.serializeStopIds(trip).toByteArray
       ).executeUpdate
       } catch {
-        case _ => println("######## ", trip.id)
+        case _: Exception => println("######## ", trip.id)
       }
     }
 

@@ -7,13 +7,7 @@ import scala.concurrent.Future
 import misc._
 import models._
 
-case class TerDB(graph: List[Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
-  lazy val id = "ter"
-}
-
-case class TransDB(graph: List[Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)]) {
-  lazy val id = "trans"
-}
+case class Subset(id: String, graph: List[Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)])
 
 case class DB(gtfsBundle: GtfsBundle) {
 
@@ -21,18 +15,20 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter, gtfsBundle.trans)
 
-  lazy val trans = TransDB(
-    DB.buildGraph(gtfsBundle.trans.stops, trips),
-    gtfsBundle.trans.calendar.map(Calendar.fromRecord),
-    gtfsBundle.trans.calendarDates.map(CalendarDate.fromRecord),
-    DB.buildTreeStops(gtfsBundle.trans.stops)
-  )
-
-  lazy val ter = TerDB(
+  lazy val ter = Subset(
+    "ter",
     DB.buildGraph(gtfsBundle.ter.stops, trips),
     gtfsBundle.ter.calendar.map(Calendar.fromRecord),
     gtfsBundle.ter.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.ter.stops)
+  )
+
+  lazy val trans = Subset(
+    "trans",
+    DB.buildGraph(gtfsBundle.trans.stops, trips),
+    gtfsBundle.trans.calendar.map(Calendar.fromRecord),
+    gtfsBundle.trans.calendarDates.map(CalendarDate.fromRecord),
+    DB.buildTreeStops(gtfsBundle.trans.stops)
   )
 }
 

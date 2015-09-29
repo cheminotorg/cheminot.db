@@ -19,7 +19,7 @@ object CSV extends RegexParsers {
   def CRLF    = "\r\n"
   def TXT     = "[^\",\r\n]".r
 
-  def file[A](collect: CollectFunct[A]): Parser[List[A]] = (repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)) ^^ (_.flatten)
+  def file[A](collect: CollectFunct[A]): Parser[List[A]] = (repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)) ^^ (_.drop(1).flatten)
   def record[A](collect: CollectFunct[A]): Parser[Option[A]] = rep1sep(field, COMMA) ^^ {
     case record =>
       scala.util.Try { collect(record) }.toOption
@@ -36,9 +36,7 @@ object CSV extends RegexParsers {
 }
 
 object CSVFile {
-  type Record[A] = List[A]
-  type CSVRecord = Record[String]
-  type CollectFunct[A] = CSVRecord => A
+  type CollectFunct[A] = List[String] => A
 }
 
 case class CSVFile(file: File) {
