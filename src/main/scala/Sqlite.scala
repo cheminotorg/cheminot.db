@@ -34,6 +34,8 @@ object Sqlite {
   def createTripsTable()(implicit connection: Connection) {
     SQL("CREATE TABLE trips (id TEXT PRIMARY KEY, calendar BLOB, direction TEXT, stopIds TEXT, type TEXT)").executeUpdate
     SQL("CREATE TABLE trips_stops (tripId TEXT, stopId TEXT, FOREIGN KEY (tripId) REFERENCES trips(id))").executeUpdate
+    SQL("CREATE INDEX trips_stops_stop_index ON trips_stops (stopId)").executeUpdate
+    SQL("CREATE INDEX trips_type ON trips (type)").executeUpdate
   }
 
   def insertTrips(groupedTrips: (Symbol, Seq[Trip])*)(implicit connection: Connection) {
@@ -59,18 +61,24 @@ object Sqlite {
 
         val insertTripsStopsQuery = SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})")
         trips.foreach { trip =>
+          var insertParis = false
           trip.stopTimes.foreach { stopTime =>
             insertTripsStopsQuery.on(
               'tripId -> trip.id,
               'stopId -> stopTime.stopId
             ).executeUpdate
+            if(Stop.isParis(stopTime.stopId) && !insertParis) {
+              insertTripsStopsQuery.on(
+                'tripId -> trip.id,
+                'stopId -> Stop.STOP_PARIS
+              ).executeUpdate
+              insertParis = true
+            }
           }
         }
     }
 
     SQL("END TRANSACTION").executeUpdate
-
-    SQL("CREATE INDEX trips_stops_stop_index ON trips_stops (stopId)").executeUpdate
   }
 
   def initMeta(version: Version) (implicit connection: Connection) {

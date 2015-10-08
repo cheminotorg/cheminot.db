@@ -46,7 +46,7 @@ object DB {
 
   private def buildGraph(stopRecords: List[StopRecord], trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
-      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil) //acces concurrent à cette variable /!\
+      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
       val vertices = par(stopRecords) { stopRecord =>
         val zStopTimes = Subway.stopTimes.get(stopRecord.stopId).getOrElse(Nil)
         val zEdges = Stop.parisStops.filterNot(_ == stopRecord.stopId).toList
@@ -59,7 +59,9 @@ object DB {
           (edges ++: accEdges) -> (stopTimes ++: accStopTimes)
         }
         if(Stop.parisStops.contains(stopRecord.stopId)) {
-          paris = paris.copy(edges = (edges ++: paris.edges).distinct, stopTimes = (stopTimes ++: paris.stopTimes).distinct)
+          synchronized {
+            paris = paris.copy(edges = (edges ++: paris.edges).distinct, stopTimes = (stopTimes ++: paris.stopTimes).distinct)
+          }
         }
         Vertice(stopRecord.stopId, stopRecord.stopName, stopRecord.stopLat, stopRecord.stopLong, edges.distinct, stopTimes.distinct)
       }.toList
@@ -87,6 +89,7 @@ object DB {
           case stopTimeRecord if(stopTimeRecord.tripId == tripRecord.tripId) =>
             StopTime.fromRecord(stopTimeRecord)
         }.toList
+
         Trip.fromRecord(tripRecord, tripRecord.routeId, maybeService, stopTimesForTrip)
       }.toList
     }

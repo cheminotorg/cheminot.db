@@ -28,6 +28,9 @@ object Stop {
     STOP_PARIS_AUSTERLITZ
   )
 
+  def isParis(stopId: String) =
+    parisStops.exists(_ == stopId)
+
   def fromRecord(record: StopRecord): Stop = {
     Stop(
       record.stopId,
