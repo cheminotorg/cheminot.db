@@ -25,7 +25,7 @@ object Main {
             Persist.all(dbRootDir, db)
           } else {
             if(config.sqlite) {
-              Persist.sqlite(dbRootDir, db.version, db.trips)
+              Persist.sqlite(dbRootDir, db)
             }
             if(config.graph) {
               Persist.graph(dbRootDir, db)

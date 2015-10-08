@@ -13,11 +13,13 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val version = gtfsBundle.version
 
-  lazy val trips: List[Trip] = DB.buildTrips(gtfsBundle.ter, gtfsBundle.trans)
+  lazy val terTrips = DB.buildTrips(gtfsBundle.ter)
+
+  lazy val transTrips = DB.buildTrips(gtfsBundle.trans)
 
   lazy val ter = Subset(
     "ter",
-    DB.buildGraph(gtfsBundle.ter.stops, trips),
+    DB.buildGraph(gtfsBundle.ter.stops, terTrips ++: transTrips),
     gtfsBundle.ter.calendar.map(Calendar.fromRecord),
     gtfsBundle.ter.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.ter.stops)
@@ -25,7 +27,7 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val trans = Subset(
     "trans",
-    DB.buildGraph(gtfsBundle.trans.stops, trips),
+    DB.buildGraph(gtfsBundle.trans.stops, terTrips ++: transTrips),
     gtfsBundle.trans.calendar.map(Calendar.fromRecord),
     gtfsBundle.trans.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.trans.stops)
@@ -44,7 +46,7 @@ object DB {
 
   private def buildGraph(stopRecords: List[StopRecord], trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
-      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
+      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil) //acces concurrent à cette variable /!\
       val vertices = par(stopRecords) { stopRecord =>
         val zStopTimes = Subway.stopTimes.get(stopRecord.stopId).getOrElse(Nil)
         val zEdges = Stop.parisStops.filterNot(_ == stopRecord.stopId).toList
@@ -66,7 +68,7 @@ object DB {
 
   private def buildTreeStops(stopRecords: List[StopRecord]): TTreeNode[(String, String)] = {
     Measure.duration("TTreeStops") {
-      TTreeNode(("paris" -> (Stop.STOP_PARIS, "Paris")) +: par(stopRecords) { stopRecord => //TODO
+      TTreeNode(("paris" -> (Stop.STOP_PARIS, "Paris")) +: par(stopRecords) { stopRecord =>
         val saintStopNames = Normalizer.handleSaintWords(stopRecord.stopName)
         val compoundStopNames = if(saintStopNames.isEmpty) Normalizer.handleCompoundWords(stopRecord.stopName) else Nil
         (stopRecord.stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
@@ -76,15 +78,12 @@ object DB {
     }
   }
 
-  private def buildTrips(parsedTer: ParsedGtfsDirectory, parsedTrans: ParsedGtfsDirectory): List[Trip] =
+  private def buildTrips(parsed: ParsedGtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
-      val calendar = parsedTer.calendar ++: parsedTrans.calendar
-      val stopTimes = parsedTer.stopTimes ++: parsedTrans.stopTimes
-      val trips = parsedTer.trips ++: parsedTrans.trips
-      println(s"** Trips: ${trips.size}\n** StopTimes: ${stopTimes.size}\n** Calendar: ${calendar.size}")
-      par(trips, debug = true) { tripRecord =>
-        val maybeService = calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
-        val stopTimesForTrip = stopTimes.collect {
+      println(s"** Trips: ${parsed.trips.size}\n** StopTimes: ${parsed.stopTimes.size}\n** Calendar: ${parsed.calendar.size}")
+      par(parsed.trips, debug = true) { tripRecord =>
+        val maybeService = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
+        val stopTimesForTrip = parsed.stopTimes.collect {
           case stopTimeRecord if(stopTimeRecord.tripId == tripRecord.tripId) =>
             StopTime.fromRecord(stopTimeRecord)
         }.toList

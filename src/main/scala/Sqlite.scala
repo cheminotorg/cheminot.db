@@ -32,35 +32,40 @@ object Sqlite {
   }
 
   def createTripsTable()(implicit connection: Connection) {
-    SQL("CREATE TABLE trips (id TEXT PRIMARY KEY, calendar BLOB, direction TEXT, stopIds TEXT)").executeUpdate
+    SQL("CREATE TABLE trips (id TEXT PRIMARY KEY, calendar BLOB, direction TEXT, stopIds TEXT, type TEXT)").executeUpdate
     SQL("CREATE TABLE trips_stops (tripId TEXT, stopId TEXT, FOREIGN KEY (tripId) REFERENCES trips(id))").executeUpdate
   }
 
-  def insertTrips(trips: Seq[Trip])(implicit connection: Connection) {
+  def insertTrips(groupedTrips: (Symbol, Seq[Trip])*)(implicit connection: Connection) {
     SQL("BEGIN TRANSACTION").executeUpdate
 
-    val insertTripQuery = SQL("INSERT INTO trips (id , calendar, direction, stopIds) VALUES({id}, {calendar}, {direction}, {stopIds})")
-    trips.foreach { trip =>
-      try {
-      insertTripQuery.on(
-        'id -> trip.id,
-        'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray).getOrElse(Array()),
-        'direction -> trip.direction,
-        'stopIds -> Trip.serializeStopIds(trip).toByteArray
-      ).executeUpdate
-      } catch {
-        case _: Exception => println("######## ", trip.id)
-      }
-    }
+    groupedTrips.foreach {
+      case (typ, trips) =>
 
-    val insertTripsStopsQuery = SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})")
-    trips.foreach { trip =>
-      trip.stopTimes.foreach { stopTime =>
-        insertTripsStopsQuery.on(
-          'tripId -> trip.id,
-          'stopId -> stopTime.stopId
-        ).executeUpdate
-      }
+        val insertTripQuery = SQL("INSERT INTO trips (id , calendar, direction, stopIds, type) VALUES({id}, {calendar}, {direction}, {stopIds}, {type})")
+        trips.foreach { trip =>
+          try {
+            insertTripQuery.on(
+              'id -> trip.id,
+              'calendar -> trip.calendar.map(c => Calendar.serialize(c).toByteArray).getOrElse(Array()),
+              'direction -> trip.direction,
+              'stopIds -> Trip.serializeStopIds(trip).toByteArray,
+              'type -> typ.name
+            ).executeUpdate
+          } catch {
+            case _: Exception => println("######## ", trip.id)
+          }
+        }
+
+        val insertTripsStopsQuery = SQL("INSERT INTO trips_stops (tripId , stopId) VALUES({tripId}, {stopId})")
+        trips.foreach { trip =>
+          trip.stopTimes.foreach { stopTime =>
+            insertTripsStopsQuery.on(
+              'tripId -> trip.id,
+              'stopId -> stopTime.stopId
+            ).executeUpdate
+          }
+        }
     }
 
     SQL("END TRANSACTION").executeUpdate
