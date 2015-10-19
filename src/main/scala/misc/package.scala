@@ -11,16 +11,16 @@ package m.cheminot {
     implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(THREADS_PER_POOL))
 
     def par[A, B](aaa: Seq[A], debug: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
-      val grouped = aaa.size / (THREADS_PER_POOL / 2)
+      val grouped = aaa.size / (THREADS_PER_POOL * 2)
       if(debug) { println(s"[progress] total: ${aaa.size} | grouped: ${grouped}") }
       var counter = 0;
+      val groups = aaa.grouped(20).toList
       Await.result(
         Future.sequence {
-          aaa.grouped(grouped).toSeq.map { group =>
-            println("#############", group.size)
+          groups.map { group =>
             Future(group.map(f)).map { xxx =>
               if(debug) {
-                counter += xxx.size
+                synchronized { counter += xxx.size }
                 println(s"[progress] ${counter} / ${aaa.size}")
               }
               xxx

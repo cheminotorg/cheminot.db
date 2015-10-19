@@ -7,7 +7,7 @@ object CheminotDB extends Build {
     base = file("."),
     settings = Defaults.defaultSettings ++ Seq(
       version := "0.1",
-      scalaVersion := "2.11.4",
+      scalaVersion := "2.11.7",
       resolvers += "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
       libraryDependencies ++= Seq(
         "com.typesafe.play" %% "play-json" % "2.4.0-M2",

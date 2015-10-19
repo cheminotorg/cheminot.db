@@ -32,7 +32,7 @@ object Persist {
       Sqlite.init();
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
-      Sqlite.insertTrips('TER -> db.terTrips, 'TRANS -> db.transTrips)
+      Sqlite.insertTrips('TER -> db.terTrips, 'TRANS -> db.transTrips, 'INTER -> db.interTrips)
       Sqlite.initMeta(db.version)
       connection.close()
       println("done!")
@@ -43,6 +43,7 @@ object Persist {
   def graph(dbDir: File, db: DB): File = {
     graph(dbDir, db.ter.id, db.version, db.ter.graph)
     graph(dbDir, db.trans.id, db.version, db.trans.graph)
+    graph(dbDir, db.inter.id, db.version, db.inter.graph)
   }
 
   private def graph(dbDir: File, id: String, version: Version, graph: List[Vertice]): File = {
@@ -57,6 +58,7 @@ object Persist {
   def calendarDates(dbDir: File, db: DB): File = {
     calendarDates(dbDir, db.ter.id, db.version, db.ter.calendarDates, db.ter.calendar)
     calendarDates(dbDir, db.trans.id, db.version, db.trans.calendarDates, db.trans.calendar)
+    calendarDates(dbDir, db.inter.id, db.version, db.inter.calendarDates, db.inter.calendar)
   }
 
   private def calendarDates(dbDir: File, id: String, version: Version, calendarDates: List[CalendarDate], calendar: Seq[Calendar]): File = {
@@ -68,13 +70,12 @@ object Persist {
     file
   }
 
-  def ttstops(dbDir: File, db: DB): File = {
-    ttstops(dbDir, db.ter.id, db.version, db.ter.ttstops)
-    ttstops(dbDir, db.trans.id, db.version, db.trans.ttstops)
+  def ttstops(dbDir: File, db: DB) {
+    ttstops(dbDir, db.version, db.ttstops)
   }
 
-  private def ttstops(dbDir: File, id: String, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
-    val file = directory(dbDir, version)(s"${id}-stops_ttree.json")
+  private def ttstops(dbDir: File, version: Version, ttstops: misc.TTreeNode[(String, String)]): File = {
+    val file = directory(dbDir, version)("stops_ttree.json")
     println("Storing ternary tree stops to " + file)
     val content = Json.stringify(Json.toJson(ttstops))
     FileUtils.write(file, content, "utf-8")

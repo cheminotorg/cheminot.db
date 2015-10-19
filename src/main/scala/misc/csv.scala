@@ -22,7 +22,14 @@ object CSV extends RegexParsers {
   def file[A](collect: CollectFunct[A]): Parser[List[A]] = (repsep(record(collect), CRLF|CR|LF) <~ opt(CRLF)) ^^ (_.drop(1).flatten)
   def record[A](collect: CollectFunct[A]): Parser[Option[A]] = rep1sep(field, COMMA) ^^ {
     case record =>
-      scala.util.Try { collect(record) }.toOption
+      try {
+        Some(collect(record))
+      } catch {
+        case Verbose(msg) =>
+          println(msg)
+          None
+        case e: Exception => None
+      }
   }
   def field: Parser[String] = (escaped|nonescaped)
   def escaped: Parser[String] = (DQUOTE~>((TXT|COMMA|CR|LF|DQUOTE2)*)<~DQUOTE) ^^ { case ls => ls.mkString("")}
@@ -33,6 +40,10 @@ object CSV extends RegexParsers {
       case Success(res, _) => res
       case _ => Nil
     }
+
+  case class Quiet(msg: String) extends Exception(msg)
+
+  case class Verbose(msg: String) extends Exception(msg)
 }
 
 object CSVFile {

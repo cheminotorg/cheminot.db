@@ -17,17 +17,29 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val transTrips = DB.buildTrips(gtfsBundle.trans)
 
+  lazy val interTrips = DB.buildTrips(gtfsBundle.inter)
+
+  lazy val ttstops = DB.buildTreeStops(gtfsBundle.ter.stops ++: gtfsBundle.trans.stops ++: gtfsBundle.inter.stops)
+
   lazy val ter = Subset(
     "ter",
-    DB.buildGraph(gtfsBundle.ter.stops, terTrips ++: transTrips),
+    DB.buildGraph(gtfsBundle.ter.stops, terTrips),
     gtfsBundle.ter.calendar.map(Calendar.fromRecord),
     gtfsBundle.ter.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.ter.stops)
   )
 
+  lazy val inter = Subset(
+    "inter",
+    DB.buildGraph(gtfsBundle.inter.stops, interTrips),
+    gtfsBundle.inter.calendar.map(Calendar.fromRecord),
+    gtfsBundle.inter.calendarDates.map(CalendarDate.fromRecord),
+    DB.buildTreeStops(gtfsBundle.inter.stops)
+  )
+
   lazy val trans = Subset(
     "trans",
-    DB.buildGraph(gtfsBundle.trans.stops, terTrips ++: transTrips),
+    DB.buildGraph(gtfsBundle.trans.stops, transTrips),
     gtfsBundle.trans.calendar.map(Calendar.fromRecord),
     gtfsBundle.trans.calendarDates.map(CalendarDate.fromRecord),
     DB.buildTreeStops(gtfsBundle.trans.stops)
