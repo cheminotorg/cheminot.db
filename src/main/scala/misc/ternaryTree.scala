@@ -26,7 +26,7 @@ object TTreeNode {
         if(word.length > 1) {
           node.copy(eq = Some(insert(word.tail, node.eq, data)))
         } else {
-          node.copy(isEnd = true, data = data +: node.data)
+          node.copy(isEnd = true, data = (data +: node.data).distinct)
         }
     }
   }

@@ -19,7 +19,9 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val interTrips = DB.buildTrips(gtfsBundle.inter)
 
-  lazy val ttstops = DB.buildTreeStops(gtfsBundle.ter.stops ++: gtfsBundle.trans.stops ++: gtfsBundle.inter.stops)
+  lazy val stops = (gtfsBundle.ter.stops ++: gtfsBundle.trans.stops ++: gtfsBundle.inter.stops).groupBy(_.stopId).values.toList.flatten
+
+  lazy val ttstops = DB.buildTreeStops(stops)
 
   lazy val ter = Subset(
     "ter",

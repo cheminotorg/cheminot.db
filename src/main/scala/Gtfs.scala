@@ -96,9 +96,9 @@ object GtfsBundle {
   private def fromDir(directory: File): Option[GtfsBundle] =
     open(directory) map {
       case (version, terDir, transDir, interDir) =>
-        val (gtfsTer, terConnections) = GtfsDirectory.ter(terDir)
-        val (gtfsTrans, transConnections) = GtfsDirectory.trans(transDir, terConnections)
-        val gtfsInter = GtfsDirectory.inter(interDir, terConnections, transConnections)
+        val gtfsTer = GtfsDirectory.ter(terDir)
+        val gtfsTrans = GtfsDirectory.trans(transDir)
+        val gtfsInter = GtfsDirectory.inter(interDir)
         GtfsBundle(version, gtfsTer, gtfsTrans, gtfsInter)
     }
 
@@ -122,38 +122,38 @@ object GtfsDirectory {
 
   type InterStopId = String
 
-  type TerConnections = Map[NodeId, TerStopId] // common id, ter stopId
-
-  type TransConnections = Map[NodeId, TransStopId] // common id, trans stopId
-
   val TerStopId = """StopPoint:OCETrain TER-(.*).""".r
 
   val TransStopId = """StopPoint:DUA(.*)""".r
 
   val InterStopId = """StopPoint:OCECorail Intercité-(.*).""".r
 
-  def ter(dir: File): (ParsedGtfsDirectory, TerConnections) = {
+  def ter(dir: File): ParsedGtfsDirectory = {
     println(s"[GTFS] Reading ter from ${dir.getAbsolutePath}")
-
-    var terConnections: TerConnections = Map()
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, _) =>
-        StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), stopId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+        stopId match {
+          case TerStopId(nodeId) =>
+            StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+          case _ =>
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
+        }
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId, shapeId) =>
         TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
     }
+
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCETrain TER-")) =>
         stopId match {
           case TerStopId(nodeId) =>
-            terConnections = terConnections + (nodeId -> stopId)
+            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case _ =>
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
         }
-        StopRecord(stopId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
@@ -177,29 +177,20 @@ object GtfsDirectory {
         CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
     }
 
-    val parsed = ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
-
-    parsed -> terConnections
+    ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
   }
 
-  def trans(dir: File, terConnections: TerConnections): (ParsedGtfsDirectory, TransConnections) = {
-    println(s"[GTFS] Reading trans from ${dir.getAbsolutePath} [${terConnections.size}]")
-
-    var transConnections: TransConnections = Map()
+  def trans(dir: File): ParsedGtfsDirectory = {
+    println(s"[GTFS] Reading trans from ${dir.getAbsolutePath}")
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType) =>
-        val maybeUpdatedStopId = for {
-          commonStopId <- stopId match {
-            case TransStopId(nodeId) =>
-              Some(nodeId)
-            case _ =>
-              None
-          }
-          nodeId <- terConnections.get(commonStopId)
-        } yield nodeId
-
-        StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), maybeUpdatedStopId.getOrElse(stopId), stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+        stopId match {
+          case TransStopId(nodeId) =>
+            StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+          case _ =>
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
+        }
     }
 
     val trips = GtfsDirReader.trips(dir) {
@@ -210,13 +201,10 @@ object GtfsDirectory {
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:DUA")) =>
         stopId match {
-          case TransStopId(nodeId) if terConnections.get(nodeId).isEmpty =>
-            transConnections = transConnections + (nodeId -> stopId)
-            StopRecord(stopId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case TransStopId(nodeId) =>
-            throw new CSV.Verbose(s"** Trans connection: $nodeId")
+            StopRecord(nodeId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case _ =>
-            throw new CSV.Quiet(s"** Reading stops: unable to normalize trans id for: $stopId")
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
         }
     }
 
@@ -241,25 +229,20 @@ object GtfsDirectory {
         CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
     }
 
-    ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates) -> transConnections
+    ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
   }
 
-  def inter(dir: File, terConnections: TerConnections, transConnections: TransConnections): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading inter from ${dir.getAbsolutePath} [${terConnections.size} ${transConnections.size}]")
+  def inter(dir: File): ParsedGtfsDirectory = {
+    println(s"[GTFS] Reading inter from ${dir.getAbsolutePath}]")
 
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, _) =>
-        val maybeUpdatedStopId = for {
-          commonStopId <- stopId match {
-            case InterStopId(nodeId) =>
-              Some(nodeId)
-            case _ =>
-              None
-          }
-          nodeId <- terConnections.get(commonStopId) orElse transConnections.get(commonStopId)
-        } yield nodeId
-
-        StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), maybeUpdatedStopId.getOrElse(stopId), stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+        stopId match {
+          case InterStopId(nodeId) =>
+            StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
+          case _ =>
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
+        }
     }
 
     val trips = GtfsDirReader.trips(dir) {
@@ -270,12 +253,10 @@ object GtfsDirectory {
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCECorail")) =>
         stopId match {
-          case InterStopId(nodeId) if terConnections.get(nodeId).isEmpty && transConnections.get(nodeId).isEmpty =>
-            StopRecord(stopId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case InterStopId(nodeId) =>
-            throw new CSV.Verbose(s"** Inter connection: $nodeId")
+            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
           case _ =>
-            throw new CSV.Quiet(s"** Reading stops: unable to normalize inter id for: $stopId")
+            throw new CSV.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
         }
     }
 
