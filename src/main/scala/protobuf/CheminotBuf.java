@@ -26,7 +26,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.Graph)
       GraphOrBuilder {
     // Use Graph.newBuilder() to construct.
-    private Graph(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private Graph(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private Graph() {
@@ -156,9 +156,8 @@ public final class CheminotBuf {
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -172,7 +171,7 @@ public final class CheminotBuf {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(1, vertices);
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -410,6 +409,14 @@ public final class CheminotBuf {
       getMutableVertices() {
         return internalGetMutableVertices().getMutableMap();
       }
+      /**
+       * <code>map&lt;string, .m.cheminot.data.Vertice&gt; vertices = 1;</code>
+       */
+      public Builder putAllVertices(
+          java.util.Map<java.lang.String, m.cheminot.data.CheminotBuf.Vertice> values) {
+        getMutableVertices().putAll(values);
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return this;
@@ -434,8 +441,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<Graph> PARSER =
-        new com.google.protobuf.AbstractParser<Graph>() {
+    private static final com.google.protobuf.Parser<Graph>
+        PARSER = new com.google.protobuf.AbstractParser<Graph>() {
       public Graph parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -452,6 +459,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<Graph> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<Graph> getParserForType() {
@@ -549,7 +560,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.Vertice)
       VerticeOrBuilder {
     // Use Vertice.newBuilder() to construct.
-    private Vertice(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private Vertice(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private Vertice() {
@@ -586,15 +597,15 @@ public final class CheminotBuf {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              id_ = bs;
+              id_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              name_ = bs;
+              name_ = s;
               break;
             }
             case 25: {
@@ -608,12 +619,12 @@ public final class CheminotBuf {
               break;
             }
             case 42: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
               if (!((mutable_bitField0_ & 0x00000010) == 0x00000010)) {
                 edges_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000010;
               }
-              edges_.add(bs);
+              edges_.add(s);
               break;
             }
             case 50: {
@@ -621,7 +632,7 @@ public final class CheminotBuf {
                 stopTimes_ = new java.util.ArrayList<m.cheminot.data.CheminotBuf.StopTime>();
                 mutable_bitField0_ |= 0x00000020;
               }
-              stopTimes_.add(input.readMessage(m.cheminot.data.CheminotBuf.StopTime.PARSER, extensionRegistry));
+              stopTimes_.add(input.readMessage(m.cheminot.data.CheminotBuf.StopTime.parser(), extensionRegistry));
               break;
             }
           }
@@ -668,9 +679,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          id_ = s;
-        }
+        id_ = s;
         return s;
       }
     }
@@ -704,9 +713,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          name_ = s;
-        }
+        name_ = s;
         return s;
       }
     }
@@ -822,10 +829,10 @@ public final class CheminotBuf {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (!getIdBytes().isEmpty()) {
-        output.writeBytes(1, getIdBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, id_);
       }
       if (!getNameBytes().isEmpty()) {
-        output.writeBytes(2, getNameBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, name_);
       }
       if (lat_ != 0D) {
         output.writeDouble(3, lat_);
@@ -834,26 +841,23 @@ public final class CheminotBuf {
         output.writeDouble(4, lng_);
       }
       for (int i = 0; i < edges_.size(); i++) {
-        output.writeBytes(5, edges_.getByteString(i));
+        com.google.protobuf.GeneratedMessage.writeString(output, 5, edges_.getRaw(i));
       }
       for (int i = 0; i < stopTimes_.size(); i++) {
         output.writeMessage(6, stopTimes_.get(i));
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       if (!getIdBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getIdBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, id_);
       }
       if (!getNameBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getNameBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, name_);
       }
       if (lat_ != 0D) {
         size += com.google.protobuf.CodedOutputStream
@@ -866,8 +870,7 @@ public final class CheminotBuf {
       {
         int dataSize = 0;
         for (int i = 0; i < edges_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeBytesSizeNoTag(edges_.getByteString(i));
+          dataSize += computeStringSizeNoTag(edges_.getRaw(i));
         }
         size += dataSize;
         size += 1 * getEdgesList().size();
@@ -876,7 +879,7 @@ public final class CheminotBuf {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(6, stopTimes_.get(i));
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -1149,9 +1152,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            id_ = s;
-          }
+          id_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1203,7 +1204,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         id_ = value;
         onChanged();
         return this;
@@ -1219,9 +1221,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            name_ = s;
-          }
+          name_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -1273,7 +1273,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         name_ = value;
         onChanged();
         return this;
@@ -1418,7 +1419,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureEdgesIsMutable();
+  checkByteStringIsUtf8(value);
+        ensureEdgesIsMutable();
         edges_.add(value);
         onChanged();
         return this;
@@ -1687,8 +1689,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<Vertice> PARSER =
-        new com.google.protobuf.AbstractParser<Vertice>() {
+    private static final com.google.protobuf.Parser<Vertice>
+        PARSER = new com.google.protobuf.AbstractParser<Vertice>() {
       public Vertice parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -1705,6 +1707,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<Vertice> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<Vertice> getParserForType() {
@@ -1774,7 +1780,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.StopTime)
       StopTimeOrBuilder {
     // Use StopTime.newBuilder() to construct.
-    private StopTime(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private StopTime(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private StopTime() {
@@ -1810,27 +1816,27 @@ public final class CheminotBuf {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              tripId_ = bs;
+              tripId_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              arrival_ = bs;
+              arrival_ = s;
               break;
             }
             case 26: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              departure_ = bs;
+              departure_ = s;
               break;
             }
             case 34: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              stopId_ = bs;
+              stopId_ = s;
               break;
             }
             case 40: {
@@ -1875,9 +1881,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          tripId_ = s;
-        }
+        tripId_ = s;
         return s;
       }
     }
@@ -1911,9 +1915,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          arrival_ = s;
-        }
+        arrival_ = s;
         return s;
       }
     }
@@ -1947,9 +1949,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          departure_ = s;
-        }
+        departure_ = s;
         return s;
       }
     }
@@ -1983,9 +1983,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          stopId_ = s;
-        }
+        stopId_ = s;
         return s;
       }
     }
@@ -2028,49 +2026,44 @@ public final class CheminotBuf {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (!getTripIdBytes().isEmpty()) {
-        output.writeBytes(1, getTripIdBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, tripId_);
       }
       if (!getArrivalBytes().isEmpty()) {
-        output.writeBytes(2, getArrivalBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, arrival_);
       }
       if (!getDepartureBytes().isEmpty()) {
-        output.writeBytes(3, getDepartureBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, departure_);
       }
       if (!getStopIdBytes().isEmpty()) {
-        output.writeBytes(4, getStopIdBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 4, stopId_);
       }
       if (pos_ != 0) {
         output.writeInt32(5, pos_);
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       if (!getTripIdBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getTripIdBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, tripId_);
       }
       if (!getArrivalBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getArrivalBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, arrival_);
       }
       if (!getDepartureBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, getDepartureBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(3, departure_);
       }
       if (!getStopIdBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, getStopIdBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(4, stopId_);
       }
       if (pos_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(5, pos_);
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -2288,9 +2281,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            tripId_ = s;
-          }
+          tripId_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2342,7 +2333,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         tripId_ = value;
         onChanged();
         return this;
@@ -2358,9 +2350,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            arrival_ = s;
-          }
+          arrival_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2412,7 +2402,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         arrival_ = value;
         onChanged();
         return this;
@@ -2428,9 +2419,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            departure_ = s;
-          }
+          departure_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2482,7 +2471,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         departure_ = value;
         onChanged();
         return this;
@@ -2498,9 +2488,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            stopId_ = s;
-          }
+          stopId_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -2552,7 +2540,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         stopId_ = value;
         onChanged();
         return this;
@@ -2607,8 +2596,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<StopTime> PARSER =
-        new com.google.protobuf.AbstractParser<StopTime>() {
+    private static final com.google.protobuf.Parser<StopTime>
+        PARSER = new com.google.protobuf.AbstractParser<StopTime>() {
       public StopTime parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -2625,6 +2614,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<StopTime> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<StopTime> getParserForType() {
@@ -2655,7 +2648,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.CalendarDates)
       CalendarDatesOrBuilder {
     // Use CalendarDates.newBuilder() to construct.
-    private CalendarDates(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private CalendarDates(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private CalendarDates() {
@@ -2785,9 +2778,8 @@ public final class CheminotBuf {
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -2801,7 +2793,7 @@ public final class CheminotBuf {
         size += com.google.protobuf.CodedOutputStream
             .computeMessageSize(1, exceptionsByServiceId);
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -3039,6 +3031,14 @@ public final class CheminotBuf {
       getMutableExceptionsByServiceId() {
         return internalGetMutableExceptionsByServiceId().getMutableMap();
       }
+      /**
+       * <code>map&lt;string, .m.cheminot.data.CalendarExceptions&gt; exceptionsByServiceId = 1;</code>
+       */
+      public Builder putAllExceptionsByServiceId(
+          java.util.Map<java.lang.String, m.cheminot.data.CheminotBuf.CalendarExceptions> values) {
+        getMutableExceptionsByServiceId().putAll(values);
+        return this;
+      }
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
         return this;
@@ -3063,8 +3063,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<CalendarDates> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarDates>() {
+    private static final com.google.protobuf.Parser<CalendarDates>
+        PARSER = new com.google.protobuf.AbstractParser<CalendarDates>() {
       public CalendarDates parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3081,6 +3081,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<CalendarDates> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<CalendarDates> getParserForType() {
@@ -3129,7 +3133,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.CalendarExceptions)
       CalendarExceptionsOrBuilder {
     // Use CalendarExceptions.newBuilder() to construct.
-    private CalendarExceptions(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private CalendarExceptions(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private CalendarExceptions() {
@@ -3165,7 +3169,7 @@ public final class CheminotBuf {
                 calendarDates_ = new java.util.ArrayList<m.cheminot.data.CheminotBuf.CalendarDate>();
                 mutable_bitField0_ |= 0x00000001;
               }
-              calendarDates_.add(input.readMessage(m.cheminot.data.CheminotBuf.CalendarDate.PARSER, extensionRegistry));
+              calendarDates_.add(input.readMessage(m.cheminot.data.CheminotBuf.CalendarDate.parser(), extensionRegistry));
               break;
             }
           }
@@ -3247,9 +3251,8 @@ public final class CheminotBuf {
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
@@ -3257,7 +3260,7 @@ public final class CheminotBuf {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(1, calendarDates_.get(i));
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -3738,8 +3741,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<CalendarExceptions> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarExceptions>() {
+    private static final com.google.protobuf.Parser<CalendarExceptions>
+        PARSER = new com.google.protobuf.AbstractParser<CalendarExceptions>() {
       public CalendarExceptions parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -3756,6 +3759,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<CalendarExceptions> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<CalendarExceptions> getParserForType() {
@@ -3805,7 +3812,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.CalendarDate)
       CalendarDateOrBuilder {
     // Use CalendarDate.newBuilder() to construct.
-    private CalendarDate(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private CalendarDate(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private CalendarDate() {
@@ -3839,15 +3846,15 @@ public final class CheminotBuf {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              serviceId_ = bs;
+              serviceId_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              date_ = bs;
+              date_ = s;
               break;
             }
             case 24: {
@@ -3892,9 +3899,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          serviceId_ = s;
-        }
+        serviceId_ = s;
         return s;
       }
     }
@@ -3928,9 +3933,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          date_ = s;
-        }
+        date_ = s;
         return s;
       }
     }
@@ -3973,35 +3976,32 @@ public final class CheminotBuf {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (!getServiceIdBytes().isEmpty()) {
-        output.writeBytes(1, getServiceIdBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, serviceId_);
       }
       if (!getDateBytes().isEmpty()) {
-        output.writeBytes(2, getDateBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, date_);
       }
       if (exceptionType_ != 0) {
         output.writeInt32(3, exceptionType_);
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       if (!getServiceIdBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getServiceIdBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, serviceId_);
       }
       if (!getDateBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getDateBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, date_);
       }
       if (exceptionType_ != 0) {
         size += com.google.protobuf.CodedOutputStream
           .computeInt32Size(3, exceptionType_);
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -4205,9 +4205,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            serviceId_ = s;
-          }
+          serviceId_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -4259,7 +4257,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         serviceId_ = value;
         onChanged();
         return this;
@@ -4275,9 +4274,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            date_ = s;
-          }
+          date_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -4329,7 +4326,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         date_ = value;
         onChanged();
         return this;
@@ -4384,8 +4382,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<CalendarDate> PARSER =
-        new com.google.protobuf.AbstractParser<CalendarDate>() {
+    private static final com.google.protobuf.Parser<CalendarDate>
+        PARSER = new com.google.protobuf.AbstractParser<CalendarDate>() {
       public CalendarDate parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -4402,6 +4400,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<CalendarDate> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<CalendarDate> getParserForType() {
@@ -4526,7 +4528,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.Calendar)
       CalendarOrBuilder {
     // Use Calendar.newBuilder() to construct.
-    private Calendar(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private Calendar(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private Calendar() {
@@ -4567,63 +4569,63 @@ public final class CheminotBuf {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              serviceId_ = bs;
+              serviceId_ = s;
               break;
             }
             case 18: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              monday_ = bs;
+              monday_ = s;
               break;
             }
             case 26: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              tuesday_ = bs;
+              tuesday_ = s;
               break;
             }
             case 34: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              wednesday_ = bs;
+              wednesday_ = s;
               break;
             }
             case 42: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              thursday_ = bs;
+              thursday_ = s;
               break;
             }
             case 50: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              friday_ = bs;
+              friday_ = s;
               break;
             }
             case 58: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              saturday_ = bs;
+              saturday_ = s;
               break;
             }
             case 66: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              sunday_ = bs;
+              sunday_ = s;
               break;
             }
             case 74: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              startDate_ = bs;
+              startDate_ = s;
               break;
             }
             case 82: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
 
-              endDate_ = bs;
+              endDate_ = s;
               break;
             }
           }
@@ -4663,9 +4665,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          serviceId_ = s;
-        }
+        serviceId_ = s;
         return s;
       }
     }
@@ -4699,9 +4699,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          monday_ = s;
-        }
+        monday_ = s;
         return s;
       }
     }
@@ -4735,9 +4733,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          tuesday_ = s;
-        }
+        tuesday_ = s;
         return s;
       }
     }
@@ -4771,9 +4767,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          wednesday_ = s;
-        }
+        wednesday_ = s;
         return s;
       }
     }
@@ -4807,9 +4801,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          thursday_ = s;
-        }
+        thursday_ = s;
         return s;
       }
     }
@@ -4843,9 +4835,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          friday_ = s;
-        }
+        friday_ = s;
         return s;
       }
     }
@@ -4879,9 +4869,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          saturday_ = s;
-        }
+        saturday_ = s;
         return s;
       }
     }
@@ -4915,9 +4903,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          sunday_ = s;
-        }
+        sunday_ = s;
         return s;
       }
     }
@@ -4951,9 +4937,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          startDate_ = s;
-        }
+        startDate_ = s;
         return s;
       }
     }
@@ -4987,9 +4971,7 @@ public final class CheminotBuf {
         com.google.protobuf.ByteString bs = 
             (com.google.protobuf.ByteString) ref;
         java.lang.String s = bs.toStringUtf8();
-        if (bs.isValidUtf8()) {
-          endDate_ = s;
-        }
+        endDate_ = s;
         return s;
       }
     }
@@ -5023,84 +5005,73 @@ public final class CheminotBuf {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       if (!getServiceIdBytes().isEmpty()) {
-        output.writeBytes(1, getServiceIdBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, serviceId_);
       }
       if (!getMondayBytes().isEmpty()) {
-        output.writeBytes(2, getMondayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 2, monday_);
       }
       if (!getTuesdayBytes().isEmpty()) {
-        output.writeBytes(3, getTuesdayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 3, tuesday_);
       }
       if (!getWednesdayBytes().isEmpty()) {
-        output.writeBytes(4, getWednesdayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 4, wednesday_);
       }
       if (!getThursdayBytes().isEmpty()) {
-        output.writeBytes(5, getThursdayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 5, thursday_);
       }
       if (!getFridayBytes().isEmpty()) {
-        output.writeBytes(6, getFridayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 6, friday_);
       }
       if (!getSaturdayBytes().isEmpty()) {
-        output.writeBytes(7, getSaturdayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 7, saturday_);
       }
       if (!getSundayBytes().isEmpty()) {
-        output.writeBytes(8, getSundayBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 8, sunday_);
       }
       if (!getStartDateBytes().isEmpty()) {
-        output.writeBytes(9, getStartDateBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 9, startDate_);
       }
       if (!getEndDateBytes().isEmpty()) {
-        output.writeBytes(10, getEndDateBytes());
+        com.google.protobuf.GeneratedMessage.writeString(output, 10, endDate_);
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       if (!getServiceIdBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(1, getServiceIdBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(1, serviceId_);
       }
       if (!getMondayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(2, getMondayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(2, monday_);
       }
       if (!getTuesdayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(3, getTuesdayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(3, tuesday_);
       }
       if (!getWednesdayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(4, getWednesdayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(4, wednesday_);
       }
       if (!getThursdayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(5, getThursdayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(5, thursday_);
       }
       if (!getFridayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(6, getFridayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(6, friday_);
       }
       if (!getSaturdayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(7, getSaturdayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(7, saturday_);
       }
       if (!getSundayBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(8, getSundayBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(8, sunday_);
       }
       if (!getStartDateBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(9, getStartDateBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(9, startDate_);
       }
       if (!getEndDateBytes().isEmpty()) {
-        size += com.google.protobuf.CodedOutputStream
-          .computeBytesSize(10, getEndDateBytes());
+        size += com.google.protobuf.GeneratedMessage.computeStringSize(10, endDate_);
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -5354,9 +5325,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            serviceId_ = s;
-          }
+          serviceId_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5408,7 +5377,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         serviceId_ = value;
         onChanged();
         return this;
@@ -5424,9 +5394,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            monday_ = s;
-          }
+          monday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5478,7 +5446,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         monday_ = value;
         onChanged();
         return this;
@@ -5494,9 +5463,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            tuesday_ = s;
-          }
+          tuesday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5548,7 +5515,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         tuesday_ = value;
         onChanged();
         return this;
@@ -5564,9 +5532,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            wednesday_ = s;
-          }
+          wednesday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5618,7 +5584,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         wednesday_ = value;
         onChanged();
         return this;
@@ -5634,9 +5601,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            thursday_ = s;
-          }
+          thursday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5688,7 +5653,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         thursday_ = value;
         onChanged();
         return this;
@@ -5704,9 +5670,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            friday_ = s;
-          }
+          friday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5758,7 +5722,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         friday_ = value;
         onChanged();
         return this;
@@ -5774,9 +5739,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            saturday_ = s;
-          }
+          saturday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5828,7 +5791,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         saturday_ = value;
         onChanged();
         return this;
@@ -5844,9 +5808,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            sunday_ = s;
-          }
+          sunday_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5898,7 +5860,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         sunday_ = value;
         onChanged();
         return this;
@@ -5914,9 +5877,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            startDate_ = s;
-          }
+          startDate_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -5968,7 +5929,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         startDate_ = value;
         onChanged();
         return this;
@@ -5984,9 +5946,7 @@ public final class CheminotBuf {
           com.google.protobuf.ByteString bs =
               (com.google.protobuf.ByteString) ref;
           java.lang.String s = bs.toStringUtf8();
-          if (bs.isValidUtf8()) {
-            endDate_ = s;
-          }
+          endDate_ = s;
           return s;
         } else {
           return (java.lang.String) ref;
@@ -6038,7 +5998,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  
+  checkByteStringIsUtf8(value);
+        
         endDate_ = value;
         onChanged();
         return this;
@@ -6067,8 +6028,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<Calendar> PARSER =
-        new com.google.protobuf.AbstractParser<Calendar>() {
+    private static final com.google.protobuf.Parser<Calendar>
+        PARSER = new com.google.protobuf.AbstractParser<Calendar>() {
       public Calendar parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6085,6 +6046,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<Calendar> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<Calendar> getParserForType() {
@@ -6128,7 +6093,7 @@ public final class CheminotBuf {
       // @@protoc_insertion_point(message_implements:m.cheminot.data.TripStopIds)
       TripStopIdsOrBuilder {
     // Use TripStopIds.newBuilder() to construct.
-    private TripStopIds(com.google.protobuf.GeneratedMessage.Builder builder) {
+    private TripStopIds(com.google.protobuf.GeneratedMessage.Builder<?> builder) {
       super(builder);
     }
     private TripStopIds() {
@@ -6160,12 +6125,12 @@ public final class CheminotBuf {
               break;
             }
             case 10: {
-              com.google.protobuf.ByteString bs = input.readBytes();
+              String s = input.readStringRequireUtf8();
               if (!((mutable_bitField0_ & 0x00000001) == 0x00000001)) {
                 stopIds_ = new com.google.protobuf.LazyStringArrayList();
                 mutable_bitField0_ |= 0x00000001;
               }
-              stopIds_.add(bs);
+              stopIds_.add(s);
               break;
             }
           }
@@ -6237,26 +6202,24 @@ public final class CheminotBuf {
     public void writeTo(com.google.protobuf.CodedOutputStream output)
                         throws java.io.IOException {
       for (int i = 0; i < stopIds_.size(); i++) {
-        output.writeBytes(1, stopIds_.getByteString(i));
+        com.google.protobuf.GeneratedMessage.writeString(output, 1, stopIds_.getRaw(i));
       }
     }
 
-    private int memoizedSerializedSize = -1;
     public int getSerializedSize() {
-      int size = memoizedSerializedSize;
+      int size = memoizedSize;
       if (size != -1) return size;
 
       size = 0;
       {
         int dataSize = 0;
         for (int i = 0; i < stopIds_.size(); i++) {
-          dataSize += com.google.protobuf.CodedOutputStream
-            .computeBytesSizeNoTag(stopIds_.getByteString(i));
+          dataSize += computeStringSizeNoTag(stopIds_.getRaw(i));
         }
         size += dataSize;
         size += 1 * getStopIdsList().size();
       }
-      memoizedSerializedSize = size;
+      memoizedSize = size;
       return size;
     }
 
@@ -6536,7 +6499,8 @@ public final class CheminotBuf {
         if (value == null) {
     throw new NullPointerException();
   }
-  ensureStopIdsIsMutable();
+  checkByteStringIsUtf8(value);
+        ensureStopIdsIsMutable();
         stopIds_.add(value);
         onChanged();
         return this;
@@ -6565,8 +6529,8 @@ public final class CheminotBuf {
       return DEFAULT_INSTANCE;
     }
 
-    public static final com.google.protobuf.Parser<TripStopIds> PARSER =
-        new com.google.protobuf.AbstractParser<TripStopIds>() {
+    private static final com.google.protobuf.Parser<TripStopIds>
+        PARSER = new com.google.protobuf.AbstractParser<TripStopIds>() {
       public TripStopIds parsePartialFrom(
           com.google.protobuf.CodedInputStream input,
           com.google.protobuf.ExtensionRegistryLite extensionRegistry)
@@ -6583,6 +6547,10 @@ public final class CheminotBuf {
         }
       }
     };
+
+    public static com.google.protobuf.Parser<TripStopIds> parser() {
+      return PARSER;
+    }
 
     @java.lang.Override
     public com.google.protobuf.Parser<TripStopIds> getParserForType() {
