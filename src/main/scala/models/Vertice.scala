@@ -8,6 +8,12 @@ object Vertice {
 
   import m.cheminot.data.CheminotBuf
 
+  lazy val PARIS = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
+
+  lazy val PARIS_LYON = Vertice(Stop.STOP_PARIS_LYON, "Paris Gare De Lyon", 48.844266, 2.373755, Nil, Nil)
+
+  lazy val PARIS_NORD = Vertice(Stop.STOP_PARIS_NORD, "Paris Nord", 48.880845, 2.356722, Nil, Nil)
+
   def serialize(vertice: Vertice): CheminotBuf.Vertice = {
     val builder = CheminotBuf.Vertice.newBuilder()
     builder

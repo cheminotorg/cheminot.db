@@ -374,7 +374,16 @@ case class StopRecord(
   stopUrl: String,
   locationType: String,
   parentStation: String
-)
+) {
+
+  override def equals(o: Any): Boolean =
+    o match {
+      case r:StopRecord => r.stopId == stopId
+      case _ => false
+    }
+
+  override def hashCode = stopId.hashCode
+}
 
 case class CalendarRecord(
   serviceId: String,

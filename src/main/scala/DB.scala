@@ -19,7 +19,7 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val interTrips = DB.buildTrips(gtfsBundle.inter)
 
-  lazy val stops = (gtfsBundle.ter.stops ++: gtfsBundle.trans.stops ++: gtfsBundle.inter.stops).groupBy(_.stopId).values.toList.flatten
+  lazy val stops = (gtfsBundle.ter.stops ++: gtfsBundle.trans.stops ++: gtfsBundle.inter.stops).groupBy(_.stopId).values.toList.distinct.flatten
 
   lazy val ttstops = DB.buildTreeStops(stops)
 
@@ -50,6 +50,8 @@ case class DB(gtfsBundle: GtfsBundle) {
 
 object DB {
 
+  type StopId = String
+
   def defaultDbDir: File = new File("db")
 
   def fromDir(directory: File): Option[DB] =
@@ -58,10 +60,26 @@ object DB {
   def fromDefaultDir(): Option[DB] =
     GtfsBundle.mostRecent().map(DB.apply)
 
+  private def mergeVertices(z: Vertice, verticeIds: List[String], vertices: Map[StopId, Vertice], replace: Boolean): Map[StopId, Vertice] = {
+    val mergedVertice: Vertice = verticeIds.flatMap(vertices.get).foldLeft(z) { (acc, vertice) =>
+      val stopTimes = (vertice.stopTimes ++: acc.stopTimes).map { stopTime =>
+        stopTime.copy(stopId = vertice.id)
+      }
+
+      acc.copy(
+        edges = (vertice.edges ++: acc.edges).distinct,
+        stopTimes = stopTimes
+      )
+    }
+
+    val merged = vertices + (mergedVertice.id -> mergedVertice)
+
+    if (replace) verticeIds.foldLeft(merged)(_ - _) else merged
+  }
+
   private def buildGraph(stopRecords: List[StopRecord], trips: List[Trip]): List[Vertice] =
     Measure.duration("Graph") {
-      var paris = Vertice(Stop.STOP_PARIS, "Paris", 48.858859, 2.3470599, Nil, Nil)
-      val vertices = par(stopRecords) { stopRecord =>
+      val vertices: Map[StopId, Vertice] = par(stopRecords) { stopRecord =>
         val zStopTimes = Subway.stopTimes.get(stopRecord.stopId).getOrElse(Nil)
         val zEdges = Stop.parisStops.filterNot(_ == stopRecord.stopId).toList
         val (edges, stopTimes) = trips.foldLeft((zEdges, zStopTimes)) { (acc, trip) =>
@@ -72,25 +90,32 @@ object DB {
           }
           (edges ++: accEdges) -> (stopTimes ++: accStopTimes)
         }
-        if(Stop.parisStops.contains(stopRecord.stopId)) {
-          synchronized {
-            paris = paris.copy(edges = (edges ++: paris.edges).distinct, stopTimes = (stopTimes ++: paris.stopTimes).distinct)
-          }
-        }
-        Vertice(stopRecord.stopId, stopRecord.stopName, stopRecord.stopLat, stopRecord.stopLong, edges.distinct, stopTimes.distinct)
-      }.toList
-      paris +: vertices
+        stopRecord.stopId -> Vertice(stopRecord.stopId, stopRecord.stopName, stopRecord.stopLat, stopRecord.stopLong, edges.distinct, stopTimes.distinct)
+      }.toMap
+
+      List(
+        (Vertice.PARIS, Stop.parisStops, false),
+        (Vertice.PARIS_LYON, Stop.parisLyon, true),
+        (Vertice.PARIS_NORD, Stop.parisNord, true)
+      ).foldLeft(vertices) {
+        case (acc, (vertice, verticeIds, replace)) =>
+          mergeVertices(vertice, verticeIds, acc, replace)
+      }.values.toList
     }
 
-  private def buildTreeStops(stopRecords: List[StopRecord]): TTreeNode[(String, String)] = {
+  private def buildTreeStops(stopRecords: List[StopRecord], mergedStops: List[String]): TTreeNode[(String, String)] = {
     Measure.duration("TTreeStops") {
-      TTreeNode(("paris" -> (Stop.STOP_PARIS, "Paris")) +: par(stopRecords) { stopRecord =>
+      val entries = par(stopRecords.filterNot(s => mergedStops.exists(_ == s.stopId))) { stopRecord =>
         val saintStopNames = Normalizer.handleSaintWords(stopRecord.stopName)
         val compoundStopNames = if(saintStopNames.isEmpty) Normalizer.handleCompoundWords(stopRecord.stopName) else Nil
         (stopRecord.stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
           s.toLowerCase -> (stopRecord.stopId, stopRecord.stopName)
         }
-      }.toList.flatten)
+      }.toList.flatten
+      val paris = Vertice.PARIS.name.toLowerCase -> (Stop.STOP_PARIS, Vertice.PARIS.name)
+      val parisLyon = Vertice.PARIS_LYON.name.toLowerCase -> (Stop.STOP_PARIS_LYON, Vertice.PARIS_LYON.name)
+      val parisNord = Vertice.PARIS_NORD.name.toLowerCase -> (Stop.STOP_PARIS_NORD, Vertice.PARIS_NORD.name)
+      TTreeNode(parisNord +: parisLyon +: paris +: entries)
     }
   }
 
