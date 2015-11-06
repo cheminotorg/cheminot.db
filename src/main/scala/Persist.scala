@@ -32,7 +32,7 @@ object Persist {
       Sqlite.init();
       Sqlite.createMetaTable()
       Sqlite.createTripsTable()
-      Sqlite.insertTrips('TER -> db.terTrips, 'TRANS -> db.transTrips, 'INTER -> db.interTrips)
+      Sqlite.insertTrips('TER -> db.fixedTerTrips, 'TRANS -> db.fixedTransTrips, 'INTER -> db.fixedInterTrips)
       Sqlite.initMeta(db.version)
       connection.close()
       println("done!")
@@ -46,11 +46,11 @@ object Persist {
     graph(dbDir, db.inter.id, db.version, db.inter.graph)
   }
 
-  private def graph(dbDir: File, id: String, version: Version, graph: List[Vertice]): File = {
+  private def graph(dbDir: File, id: String, version: Version, graph: Map[StopId, Vertice]): File = {
     val file = directory(dbDir, version)(s"${id}-graph-${version.value}")
     println("Storing graph to " + file)
     val output = new java.io.FileOutputStream(file)
-    Vertice.serializeGraph(graph).writeTo(output)
+    Vertice.serializeGraph(graph.values.toSeq).writeTo(output)
     println("done!")
     file
   }

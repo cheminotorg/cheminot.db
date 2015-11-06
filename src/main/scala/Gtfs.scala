@@ -124,9 +124,15 @@ object GtfsDirectory {
 
   val TerStopId = """StopPoint:OCETrain TER-(.*).""".r
 
+  val TerParentStopId = """StopArea:OCE(.*).""".r
+
   val TransStopId = """StopPoint:DUA(.*)""".r
 
+  val TransParentStopId = """StopArea:DUA(.*)""".r
+
   val InterStopId = """StopPoint:OCECorail Intercité-(.*).""".r
+
+  val InterParentStopId = """StopArea:OCE(.*).""".r
 
   def ter(dir: File): ParsedGtfsDirectory = {
     println(s"[GTFS] Reading ter from ${dir.getAbsolutePath}")
@@ -148,9 +154,14 @@ object GtfsDirectory {
 
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCETrain TER-")) =>
-        stopId match {
-          case TerStopId(nodeId) =>
-            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
+        (stopId, parentStation) match {
+          case (TerStopId(nodeId), TerParentStopId(parentNodeId)) =>
+            val parent = parentNodeId match {
+              case id if Stop.isParisLyon(id) => Stop.STOP_PARIS_LYON
+              case id if Stop.isParisNord(id) => Stop.STOP_PARIS_NORD
+              case _ => parentNodeId
+            }
+            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
             throw new CSV.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
         }
@@ -200,9 +211,14 @@ object GtfsDirectory {
 
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:DUA")) =>
-        stopId match {
-          case TransStopId(nodeId) =>
-            StopRecord(nodeId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
+        (stopId, parentStation) match {
+          case (TransStopId(nodeId), TransParentStopId(parentNodeId)) =>
+            val parent = parentNodeId match {
+              case id if Stop.isParisLyon(id) => Stop.STOP_PARIS_LYON
+              case id if Stop.isParisNord(id) => Stop.STOP_PARIS_NORD
+              case _ => parentNodeId
+            }
+            StopRecord(nodeId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
             throw new CSV.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
         }
@@ -252,9 +268,14 @@ object GtfsDirectory {
 
     val stops = GtfsDirReader.stops(dir) {
       case record@List(stopId, stopName, stopDesc, stopLat, stopLong, zoneId, stopUrl, locationType, parentStation) if(stopId.startsWith("StopPoint:OCECorail")) =>
-        stopId match {
-          case InterStopId(nodeId) =>
-            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parentStation)
+        (stopId, parentStation) match {
+          case (InterStopId(nodeId), InterParentStopId(parentNodeId)) =>
+            val parent = parentNodeId match {
+              case id if Stop.isParisLyon(id) => Stop.STOP_PARIS_LYON
+              case id if Stop.isParisNord(id) => Stop.STOP_PARIS_NORD
+              case _ => parentNodeId
+            }
+            StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
             throw new CSV.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
         }
