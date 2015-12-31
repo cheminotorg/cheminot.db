@@ -24,14 +24,8 @@ object Main {
           if(config.nothing) {
             Persist.all(dbRootDir, db)
           } else {
-            if(config.sqlite) {
-              Persist.sqlite(dbRootDir, db)
-            }
             if(config.graph) {
               Persist.graph(dbRootDir, db)
-            }
-            if(config.calendar) {
-              Persist.calendarDates(dbRootDir, db)
             }
             if(config.ttstops) {
               Persist.ttstops(dbRootDir, db)
@@ -69,17 +63,9 @@ object Main {
       } text("Specify twitter pseudo to notify")
     )
 
-    opt[Unit]('s', "sqlite") action { (_, config) =>
-      config.copy(sqlite = true)
-    } text("Build sqlite db")
-
     opt[Unit]('g', "graph") action { (_, config) =>
       config.copy(graph = true)
     } text("Build graph file")
-
-    opt[Unit]('c', "calendar") action { (_, config) =>
-      config.copy(calendar = true)
-    } text("Build calendar dates file")
 
     opt[Unit]('t', "ttstops") action { (_, config) =>
       config.copy(ttstops = true)
@@ -96,9 +82,7 @@ object Main {
 }
 
 case class Config(
-  sqlite: Boolean = false,
   graph: Boolean = false,
-  calendar: Boolean = false,
   ttstops: Boolean = false,
   autoupdate: Boolean = false,
   gtfsdir: Option[File] = None,
@@ -109,7 +93,7 @@ case class Config(
   twitterAccessKey: Option[String] = None,
   twitterAccessSecret: Option[String] = None
 ) {
-  def nothing = !(sqlite || graph || calendar || autoupdate || ttstops)
+  def nothing = !(graph || autoupdate || ttstops)
   val twitterOAuth =
     for {
       a <- twitterConsumerKey

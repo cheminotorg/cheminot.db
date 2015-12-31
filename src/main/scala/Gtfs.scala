@@ -78,7 +78,7 @@ object Gtfs {
   }
 }
 
-case class GtfsBundle(version: Version, ter: ParsedGtfsDirectory, trans: ParsedGtfsDirectory, inter: ParsedGtfsDirectory)
+case class GtfsBundle(version: Version, data: ParsedGtfsDirectory)
 
 object GtfsBundle {
 
@@ -99,7 +99,7 @@ object GtfsBundle {
         val gtfsTer = GtfsDirectory.ter(terDir)
         val gtfsTrans = GtfsDirectory.trans(transDir)
         val gtfsInter = GtfsDirectory.inter(interDir)
-        GtfsBundle(version, gtfsTer, gtfsTrans, gtfsInter)
+        GtfsBundle(version, gtfsTer merge gtfsTrans merge gtfsInter)
     }
 
   def mostRecent(root: Option[File] = None): Option[GtfsBundle] =
@@ -137,19 +137,21 @@ object GtfsDirectory {
   def ter(dir: File): ParsedGtfsDirectory = {
     println(s"[GTFS] Reading ter from ${dir.getAbsolutePath}")
 
+    val terServiceId = (id: String) => s"ter#${id}"
+
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, _) =>
         stopId match {
           case TerStopId(nodeId) =>
             StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
         }
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId, shapeId) =>
-        TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
+        TripRecord(routeId, terServiceId(serviceId), tripId, tripHeadSign, directionId, blockId)
     }
 
     val stops = GtfsDirReader.stops(dir) {
@@ -163,14 +165,14 @@ object GtfsDirectory {
             }
             StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize ter id for: $stopId")
         }
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
       case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
         CalendarRecord(
-          serviceId,
+          terServiceId(serviceId),
           parseBoolean(monday),
           parseBoolean(tuesday),
           parseBoolean(wednesday),
@@ -185,7 +187,7 @@ object GtfsDirectory {
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
       case record@List(serviceId, date, exceptionType) =>
-        CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
+        CalendarDateRecord(terServiceId(serviceId), parseDateTime(date), exceptionType.toInt)
     }
 
     ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -194,19 +196,21 @@ object GtfsDirectory {
   def trans(dir: File): ParsedGtfsDirectory = {
     println(s"[GTFS] Reading trans from ${dir.getAbsolutePath}")
 
+    val transServiceId = (id: String) => s"trans#${id}"
+
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType) =>
         stopId match {
           case TransStopId(nodeId) =>
             StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
         }
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId) =>
-        TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
+        TripRecord(routeId, transServiceId(serviceId), tripId, tripHeadSign, directionId, blockId)
     }
 
     val stops = GtfsDirReader.stops(dir) {
@@ -220,14 +224,14 @@ object GtfsDirectory {
             }
             StopRecord(nodeId, Normalizer.stopName(stopName), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize trans id for: $stopId")
         }
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
       case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
         CalendarRecord(
-          serviceId,
+          transServiceId(serviceId),
           parseBoolean(monday),
           parseBoolean(tuesday),
           parseBoolean(wednesday),
@@ -242,7 +246,7 @@ object GtfsDirectory {
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
       case record@List(serviceId, date, exceptionType) =>
-        CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
+        CalendarDateRecord(transServiceId(serviceId), parseDateTime(date), exceptionType.toInt)
     }
 
     ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -251,19 +255,21 @@ object GtfsDirectory {
   def inter(dir: File): ParsedGtfsDirectory = {
     println(s"[GTFS] Reading inter from ${dir.getAbsolutePath}]")
 
+    val interServiceId = (id: String) => s"inter#${id}"
+
     val stopTimes = GtfsDirReader.stopTimes(dir) {
       case record@List(tripId, arrival, departure, stopId, stopSeq, stopHeadSign, pickUpType, dropOffType, _) =>
         stopId match {
           case InterStopId(nodeId) =>
             StopTimeRecord(tripId, parseTime(arrival), parseTime(departure), nodeId, stopSeq.toInt, stopHeadSign, pickUpType, dropOffType)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
         }
     }
 
     val trips = GtfsDirReader.trips(dir) {
       case record@List(routeId, serviceId, tripId, tripHeadSign, directionId, blockId, shapeId) =>
-        TripRecord(routeId, serviceId, tripId, tripHeadSign, directionId, blockId)
+        TripRecord(routeId, interServiceId(serviceId), tripId, tripHeadSign, directionId, blockId)
     }
 
     val stops = GtfsDirReader.stops(dir) {
@@ -277,14 +283,14 @@ object GtfsDirectory {
             }
             StopRecord(nodeId, stopName.substring(8), stopDesc, stopLat.toDouble, stopLong.toDouble, zoneId, stopUrl, locationType, parent)
           case _ =>
-            throw new CSV.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
+            throw new CSVReadFile.Verbose(s"** Reading stops: unable to normalize inter id for: $stopId")
         }
     }
 
     val calendar = GtfsDirReader.calendar(dir) {
       case record@List(serviceId, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startDate, endDate) =>
         CalendarRecord(
-          serviceId,
+          interServiceId(serviceId),
           parseBoolean(monday),
           parseBoolean(tuesday),
           parseBoolean(wednesday),
@@ -299,7 +305,7 @@ object GtfsDirectory {
 
     val calendarDates = GtfsDirReader.calendarDates(dir) {
       case record@List(serviceId, date, exceptionType) =>
-        CalendarDateRecord(serviceId, parseDateTime(date), exceptionType.toInt)
+        CalendarDateRecord(interServiceId(serviceId), parseDateTime(date), exceptionType.toInt)
     }
 
     ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
@@ -333,7 +339,17 @@ case class ParsedGtfsDirectory(
   stops: List[StopRecord],
   calendar: List[CalendarRecord],
   calendarDates: List[CalendarDateRecord]
-)
+) {
+  def merge(p: ParsedGtfsDirectory): ParsedGtfsDirectory = {
+    p.copy(
+      p.stopTimes ++: stopTimes,
+      p.trips ++: trips,
+      p.stops ++: stops,
+      p.calendar ++: calendar,
+      p.calendarDates ++: calendarDates
+    )
+  }
+}
 
 object ParsedGtfsDirectory {
 
@@ -349,78 +365,18 @@ object GtfsDirReader {
     new File(root.getAbsolutePath() + "/" + name)
   }
 
-  def stopTimes(gtfsDir: File)(collect: CSVFile.CollectFunct[StopTimeRecord]): List[StopTimeRecord] =
-    CSVFile(file(gtfsDir, "stop_times.txt")).read(collect)
+  def stopTimes(gtfsDir: File)(collect: CSVReadFile.CollectFunct[StopTimeRecord]): List[StopTimeRecord] =
+    CSVReadFile(file(gtfsDir, "stop_times.txt")).read(collect)
 
-  def trips(gtfsDir: File)(collect: CSVFile.CollectFunct[TripRecord]): List[TripRecord] =
-    CSVFile(file(gtfsDir, "trips.txt")).read(collect)
+  def trips(gtfsDir: File)(collect: CSVReadFile.CollectFunct[TripRecord]): List[TripRecord] =
+    CSVReadFile(file(gtfsDir, "trips.txt")).read(collect)
 
-  def stops(gtfsDir: File)(collect: CSVFile.CollectFunct[StopRecord]): List[StopRecord] =
-    CSVFile(file(gtfsDir, "stops.txt")).read(collect)
+  def stops(gtfsDir: File)(collect: CSVReadFile.CollectFunct[StopRecord]): List[StopRecord] =
+    CSVReadFile(file(gtfsDir, "stops.txt")).read(collect)
 
-  def calendar(gtfsDir: File)(collect: CSVFile.CollectFunct[CalendarRecord]): List[CalendarRecord] =
-    CSVFile(file(gtfsDir, "calendar.txt")).read(collect)
+  def calendar(gtfsDir: File)(collect: CSVReadFile.CollectFunct[CalendarRecord]): List[CalendarRecord] =
+    CSVReadFile(file(gtfsDir, "calendar.txt")).read(collect)
 
-  def calendarDates(gtfsDir: File)(collect: CSVFile.CollectFunct[CalendarDateRecord]): List[CalendarDateRecord] =
-    CSVFile(file(gtfsDir, "calendar_dates.txt")).read(collect)
+  def calendarDates(gtfsDir: File)(collect: CSVReadFile.CollectFunct[CalendarDateRecord]): List[CalendarDateRecord] =
+    CSVReadFile(file(gtfsDir, "calendar_dates.txt")).read(collect)
 }
-
-case class StopTimeRecord(
-  tripId: String,
-  arrival: DateTime,
-  departure: DateTime,
-  stopId: String,
-  stopSeq: Int,
-  stopHeadSign: String,
-  pickUpType: String,
-  dropOffType: String
-)
-
-case class TripRecord(
-  routeId: String,
-  serviceId: String,
-  tripId: String,
-  tripHeadSign: String,
-  directionId: String,
-  blockId: String
-)
-
-case class StopRecord(
-  stopId: String,
-  stopName: String,
-  stopDesc: String,
-  stopLat: Double,
-  stopLong: Double,
-  zone: String,
-  stopUrl: String,
-  locationType: String,
-  parentStation: String
-) {
-
-  override def equals(o: Any): Boolean =
-    o match {
-      case r:StopRecord => r.stopId == stopId
-      case _ => false
-    }
-
-  override def hashCode = stopId.hashCode
-}
-
-case class CalendarRecord(
-  serviceId: String,
-  monday: Boolean,
-  tuesday: Boolean,
-  wednesday: Boolean,
-  thursday: Boolean,
-  friday: Boolean,
-  saturday: Boolean,
-  sunday: Boolean,
-  startDate: DateTime,
-  endDate: DateTime
-)
-
-case class CalendarDateRecord(
-  serviceId: String,
-  date: DateTime,
-  exceptionType: Int
-)

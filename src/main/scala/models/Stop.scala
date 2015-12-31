@@ -1,7 +1,6 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
-import m.cheminot.StopRecord
 
 case class Stop(id: String, name: String, lat: Double, lng: Double)
 

@@ -1,12 +1,13 @@
 package m.cheminot.models
 
-import m.cheminot.TripRecord
-
 case class Trip(id: String, calendar: Option[Calendar], direction: String, stopTimes: Seq[StopTime]) {
 
   lazy val stops: Seq[String] = {
     stopTimes.map(_.stopId).distinct
   }
+
+  def isValid: Boolean =
+    stopTimes.forall(stopTime => stopTimes.count(_.stopId == stopTime.stopId) == 1)
 
   def hasStop(id: String): Boolean = {
     stops.find(_ == id).isDefined
@@ -21,17 +22,7 @@ case class Trip(id: String, calendar: Option[Calendar], direction: String, stopT
 
 object Trip {
 
-  import m.cheminot.data.CheminotBuf
-
   def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]): Trip = {
     Trip(record.tripId, calendar, record.directionId, stopTimes)
-  }
-
-  def serializeStopIds(trip: Trip): CheminotBuf.TripStopIds = {
-    val builder = CheminotBuf.TripStopIds.newBuilder()
-    trip.stopTimes.sortBy(_.pos).map { stopTime =>
-      builder.addStopIds(stopTime.stopId)
-    }
-    builder.build()
   }
 }

@@ -1,6 +1,8 @@
 import java.util.concurrent.Executors
 import scala.concurrent.duration._
+import play.api.libs.iteratee.{ Enumerator, Iteratee }
 import scala.concurrent.{ Await, Future, ExecutionContext }
+import java.util.concurrent.atomic.AtomicInteger
 
 package m.cheminot {
 
@@ -11,22 +13,19 @@ package m.cheminot {
     implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(THREADS_PER_POOL))
 
     def par[A, B](aaa: Seq[A], debug: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
-      val grouped = aaa.size / (THREADS_PER_POOL * 2)
-      if(debug) { println(s"[progress] total: ${aaa.size} | grouped: ${grouped}") }
-      var counter = 0;
-      val groups = aaa.grouped(20).toList
+      val n = 20 //aaa.size / (THREADS_PER_POOL * 2)
+      if(debug) { println(s"[progress] total: ${aaa.size} | grouped: ${n}") }
+      val counter = new AtomicInteger(0);
       Await.result(
-        Future.sequence {
-          groups.map { group =>
-            Future(group.map(f)).map { xxx =>
+        misc.FutureUtils.groupSequentially(aaa, n) { a =>
+          Future(f(a)).andThen {
+            case _ =>
               if(debug) {
-                synchronized { counter += xxx.size }
-                println(s"[progress] ${counter} / ${aaa.size}")
+                val progress = scala.math.round(counter.incrementAndGet.toFloat / aaa.size.toFloat * 100)
+                println(s"[progress] ${progress}%")
               }
-              xxx
-            }
           }
-        }.map(_.flatten),
+        },
         1.hours
       )
     }

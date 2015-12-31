@@ -5,6 +5,7 @@ import org.apache.commons.io.FileUtils
 import play.api.libs.json.Json
 import org.joda.time.DateTime
 import models._
+import storage._
 
 object Persist {
 
@@ -19,55 +20,11 @@ object Persist {
   }
 
   def all(dbDir: File, db: DB) {
-    Persist.sqlite(dbDir, db)
     Persist.graph(dbDir, db)
-    Persist.calendarDates(dbDir, db)
-    Persist.ttstops(dbDir, db)
   }
 
-  def sqlite(dbDir: File, db: DB): File = {
-    val file = directory(dbDir, db.version)(s"cheminot-${db.version.value}.db")
-    println("Storing trips to " + file)
-    Sqlite.withConnection(file.getAbsolutePath) { implicit connection =>
-      Sqlite.init();
-      Sqlite.createMetaTable()
-      Sqlite.createTripsTable()
-      Sqlite.insertTrips('TER -> db.fixedTerTrips, 'TRANS -> db.fixedTransTrips, 'INTER -> db.fixedInterTrips)
-      Sqlite.initMeta(db.version)
-      connection.close()
-      println("done!")
-      file
-    }
-  }
-
-  def graph(dbDir: File, db: DB): File = {
-    graph(dbDir, db.ter.id, db.version, db.ter.graph)
-    graph(dbDir, db.trans.id, db.version, db.trans.graph)
-    graph(dbDir, db.inter.id, db.version, db.inter.graph)
-  }
-
-  private def graph(dbDir: File, id: String, version: Version, graph: Map[StopId, Vertice]): File = {
-    val file = directory(dbDir, version)(s"${id}-graph-${version.value}")
-    println("Storing graph to " + file)
-    val output = new java.io.FileOutputStream(file)
-    Vertice.serializeGraph(graph.values.toSeq).writeTo(output)
-    println("done!")
-    file
-  }
-
-  def calendarDates(dbDir: File, db: DB): File = {
-    calendarDates(dbDir, db.ter.id, db.version, db.ter.calendarDates, db.ter.calendar)
-    calendarDates(dbDir, db.trans.id, db.version, db.trans.calendarDates, db.trans.calendar)
-    calendarDates(dbDir, db.inter.id, db.version, db.inter.calendarDates, db.inter.calendar)
-  }
-
-  private def calendarDates(dbDir: File, id: String, version: Version, calendarDates: List[CalendarDate], calendar: Seq[Calendar]): File = {
-    val file = directory(dbDir, version)(s"${id}-calendardates-${version.value}")
-    println("Storing calendar dates to " + file)
-    val output = new java.io.FileOutputStream(file)
-    CalendarDate.serializeCalendarDates(calendarDates, calendar).writeTo(output)
-    println("done!")
-    file
+  def graph(dbDir: File, db: DB): Unit = {
+    Neo4j.insertGraph(dbDir, db)
   }
 
   def ttstops(dbDir: File, db: DB) {
