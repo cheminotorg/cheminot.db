@@ -1,7 +1,6 @@
 package m.cheminot.models
 
 import org.joda.time.DateTime
-import m.cheminot.Gtfs
 
 case class Calendar(
   serviceId: String,

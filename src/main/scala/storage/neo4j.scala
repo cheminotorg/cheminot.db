@@ -17,10 +17,12 @@ object Neo4j {
   private def stopId(trip: Trip, stopTime: StopTime): String =
     s"${trip.id}#${stopTime.stopId}"
 
-  private def calendarDateId(calendarDate: CalendarDate): String =
-    s"${calendarDate.serviceId}#${calendarDate.date.withTimeAtStartOfDay().getMillis()}#${calendarDate.exceptionType}"
+  private def calendarDateId(calendarDate: CalendarDate): String = {
+    val date = calendarDate.date.withTimeAtStartOfDay().getMillis()
+    s"${calendarDate.serviceId}#${date}#${calendarDate.exceptionType}"
+  }
 
-  def indexes(outdir: File, db: DB): Unit = {
+  def writeIndexes(outdir: File, db: DB): Unit = {
     import scala.collection.JavaConverters._
 
     val lines = List(
@@ -46,7 +48,7 @@ object Neo4j {
 
   object Nodes {
 
-    def stations(outdir: File, db: DB): Unit = {
+    def writeStations(outdir: File, db: DB): Unit = {
       val headers = List("stationid:ID(Station)", "name:string", "lat:double", "lng:double", ":LABEL")
       val data = db.graph.values.toList.map { vertice =>
         List(vertice.id, vertice.name, vertice.lat.toString, vertice.lng.toString, "Station")
@@ -54,7 +56,7 @@ object Neo4j {
       write(outdir, name = "stations", headers = headers, data = data)
     }
 
-    def stops(outdir: File, db: DB): Unit = {
+    def writeStops(outdir: File, db: DB): Unit = {
       val headers = List("stopid:ID(Stop)", "stationid:string", ":LABEL")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.map { stopTime =>
@@ -64,7 +66,7 @@ object Neo4j {
       write(outdir, name = "stops", headers = headers, data = data)
     }
 
-    def trips(outdir: File, db: DB): Unit = {
+    def writeTrips(outdir: File, db: DB): Unit = {
       val headers = List("tripid:ID(Trip)", "serviceid:string", ":LABEL")
       val data = db.trips.values.toList.map { trip =>
         List(trip.id, trip.calendar.map(_.serviceId).getOrElse(""), "Trip")
@@ -72,7 +74,7 @@ object Neo4j {
       write(outdir, name = "trips", headers = headers, data = data)
     }
 
-    def calendar(outdir: File, db: DB): Unit = {
+    def writeCalendar(outdir: File, db: DB): Unit = {
       val formatDateTime = (date: org.joda.time.DateTime) => {
         (date.withTimeAtStartOfDay().getMillis() / 1000).toString
       }
@@ -107,7 +109,7 @@ object Neo4j {
       write(outdir, name = "calendar", headers = headers, data = data)
     }
 
-    def calendarDates(outdir: File, db: DB): Unit = {
+    def writeCalendarDates(outdir: File, db: DB): Unit = {
       val formatDateTime = (date: org.joda.time.DateTime) => {
         (date.withTimeAtStartOfDay().getMillis() / 1000).toString
       }
@@ -121,7 +123,22 @@ object Neo4j {
 
   object Relationships {
 
-    def trip2Stops(outdir: File, db: DB): Unit = {
+    def writeStop2Station(outdir: File, db: DB): Unit = {
+      val headers = List(":START_ID(Stop)", ":END_ID(Station)", ":TYPE")
+      val data = db.trips.values.toList.flatMap { trip =>
+        trip.stopTimes.flatMap { stopTime =>
+          db.trips.get(stopTime.tripId).orElse {
+            println(">> Not a valid trip " + stopTime.tripId)
+            None
+          }.map { trip =>
+            List(stopId(trip, stopTime), stopTime.stopId, "AT")
+          }
+        }
+      }
+      write(outdir, name = "stop2station", headers = headers, data = data)
+    }
+
+    def writeTrip2Stop(outdir: File, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Stop)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.map { stopTime =>
@@ -131,7 +148,7 @@ object Neo4j {
       write(outdir, name = "trip2stops", headers = headers, data = data)
     }
 
-    def trip2Calendar(outdir: File, db: DB): Unit = {
+    def writeTrip2Calendar(outdir: File, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Calendar)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.calendar.map { calendar =>
@@ -141,7 +158,7 @@ object Neo4j {
       write(outdir, name = "trip2calendar", headers = headers, data = data)
     }
 
-    def calendar2CalendarDates(outdir: File, db: DB): Unit = {
+    def writeCalendar2CalendarDates(outdir: File, db: DB): Unit = {
       val headers = List(":START_ID(Calendar)", ":END_ID(CalendarDate)", ":TYPE")
       val data = db.calendarDates.map { calendarDate =>
         val `type` = if(calendarDate.exceptionType == 1) "ON" else "OFF"
@@ -150,7 +167,7 @@ object Neo4j {
       write(outdir, name = "calendar2calendardates", headers = headers, data = data)
     }
 
-    def tripWays(outdir: File, db: DB): Unit = {
+    def writeStop2Stop(outdir: File, db: DB): Unit = {
       val formatTime = (time: org.joda.time.DateTime) => {
         val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
         formatter.print(time)
@@ -176,17 +193,18 @@ object Neo4j {
     }
   }
 
-  def insertGraph(dbDir: File, db: DB): Unit = {
+  def writeGraph(dbDir: File, db: DB): Unit = {
     val outdir = new File(dbDir.getAbsolutePath + "/" + db.version.value)
-    Nodes.stations(outdir, db);
-    Nodes.trips(outdir, db)
-    Nodes.stops(outdir, db)
-    Nodes.calendar(outdir, db)
-    Nodes.calendarDates(outdir, db)
-    Relationships.tripWays(outdir, db)
-    Relationships.trip2Stops(outdir, db)
-    Relationships.trip2Calendar(outdir, db)
-    Relationships.calendar2CalendarDates(outdir, db)
-    indexes(dbDir, db);
+    Nodes.writeStations(outdir, db);
+    Nodes.writeTrips(outdir, db)
+    Nodes.writeStops(outdir, db)
+    Nodes.writeCalendar(outdir, db)
+    Nodes.writeCalendarDates(outdir, db)
+    Relationships.writeStop2Stop(outdir, db)
+    Relationships.writeTrip2Stop(outdir, db)
+    Relationships.writeTrip2Calendar(outdir, db)
+    Relationships.writeCalendar2CalendarDates(outdir, db)
+    Relationships.writeStop2Stop(outdir, db)
+    writeIndexes(dbDir, db);
   }
 }

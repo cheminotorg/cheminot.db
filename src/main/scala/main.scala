@@ -4,9 +4,7 @@ import java.io.File
 
 object Main {
 
-  Class.forName("org.sqlite.JDBC")
-
-  def main(args: Array[String]) {
+  def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) foreach { config =>
 
       val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
@@ -18,20 +16,9 @@ object Main {
       if(config.autoupdate) {
         AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => GtfsBundle.mostRecent(config.gtfsdir))
       } else {
-        (for {
-          db <- (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir()
-        } yield {
-          if(config.nothing) {
-            Persist.all(dbRootDir, db)
-          } else {
-            if(config.graph) {
-              Persist.graph(dbRootDir, db)
-            }
-            if(config.ttstops) {
-              Persist.ttstops(dbRootDir, db)
-            }
-          }
-        }) getOrElse {
+        (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir().map { db =>
+          storage.Neo4j.writeGraph(dbRootDir, db)
+        } getOrElse {
           println("Unable to find gtfs directory")
         }
       }
@@ -67,10 +54,6 @@ object Main {
       config.copy(graph = true)
     } text("Build graph file")
 
-    opt[Unit]('t', "ttstops") action { (_, config) =>
-      config.copy(ttstops = true)
-    } text("Build TTreeStops")
-
     opt[File]('d', "gtfs") action { (input, config) =>
       config.copy(gtfsdir = Some(input))
     } text("Specify gtfs root directory")
@@ -83,7 +66,6 @@ object Main {
 
 case class Config(
   graph: Boolean = false,
-  ttstops: Boolean = false,
   autoupdate: Boolean = false,
   gtfsdir: Option[File] = None,
   dbdir: Option[File] = None,
@@ -93,7 +75,7 @@ case class Config(
   twitterAccessKey: Option[String] = None,
   twitterAccessSecret: Option[String] = None
 ) {
-  def nothing = !(graph || autoupdate || ttstops)
+  def nothing = !(graph || autoupdate)
   val twitterOAuth =
     for {
       a <- twitterConsumerKey

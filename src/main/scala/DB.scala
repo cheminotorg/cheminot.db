@@ -7,7 +7,7 @@ import scala.concurrent.Future
 import misc._
 import models._
 
-case class Subset(id: String, graph: Map[StopId, Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate], ttstops: TTreeNode[(String, String)])
+case class Subset(id: String, graph: Map[StopId, Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate])
 
 case class DB(gtfsBundle: GtfsBundle) {
 
@@ -26,9 +26,6 @@ case class DB(gtfsBundle: GtfsBundle) {
 
   lazy val calendar: List[Calendar] =
     gtfsBundle.data.calendar.map(Calendar.fromRecord)
-
-  lazy val ttstops: TTreeNode[(String, String)] =
-    DB.buildTreeStops(gtfsBundle.data.stops, graph)
 }
 
 object DB {
@@ -88,20 +85,6 @@ object DB {
       //val merged = Vertice.merge(Stop.parisStops, Vertice.PARIS)(graph.get)
       //val updatedGraph = graph + (Vertice.PARIS.id -> merged)
       graph -> refs.asScala.toMap
-    }
-  }
-
-  private def buildTreeStops(stopRecords: List[StopRecord], graph: Map[VerticeId, Vertice]): TTreeNode[(String, String)] = {
-    Measure.duration("TTreeStops") {
-      val entries = par(stopRecords.filter(s => graph.get(s.stopId).isDefined)) { stopRecord =>
-        val saintStopNames = Normalizer.handleSaintWords(stopRecord.stopName)
-        val compoundStopNames = if(saintStopNames.isEmpty) Normalizer.handleCompoundWords(stopRecord.stopName) else Nil
-        (stopRecord.stopName +: saintStopNames ++: compoundStopNames).distinct.filterNot(_.isEmpty).map { s =>
-          (s.toLowerCase, (stopRecord.stopId, stopRecord.stopName))
-        }
-      }.toList.flatten
-      val paris = (Vertice.PARIS.name.toLowerCase, (Stop.STOP_PARIS, Vertice.PARIS.name))
-      TTreeNode(paris +: entries)
     }
   }
 

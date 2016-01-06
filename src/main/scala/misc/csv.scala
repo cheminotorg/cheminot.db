@@ -3,7 +3,6 @@ package m.cheminot.misc
 import java.io.File
 import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
-import scala.util.parsing.combinator._
 import com.github.tototoshi.csv._
 
 object CSVReadFile {

@@ -2,7 +2,6 @@ package m.cheminot
 
 import java.io.File
 import scala.concurrent.Future
-import scala.concurrent.ExecutionContext.Implicits._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import misc._

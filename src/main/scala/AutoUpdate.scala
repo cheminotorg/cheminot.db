@@ -11,7 +11,7 @@ import scalaj.http._
 
 object AutoUpdate {
 
-  val DEFAULT_RATE: Int = 3600 * 1000
+  val DEFAULT_RATE: Long = 3600 * 1000
 
   case class Update(url: String, modified: DateTime)
 
@@ -43,7 +43,7 @@ object AutoUpdate {
     destination
   }
 
-  def notify(config: Config, message: String) {
+  def notify(config: Config, message: String): Unit = {
     for {
       oauth <- config.twitterOAuth
       pseudo <- config.twitterPseudo
@@ -53,8 +53,8 @@ object AutoUpdate {
   }
 
   @annotation.tailrec
-  def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsBundle], rate: Int = DEFAULT_RATE): Unit = {
-    val bestRate: Int = rateLimiter(rate) {
+  def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsBundle], rate: Long = DEFAULT_RATE): Unit = {
+    val bestRate: Long = rateLimiter(rate) {
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
       println(s"GET $url")
       val response = Http(url).asString
@@ -69,7 +69,10 @@ object AutoUpdate {
           terDir.mkdirs
           misc.ZipUtils.unzip(zip, terDir)
           notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")
-          val db = DB.fromDir(gtfsRootDir).map { db => Persist.all(dbDir, db); db }
+          val db = DB.fromDir(gtfsRootDir).map { db =>
+            storage.Neo4j.writeGraph(dbDir, db)
+            db
+          }
           notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
           DEFAULT_RATE
         } else {

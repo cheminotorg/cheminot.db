@@ -5,7 +5,7 @@ import java.util.zip._
 
 object ZipUtils {
 
-  def unzip(zipfile: File, directory: File) {
+  def unzip(zipfile: File, directory: File): Unit = {
     println(s"Unzipping $zipfile to $directory")
     val zfile = new ZipFile(zipfile)
     val entries = zfile.entries()
@@ -28,10 +28,10 @@ object ZipUtils {
   }
 
 
-  private def copy(in: InputStream, out: OutputStream) {
+  private def copy(in: InputStream, out: OutputStream): Unit = {
     val buffer = new Array[Byte](1024)
     @annotation.tailrec
-    def loop(readCount: Int) {
+    def loop(readCount: Int): Unit = {
       if(readCount >= 0) {
         out.write(buffer, 0, readCount)
         loop(in.read(buffer))
@@ -40,7 +40,7 @@ object ZipUtils {
     loop(in.read(buffer))
   }
 
-  private def copy(in: InputStream, file: File) {
+  private def copy(in: InputStream, file: File): Unit = {
     val out = new FileOutputStream(file)
     try {
       copy(in, out)
