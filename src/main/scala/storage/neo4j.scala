@@ -7,7 +7,9 @@ import m.cheminot.models._
 
 object Neo4j {
 
-  private def write(dir: File, name: String, headers: List[String], data: List[List[String]]): Unit = {
+  type Row = List[String]
+
+  private def write(dir: File, name: String, headers: Row, data: List[Row]): Unit = {
     val headerFile = new File(s"""${dir}/${name}_headers.csv""")
     val dataFile = new File(s"""${dir}/${name}1.csv""")
     println(s"Writing to ${dataFile}")
@@ -50,8 +52,8 @@ object Neo4j {
 
     def writeStations(outdir: File, db: DB): Unit = {
       val headers = List("stationid:ID(Station)", "name:string", "lat:double", "lng:double", ":LABEL")
-      val data = db.graph.values.toList.map { vertice =>
-        List(vertice.id, vertice.name, vertice.lat.toString, vertice.lng.toString, "Station")
+      val data = db.stops.map { stop =>
+        List(stop.id, stop.name, stop.lat.toString, stop.lng.toString, "Station")
       }
       write(outdir, name = "stations", headers = headers, data = data)
     }
@@ -78,6 +80,7 @@ object Neo4j {
       val formatDateTime = (date: org.joda.time.DateTime) => {
         (date.withTimeAtStartOfDay().getMillis() / 1000).toString
       }
+
       val headers = List(
         "serviceid:ID(Calendar)",
         "monday:boolean",
@@ -91,6 +94,7 @@ object Neo4j {
         "enddate:int",
         ":LABEL"
       )
+
       val data = db.calendar.map { calendar =>
         List(
           calendar.serviceId,
@@ -106,6 +110,7 @@ object Neo4j {
           "Calendar"
         )
       }
+
       write(outdir, name = "calendar", headers = headers, data = data)
     }
 
@@ -145,7 +150,7 @@ object Neo4j {
           List(trip.id, stopId(trip, stopTime), "GOES_TO")
         }
       }
-      write(outdir, name = "trip2stops", headers = headers, data = data)
+      write(outdir, name = "trip2stop", headers = headers, data = data)
     }
 
     def writeTrip2Calendar(outdir: File, db: DB): Unit = {
@@ -189,22 +194,24 @@ object Neo4j {
           }
         }
       }
-      write(outdir, name = "ways", headers = headers, data = data)
+      write(outdir, name = "stop2stop", headers = headers, data = data)
     }
   }
 
-  def writeGraph(dbDir: File, db: DB): Unit = {
-    val outdir = new File(dbDir.getAbsolutePath + "/" + db.version.value)
+  def write(dbDir: File, db: DB): Unit = {
+    val outdir = new File(dbDir.getAbsolutePath + "/" + db.version.value + "/" + db.id)
+    outdir.mkdirs
+
     Nodes.writeStations(outdir, db);
     Nodes.writeTrips(outdir, db)
     Nodes.writeStops(outdir, db)
     Nodes.writeCalendar(outdir, db)
     Nodes.writeCalendarDates(outdir, db)
+    Relationships.writeStop2Station(outdir, db)
     Relationships.writeStop2Stop(outdir, db)
     Relationships.writeTrip2Stop(outdir, db)
     Relationships.writeTrip2Calendar(outdir, db)
     Relationships.writeCalendar2CalendarDates(outdir, db)
-    Relationships.writeStop2Stop(outdir, db)
     writeIndexes(dbDir, db);
   }
 }

@@ -70,7 +70,7 @@ object AutoUpdate {
           misc.ZipUtils.unzip(zip, terDir)
           notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")
           val db = DB.fromDir(gtfsRootDir).map { db =>
-            storage.Neo4j.writeGraph(dbDir, db)
+            storage.Neo4j.write(dbDir, db)
             db
           }
           notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))

@@ -16,8 +16,9 @@ object Main {
       if(config.autoupdate) {
         AutoUpdate.loop(config, gtfsRootDir, dbRootDir, () => GtfsBundle.mostRecent(config.gtfsdir))
       } else {
-        (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir().map { db =>
-          storage.Neo4j.writeGraph(dbRootDir, db)
+        (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir.map { db =>
+          storage.Neo4j.write(dbRootDir, db)
+          storage.Neo4j.write(dbRootDir, DB.subset("chartres", db, Seq("8739400")))
         } getOrElse {
           println("Unable to find gtfs directory")
         }
