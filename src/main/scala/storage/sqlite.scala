@@ -1,0 +1,228 @@
+package m.cheminot.storage
+
+import java.io.File
+import java.sql.{ Connection, DriverManager, PreparedStatement }
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+import anorm._
+import m.cheminot._
+import m.cheminot.models._
+
+object Sqlite {
+
+  def withConnection[A](dbFile: File)(block: Connection => A): A = {
+    val connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath)
+    val a = block(connection)
+    connection.close()
+    a
+  }
+
+  def init()(implicit connection: Connection): Unit = {
+    SQL("PRAGMA synchronous = OFF").executeUpdate
+  }
+
+  def createMetaTable()(implicit connection: Connection): Unit = {
+    SQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)").executeUpdate
+  }
+
+  def initMeta(version: Version) (implicit connection: Connection): Unit = {
+    val formatter = DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC
+    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
+      'key -> "version",
+      'value -> version.value
+    ).executeUpdate
+
+    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
+      'key -> "createdAt",
+      'value -> formatter.print(version.date)
+    ).executeUpdate
+  }
+
+  def createTripsTable()(implicit connection: Connection): Unit = {
+    SQL("CREATE TABLE trip (id TEXT PRIMARY KEY, serviceId TEXT)").executeUpdate
+    SQL("CREATE INDEX trip_serviceid ON trip(serviceId)").executeUpdate
+  }
+
+  def insertTrips(trips: Map[TripId, Trip])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    trips.values.toList.foreach { trip =>
+      val query = SQL("INSERT INTO trip (id, serviceid) VALUES({id}, {serviceid})")
+      try {
+        query.on('id -> trip.id, 'serviceid -> trip.calendar.map(_.serviceId)).executeUpdate
+      } catch {
+        case e: Exception =>
+          println(s"Unable to insert trip ${trip.id}: ${e.printStackTrace}")
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
+  def createStationsTable()(implicit connection: Connection): Unit =  {
+    SQL("CREATE TABLE station (id TEXT PRIMARY KEY, name TEXT, lat REAL, lng REAL)").executeUpdate
+    SQL("CREATE INDEX station_name ON station(name)").executeUpdate
+    SQL("CREATE INDEX station_lat ON station(lat)").executeUpdate
+    SQL("CREATE INDEX station_lng ON station(lng)").executeUpdate
+  }
+
+  def insertStations(graph: Map[VerticeId, Vertice])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    graph.values.toList.foreach { vertice =>
+      val query = SQL("INSERT INTO station (id, name, lat, lng) VALUES({id}, {name}, {lat}, {lng})")
+      try {
+        query.on('id -> vertice.id, 'name -> vertice.name, 'lat -> vertice.lat, 'lng -> vertice.lng).executeUpdate
+      } catch {
+        case e: Exception =>
+          println(s"Unable to insert vertice ${vertice.id}: ${e.printStackTrace}")
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
+  def createStopsTable()(implicit connection: Connection): Unit =  {
+    SQL("""
+      CREATE TABLE stop (
+        id TEXT PRIMARY KEY,
+        stationid TEXT,
+        tripid TEXT,
+        FOREIGN KEY(stationid) REFERENCES station(id),
+        FOREIGN KEY(tripid) REFERENCES trip(id)
+      )""").executeUpdate
+  }
+
+  def insertStops(trips: Map[TripId, Trip])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    trips.values.toList.foreach { trip =>
+      trip.stopTimes.foreach { stopTime =>
+        val query = SQL("INSERT INTO stop (id, stationid, tripid) VALUES({id}, {stationid}, {tripid})")
+        try {
+          query.on('id -> stopTime.id, 'stationid -> stopTime.stopId , 'tripid -> trip.id).executeUpdate
+        } catch {
+          case e: Exception =>
+            println(s"Unable to insert stop ${trip.id}: ${e.printStackTrace}")
+        }
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
+  def createCalendarDatesTable()(implicit connection: Connection): Unit =  {
+    SQL("CREATE TABLE calendardate (id TEXT PRIMARY_KEY, serviceid TEXT, date NUMERIC, type INTEGER, FOREIGN KEY(serviceid) REFERENCES calendar(serviceid))").executeUpdate
+    SQL("CREATE INDEX calendardate_date ON calendardate(date)").executeUpdate
+    SQL("CREATE INDEX calendardate_type ON calendardate(type)").executeUpdate
+  }
+
+  def insertCalendarDates(calendarDates: List[CalendarDate])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    calendarDates.foreach { calendarDate =>
+      val query = SQL("INSERT INTO calendardate (serviceid, date, type) VALUES({serviceid}, {date}, {type})")
+      try {
+        query.on('id -> calendarDate.id, 'serviceid -> calendarDate.serviceId, 'date -> calendarDate.date.getMillis, 'type -> calendarDate.exceptionType).executeUpdate
+      } catch {
+        case e: Exception =>
+          println(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.printStackTrace}")
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
+  def createCalendarTable()(implicit connection: Connection): Unit =  {
+    SQL("""
+      CREATE TABLE calendar (
+        serviceid TEXT,
+        monday NUMERIC,
+        tuesday NUMERIC,
+        wednesday NUMERIC,
+        thursday NUMERIC,
+        friday NUMERIC,
+        saturday NUMERIC,
+        sunday NUMERIC,
+        startdate NUMERIC,
+        enddate NUMERIC,
+        FOREIGN KEY(serviceid) REFERENCES trip(serviceid)
+      )
+    """).executeUpdate
+
+    SQL("CREATE INDEX calendar_monday ON calendar(monday)").executeUpdate
+    SQL("CREATE INDEX calendar_tuesday ON calendar(tuesday)").executeUpdate
+    SQL("CREATE INDEX calendar_wednesday ON calendar(wednesday)").executeUpdate
+    SQL("CREATE INDEX calendar_thursday ON calendar(thursday)").executeUpdate
+    SQL("CREATE INDEX calendar_friday ON calendar(friday)").executeUpdate
+    SQL("CREATE INDEX calendar_saturday ON calendar(saturday)").executeUpdate
+    SQL("CREATE INDEX calendar_sunday ON calendar(sunday)").executeUpdate
+    SQL("CREATE INDEX calendar_startdate ON calendar(startdate)").executeUpdate
+    SQL("CREATE INDEX calendar_enddate ON calendar(enddate)").executeUpdate
+  }
+
+  def insertCalendar(calendar: Seq[Calendar])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    calendar.foreach { calendar =>
+      val query = SQL("""
+       INSERT INTO calendar (serviceid, monday, tuesday, wednesday, thursday, friday, saturday, sunday, startdate, enddate)
+              VALUES({serviceid}, {monday}, {tuesday}, {wednesday}, {thursday}, {friday}, {saturday}, {sunday}, {startdate}, {enddate})
+       """)
+      try {
+        query.on(
+          'serviceid -> calendar.serviceId,
+          'monday -> calendar.monday,
+          'tuesday -> calendar.tuesday,
+          'wednesday -> calendar.wednesday,
+          'thursday -> calendar.thursday,
+          'friday -> calendar.friday,
+          'saturday -> calendar.saturday,
+          'sunday -> calendar.sunday,
+          'startdate -> calendar.startDate.getMillis,
+          'enddate -> calendar.endDate.getMillis
+        ).executeUpdate
+      } catch {
+        case e: Exception =>
+          println(s"Unable to insert calendar ${calendar.serviceId}: ${e.printStackTrace}")
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
+  def create(dbDir: File, db: DB): File = {
+    val outDir = new File(dbDir.getAbsolutePath + "/" + db.version.value + "/" + db.id)
+    outDir.mkdirs
+    val outFile = new File(outDir.getAbsoluteFile + "/cheminot.db")
+    withConnection(outFile) { implicit connection =>
+      Sqlite.init()
+
+      println("Meta table")
+      Sqlite.createMetaTable()
+      Sqlite.initMeta(db.version)
+
+      println("Trips table")
+      Sqlite.createTripsTable()
+      Sqlite.insertTrips(db.trips)
+
+      println("Stations table")
+      Sqlite.createStationsTable()
+      Sqlite.insertStations(db.graph)
+
+      println("Stops table")
+      Sqlite.createStopsTable()
+      Sqlite.insertStops(db.trips)
+
+      println("CalendarDates table")
+      Sqlite.createCalendarDatesTable()
+      Sqlite.insertCalendarDates(db.calendarDates)
+
+      println("Calendar table")
+      Sqlite.createCalendarTable()
+      Sqlite.insertCalendar(db.calendar)
+
+      outFile
+    }
+  }
+}
