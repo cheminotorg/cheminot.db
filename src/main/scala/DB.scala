@@ -8,7 +8,7 @@ import models._
 
 case class Subset(id: String, graph: Map[StopId, Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate])
 
-case class DB(id: String, version: Version, graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip], stops: List[Vertice], calendarDates: List[CalendarDate], calendar: List[Calendar])
+case class DB(id: String, version: Version, graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip], calendarDates: List[CalendarDate], calendar: List[Calendar])
 
 object DB {
 
@@ -16,8 +16,6 @@ object DB {
     val version: Version = gtfsBundle.version
 
     val (graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip]) = Builder.build(gtfsBundle)
-
-    val stops: List[Vertice] = graph.values.toList
 
     val calendar: List[Calendar] =
       gtfsBundle.data.calendar.map(Calendar.fromRecord)
@@ -27,7 +25,7 @@ object DB {
         calendar.exists(_.serviceId == calendarDate.serviceId)
       }
 
-    DB("world", version, graph, trips, stops, calendarDates, calendar)
+    DB("world", version, graph, trips, calendarDates, calendar)
   }
 
   def defaultDbDir: File = new File("db")
@@ -39,13 +37,6 @@ object DB {
     GtfsBundle.mostRecent().map(DB.apply)
 
   def subset(id: String, db: DB, verticeIds: Seq[String]): DB = {
-
-    val graph = verticeIds.foldLeft(Map.empty[VerticeId, Vertice]) {
-      case (acc, verticeId) =>
-        db.graph.get(verticeId).map { vertice =>
-          acc + (verticeId -> vertice)
-        } getOrElse acc
-    }
 
     val trips = db.trips.filter {
       case (tripId, trip) =>
@@ -62,7 +53,6 @@ object DB {
 
     db.copy(
       id = id,
-      graph = graph,
       trips = trips,
       calendar = calendar,
       calendarDates = calendarDates

@@ -45,7 +45,12 @@ case class CalendarDate(
   serviceId: String,
   date: DateTime,
   exceptionType: Int
-)
+) {
+  lazy val id = {
+    val timestamp = date.withTimeAtStartOfDay().getMillis()
+    s"${serviceId}#${timestamp}#${exceptionType}"
+  }
+}
 
 object CalendarDate {
 

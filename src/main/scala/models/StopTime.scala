@@ -4,19 +4,24 @@ import org.joda.time.DateTime
 
 case class StopTime(
   tripId: String,
-  arrival: Option[DateTime],
-  departure: Option[DateTime],
+  arrival: DateTime,
+  departure: DateTime,
   stopId: String,
   pos: Int
-)
+) {
+  lazy val id = StopTime.id(tripId, stopId)
+}
 
 object StopTime {
+
+  def id(tripId: TripId, stopId: StopId): String =
+    s"${tripId}#${stopId}"
 
   def fromRecord(record: StopTimeRecord): StopTime = {
     StopTime(
       record.tripId,
-      Option(record.arrival),
-      Option(record.departure),
+      record.arrival,
+      record.departure,
       record.stopId,
       record.stopSeq
     )

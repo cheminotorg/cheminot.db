@@ -3,9 +3,18 @@ package m.cheminot.storage
 import java.io.File
 import m.cheminot.{ DB, Version }
 import m.cheminot.misc.CSVWriteFile
-import m.cheminot.models._
+import m.cheminot.models.{ Stop, StopTime }
 
 object Neo4j {
+
+  val formatDateTime = (date: org.joda.time.DateTime) => {
+    (date.withTimeAtStartOfDay().getMillis() / 1000).toString
+  }
+
+  val formatTime = (time: org.joda.time.DateTime) => {
+    val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
+    formatter.print(time)
+  }
 
   type Row = List[String]
 
@@ -16,21 +25,15 @@ object Neo4j {
     CSVWriteFile(dataFile).write(headers +: data)
   }
 
-  private def stopId(trip: Trip, stopTime: StopTime): String =
-    s"${trip.id}#${stopTime.stopId}"
-
-  private def calendarDateId(calendarDate: CalendarDate): String = {
-    val date = calendarDate.date.withTimeAtStartOfDay().getMillis()
-    s"${calendarDate.serviceId}#${date}#${calendarDate.exceptionType}"
-  }
-
   def writeIndexes(outdir: File, db: DB): Unit = {
     import scala.collection.JavaConverters._
 
     val lines = List(
       "CREATE INDEX ON :Station(stationid);",
+      "CREATE INDEX ON :Station(parentid);",
       "CREATE INDEX ON :Stop(stationid);",
       "CREATE INDEX ON :Stop(stopid);",
+      "CREATE INDEX ON :Stop(parentid);",
       "CREATE INDEX ON :Calendar(serviceid);",
       "CREATE INDEX ON :Calendar(monday);",
       "CREATE INDEX ON :Calendar(tuesday);",
@@ -51,18 +54,20 @@ object Neo4j {
   object Nodes {
 
     def writeStations(outdir: File, db: DB): Unit = {
-      val headers = List("stationid:ID(Station)", "name:string", "lat:double", "lng:double", ":LABEL")
-      val data = db.stops.map { stop =>
-        List(stop.id, stop.name, stop.lat.toString, stop.lng.toString, "Station")
+      val headers = List("stationid:ID(Station)", "name:string", "parentid:string", "lat:double", "lng:double", ":LABEL")
+      val data = db.graph.values.toList.map { stop =>
+        val parentId = if(Stop.isParis(stop.id)) Stop.STOP_PARIS else ""
+        List(stop.id, stop.name, parentId, stop.lat.toString, stop.lng.toString, "Station")
       }
       write(outdir, name = "stations", headers = headers, data = data)
     }
 
     def writeStops(outdir: File, db: DB): Unit = {
-      val headers = List("stopid:ID(Stop)", "stationid:string", ":LABEL")
+      val headers = List("stopid:ID(Stop)", "stationid:string", "parentid:string", ":LABEL")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.map { stopTime =>
-          List(stopId(trip, stopTime), stopTime.stopId, "Stop")
+          val parentId = if(Stop.isParis(stopTime.stopId)) Stop.STOP_PARIS else ""
+          List(stopTime.id, stopTime.stopId, parentId, "Stop")
         }
       }
       write(outdir, name = "stops", headers = headers, data = data)
@@ -77,10 +82,6 @@ object Neo4j {
     }
 
     def writeCalendar(outdir: File, db: DB): Unit = {
-      val formatDateTime = (date: org.joda.time.DateTime) => {
-        (date.withTimeAtStartOfDay().getMillis() / 1000).toString
-      }
-
       val headers = List(
         "serviceid:ID(Calendar)",
         "monday:boolean",
@@ -120,7 +121,7 @@ object Neo4j {
       }
       val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", ":LABEL")
       val data = db.calendarDates.map { calendarDate =>
-        List(calendarDateId(calendarDate), calendarDate.serviceId, formatDateTime(calendarDate.date), "CalendarDate")
+        List(calendarDate.id, calendarDate.serviceId, formatDateTime(calendarDate.date), "CalendarDate")
       }
       write(outdir, name = "calendardates", headers = headers, data = data)
     }
@@ -136,7 +137,7 @@ object Neo4j {
             println(">> Not a valid trip " + stopTime.tripId)
             None
           }.map { trip =>
-            List(stopId(trip, stopTime), stopTime.stopId, "AT")
+            List(stopTime.id, stopTime.stopId, "AT")
           }
         }
       }
@@ -144,10 +145,10 @@ object Neo4j {
     }
 
     def writeTrip2Stop(outdir: File, db: DB): Unit = {
-      val headers = List(":START_ID(Trip)", ":END_ID(Stop)", ":TYPE")
+      val headers = List(":START_ID(Trip)", ":END_ID(Stop)", "arrival:int", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
-        trip.stopTimes.map { stopTime =>
-          List(trip.id, stopId(trip, stopTime), "GOES_TO")
+        trip.stopTimes.headOption.toList.map { stopTime =>
+          List(trip.id, stopTime.id, formatTime(stopTime.arrival), "GOES_TO")
         }
       }
       write(outdir, name = "trip2stop", headers = headers, data = data)
@@ -167,16 +168,12 @@ object Neo4j {
       val headers = List(":START_ID(Calendar)", ":END_ID(CalendarDate)", ":TYPE")
       val data = db.calendarDates.map { calendarDate =>
         val `type` = if(calendarDate.exceptionType == 1) "ON" else "OFF"
-        List(calendarDate.serviceId, calendarDateId(calendarDate), `type`)
+        List(calendarDate.serviceId, calendarDate.id, `type`)
       }
       write(outdir, name = "calendar2calendardates", headers = headers, data = data)
     }
 
     def writeStop2Stop(outdir: File, db: DB): Unit = {
-      val formatTime = (time: org.joda.time.DateTime) => {
-        val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
-        formatter.print(time)
-      }
       val headers = List(":START_ID(Stop)", "departure:int", "arrival:int", ":END_ID(Stop)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
@@ -187,10 +184,10 @@ object Neo4j {
             }
             next <- trip.stopTimes.lift(stopTime.pos + 1)
             serviceId <- trip.calendar.map(_.serviceId)
-            departure <- stopTime.departure.map(formatTime)
-            arrival <- next.arrival.map(formatTime)
           } yield {
-            List(stopId(trip, stopTime), departure, arrival, stopId(trip, next), "GOES_TO")
+            val departure = formatTime(stopTime.departure)
+            val arrival = formatTime(next.arrival)
+            List(stopTime.id, departure, arrival, next.id, "GOES_TO")
           }
         }
       }

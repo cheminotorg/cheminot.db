@@ -14,7 +14,7 @@ object Vertice {
 
   def fromStopRecord(stopRecord: StopRecord, trips: List[Trip]): Vertice = {
     val zEdges = if(Stop.isParis(stopRecord.stopId)) Stop.parisStops.filterNot(_ == stopRecord.stopId).toList else Seq.empty[StopId]
-    val zStopTimes = if(Stop.isParis(stopRecord.stopId)) Subway.stopTimes.get(stopRecord.stopId).getOrElse(Nil) else Seq.empty[StopTime]
+    val zStopTimes = Seq.empty[StopTime]
     val (edges, stopTimes) = trips.foldLeft((zEdges, zStopTimes)) { (acc, trip) =>
       val (accEdges, accStopTimes) = acc
       val edges = trip.edgesOf(stopRecord.stopId)

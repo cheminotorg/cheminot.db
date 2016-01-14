@@ -4,9 +4,10 @@ import java.io.File
 
 object Main {
 
+  Class.forName("org.sqlite.JDBC")
+
   def main(args: Array[String]): Unit = {
     parser.parse(args, Config()) foreach { config =>
-
       val dbRootDir = config.dbdir getOrElse DB.defaultDbDir
       val gtfsRootDir = config.gtfsdir getOrElse GtfsBundle.defaultRoot
 
@@ -18,7 +19,7 @@ object Main {
       } else {
         (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir.map { db =>
           storage.Neo4j.write(dbRootDir, db)
-          storage.Neo4j.write(dbRootDir, DB.subset("chartres", db, Seq("8739400")))
+          storage.Sqlite.create(dbRootDir, DB.subset("chartres", db, Seq("8739400")))
         } getOrElse {
           println("Unable to find gtfs directory")
         }

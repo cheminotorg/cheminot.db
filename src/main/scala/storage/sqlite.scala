@@ -52,7 +52,7 @@ object Sqlite {
         query.on('id -> trip.id, 'serviceid -> trip.calendar.map(_.serviceId)).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert trip ${trip.id}: ${e.printStackTrace}")
+          println(s"Unable to insert trip ${trip.id}: ${e.getMessage}")
       }
     }
 
@@ -60,8 +60,9 @@ object Sqlite {
   }
 
   def createStationsTable()(implicit connection: Connection): Unit =  {
-    SQL("CREATE TABLE station (id TEXT PRIMARY KEY, name TEXT, lat REAL, lng REAL)").executeUpdate
+    SQL("CREATE TABLE station (id TEXT PRIMARY KEY, name TEXT, parentid TEXT, lat REAL, lng REAL)").executeUpdate
     SQL("CREATE INDEX station_name ON station(name)").executeUpdate
+    SQL("CREATE INDEX station_parentid ON station(parentid)").executeUpdate
     SQL("CREATE INDEX station_lat ON station(lat)").executeUpdate
     SQL("CREATE INDEX station_lng ON station(lng)").executeUpdate
   }
@@ -70,12 +71,13 @@ object Sqlite {
     SQL("BEGIN TRANSACTION").executeUpdate
 
     graph.values.toList.foreach { vertice =>
-      val query = SQL("INSERT INTO station (id, name, lat, lng) VALUES({id}, {name}, {lat}, {lng})")
+      val query = SQL("INSERT INTO station (id, name, parentid, lat, lng) VALUES({id}, {name}, {parentid}, {lat}, {lng})")
+      val parentId = if(Stop.isParis(vertice.id)) Stop.STOP_PARIS else ""
       try {
-        query.on('id -> vertice.id, 'name -> vertice.name, 'lat -> vertice.lat, 'lng -> vertice.lng).executeUpdate
+        query.on('id -> vertice.id, 'name -> vertice.name, 'parentid -> parentId, 'lat -> vertice.lat, 'lng -> vertice.lng).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert vertice ${vertice.id}: ${e.printStackTrace}")
+          println(s"Unable to insert station ${vertice.id}: ${e.getMessage}")
       }
     }
 
@@ -87,23 +89,33 @@ object Sqlite {
       CREATE TABLE stop (
         id TEXT PRIMARY KEY,
         stationid TEXT,
+        parentid TEXT,
         tripid TEXT,
+        pos INTEGER,
         FOREIGN KEY(stationid) REFERENCES station(id),
         FOREIGN KEY(tripid) REFERENCES trip(id)
       )""").executeUpdate
+    SQL("CREATE INDEX stop_pos ON stop(pos)").executeUpdate
+    SQL("CREATE INDEX stop_parentid ON stop(parentid)").executeUpdate
   }
 
   def insertStops(trips: Map[TripId, Trip])(implicit connection: Connection): Unit = {
     SQL("BEGIN TRANSACTION").executeUpdate
-
+    val formatTime = (time: org.joda.time.DateTime) => {
+      val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
+      formatter.print(time)
+    }
     trips.values.toList.foreach { trip =>
       trip.stopTimes.foreach { stopTime =>
-        val query = SQL("INSERT INTO stop (id, stationid, tripid) VALUES({id}, {stationid}, {tripid})")
+        val parentId = if(Stop.isParis(stopTime.stopId)) Stop.STOP_PARIS else ""
+        val query = SQL("INSERT INTO stop (id, stationid, parentid, tripid, pos) VALUES({id}, {stationid}, {parentid}, {tripid}, {pos})")
         try {
-          query.on('id -> stopTime.id, 'stationid -> stopTime.stopId , 'tripid -> trip.id).executeUpdate
+          val arrival = formatTime(stopTime.arrival).toInt
+          val departure = formatTime(stopTime.departure).toInt
+          query.on('id -> stopTime.id, 'stationid -> stopTime.stopId , 'arrival -> arrival, 'departure -> departure, 'parentid -> parentId, 'tripid -> trip.id, 'pos -> stopTime.pos).executeUpdate
         } catch {
           case e: Exception =>
-            println(s"Unable to insert stop ${trip.id}: ${e.printStackTrace}")
+            println(s"Unable to insert stop ${trip.id}: ${e.getMessage}")
         }
       }
     }
@@ -126,7 +138,7 @@ object Sqlite {
         query.on('id -> calendarDate.id, 'serviceid -> calendarDate.serviceId, 'date -> calendarDate.date.getMillis, 'type -> calendarDate.exceptionType).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.printStackTrace}")
+          println(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.getMessage}")
       }
     }
 
@@ -184,7 +196,7 @@ object Sqlite {
         ).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert calendar ${calendar.serviceId}: ${e.printStackTrace}")
+          println(s"Unable to insert calendar ${calendar.serviceId}: ${e.getMessage}")
       }
     }
 

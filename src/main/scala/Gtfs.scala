@@ -98,7 +98,7 @@ object GtfsBundle {
         val gtfsTer = GtfsDirectory.ter(terDir)
         val gtfsTrans = GtfsDirectory.trans(transDir)
         val gtfsInter = GtfsDirectory.inter(interDir)
-        GtfsBundle(version, gtfsTer merge gtfsTrans merge gtfsInter)
+        GtfsBundle(version, gtfsTer)// merge gtfsTrans merge gtfsInter)
     }
 
   def mostRecent(root: Option[File] = None): Option[GtfsBundle] =
