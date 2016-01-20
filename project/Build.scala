@@ -21,7 +21,7 @@ object CheminotDB extends Build {
         "com.github.tototoshi" %% "scala-csv" % "1.2.2",
         "org.xerial" % "sqlite-jdbc" % "3.8.6"
       ),
-      scalacOptions ++= Seq("-language:_", "-deprecation", "-unchecked", "-encoding", "UTF-8")
+      scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-Xlint", "-Ywarn-unused-import", "-Ywarn-dead-code")
     )
   ).settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 }

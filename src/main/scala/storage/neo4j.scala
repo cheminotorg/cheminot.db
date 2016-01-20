@@ -1,20 +1,11 @@
 package m.cheminot.storage
 
 import java.io.File
-import m.cheminot.{ DB, Version }
+import m.cheminot._
 import m.cheminot.misc.CSVWriteFile
 import m.cheminot.models.{ Stop, StopTime }
 
 object Neo4j {
-
-  val formatDateTime = (date: org.joda.time.DateTime) => {
-    (date.withTimeAtStartOfDay().getMillis() / 1000).toString
-  }
-
-  val formatTime = (time: org.joda.time.DateTime) => {
-    val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
-    formatter.print(time)
-  }
 
   type Row = List[String]
 
@@ -29,6 +20,8 @@ object Neo4j {
     import scala.collection.JavaConverters._
 
     val lines = List(
+      "CREATE INDEX ON :Meta(metaid);",
+      "CREATE INDEX ON :MetaSubset(metasubsetid);",
       "CREATE INDEX ON :Station(stationid);",
       "CREATE INDEX ON :Station(parentid);",
       "CREATE INDEX ON :Stop(stationid);",
@@ -47,11 +40,25 @@ object Neo4j {
       "CREATE INDEX ON :CalendarDate(date);",
       "CREATE INDEX ON :Trip(serviceid);"
     )
-    val file = new File(s"""${outdir}/${db.version.value}/indexes.cypher""")
+    val file = new File(s"""${outdir}/indexes.cypher""")
     org.apache.commons.io.FileUtils.writeLines(file, lines.asJava)
   }
 
   object Nodes {
+
+    def writeMeta(outdir: File, db: DB): Unit = {
+      val headers = List("metaid:ID(Meta)", "bundledate:int", ":LABEL")
+      val data = List(List(db.meta.id, formatDateTime(db.meta.bundleDate), "Meta"))
+      write(outdir, name = "meta", headers = headers, data = data)
+    }
+
+    def writeMetaSubsets(outdir: File, db: DB): Unit = {
+      val headers = List("metasubsetid:ID(MetaSubset)", "updateddate:int", "startdate:int", "enddate:int", ":LABEL")
+      val data = db.meta.subsets.map { subset =>
+        List(subset.id, formatDate(subset.updatedDate), formatDate(subset.startDate), formatDate(subset.endDate), "MetaSubset")
+      }
+      write(outdir, name = "metasubsets", headers = headers, data = data)
+    }
 
     def writeStations(outdir: File, db: DB): Unit = {
       val headers = List("stationid:ID(Station)", "name:string", "parentid:string", "lat:double", "lng:double", ":LABEL")
@@ -106,8 +113,8 @@ object Neo4j {
           calendar.friday.toString,
           calendar.saturday.toString,
           calendar.sunday.toString,
-          formatDateTime(calendar.startDate),
-          formatDateTime(calendar.endDate),
+          formatDate(calendar.startDate),
+          formatDate(calendar.endDate),
           "Calendar"
         )
       }
@@ -116,12 +123,9 @@ object Neo4j {
     }
 
     def writeCalendarDates(outdir: File, db: DB): Unit = {
-      val formatDateTime = (date: org.joda.time.DateTime) => {
-        (date.withTimeAtStartOfDay().getMillis() / 1000).toString
-      }
       val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", ":LABEL")
       val data = db.calendarDates.map { calendarDate =>
-        List(calendarDate.id, calendarDate.serviceId, formatDateTime(calendarDate.date), "CalendarDate")
+        List(calendarDate.id, calendarDate.serviceId, formatDate(calendarDate.date), "CalendarDate")
       }
       write(outdir, name = "calendardates", headers = headers, data = data)
     }
@@ -193,10 +197,18 @@ object Neo4j {
       }
       write(outdir, name = "stop2stop", headers = headers, data = data)
     }
+
+    def writeMeta2MetaSubsets(outdir: File, db: DB): Unit = {
+      val headers = List(":START_ID(Meta)", ":END_ID(MetaSubset)", ":TYPE")
+      val data = db.meta.subsets.map { subset =>
+        List(db.meta.id, subset.id, "HAS")
+      }
+      write(outdir, name = "meta2metasubsets", headers = headers, data = data)
+    }
   }
 
   def write(dbDir: File, db: DB): Unit = {
-    val outdir = new File(dbDir.getAbsolutePath + "/" + db.version.value + "/" + db.id)
+    val outdir = new File(dbDir.getAbsolutePath + "/" + db.meta.id + "/" + db.id)
     outdir.mkdirs
 
     Nodes.writeStations(outdir, db);
@@ -204,11 +216,14 @@ object Neo4j {
     Nodes.writeStops(outdir, db)
     Nodes.writeCalendar(outdir, db)
     Nodes.writeCalendarDates(outdir, db)
+    Nodes.writeMeta(outdir, db)
+    Nodes.writeMetaSubsets(outdir, db)
+    Relationships.writeMeta2MetaSubsets(outdir, db)
     Relationships.writeStop2Station(outdir, db)
     Relationships.writeStop2Stop(outdir, db)
     Relationships.writeTrip2Stop(outdir, db)
     Relationships.writeTrip2Calendar(outdir, db)
     Relationships.writeCalendar2CalendarDates(outdir, db)
-    writeIndexes(dbDir, db);
+    writeIndexes(outdir, db);
   }
 }

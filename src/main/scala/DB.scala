@@ -6,16 +6,34 @@ import scala.util.control.Exception
 import scala.concurrent.Future
 import models._
 
-case class Subset(id: String, graph: Map[StopId, Vertice], calendar: List[Calendar], calendarDates: List[CalendarDate])
+case class Subset(
+  id: String,
+  graph: Map[StopId, Vertice],
+  calendar: List[Calendar],
+  calendarDates: List[CalendarDate]
+)
 
-case class DB(id: String, version: Version, graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip], calendarDates: List[CalendarDate], calendar: List[Calendar])
+case class DB(
+  id: DbId,
+  graph: Map[VerticeId, Vertice],
+  trips: Map[TripId, Trip],
+  calendarDates: List[CalendarDate],
+  calendar: List[Calendar],
+  meta: Meta
+)
+
+case class Meta(bundleId: BundleId, subsets: List[MetaSubset]) {
+  lazy val id: String = bundleId.value
+  lazy val bundleDate: DateTime = bundleId.date
+}
+
+case class MetaSubset(id: String, updatedDate: DateTime, startDate: DateTime, endDate: DateTime)
 
 object DB {
 
   def apply(gtfsBundle: GtfsBundle): DB = {
-    val version: Version = gtfsBundle.version
-
-    val (graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip]) = Builder.build(gtfsBundle)
+    val (graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip]) =
+      Builder.build(gtfsBundle)
 
     val calendar: List[Calendar] =
       gtfsBundle.data.calendar.map(Calendar.fromRecord)
@@ -25,7 +43,18 @@ object DB {
         calendar.exists(_.serviceId == calendarDate.serviceId)
       }
 
-    DB("world", version, graph, trips, calendarDates, calendar)
+    val metaSubsets = gtfsBundle.data.subsetDirs.map { subsetDir =>
+      MetaSubset(
+        id = subsetDir.id,
+        updatedDate = subsetDir.updatedDate,
+        startDate = subsetDir.startDate,
+        endDate = subsetDir.endDate
+      )
+    }
+
+    val meta = Meta(gtfsBundle.bundleId, metaSubsets)
+
+    DB("world", graph, trips, calendarDates, calendar, meta)
   }
 
   def defaultDbDir: File = new File("db")
@@ -52,34 +81,10 @@ object DB {
     }
 
     db.copy(
-      id = id,
+      id = s"${db.id}#${id}",
       trips = trips,
       calendar = calendar,
       calendarDates = calendarDates
     )
-  }
-}
-
-case class Version(date: DateTime) {
-  lazy val value: String = Version.formatter.print(date)
-}
-
-object Version {
-
-  private def parse(name: String): Option[DateTime] = {
-    Exception.allCatch[DateTime].opt {
-      Version.formatter.parseDateTime(name)
-    }
-  }
-
-  val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyyMMddHHmmss")
-
-  def fromDir(dir: File): Option[Version] = {
-    for {
-      _ <- Option(dir).filter(_.isDirectory)
-      date <- parse(dir.getName)
-    } yield {
-      Version(date)
-    }
   }
 }

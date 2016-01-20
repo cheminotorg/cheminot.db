@@ -22,20 +22,40 @@ object Sqlite {
   }
 
   def createMetaTable()(implicit connection: Connection): Unit = {
-    SQL("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)").executeUpdate
+    SQL("CREATE TABLE meta (id TEXT PRIMARY KEY, bundledate NUMERIC)").executeUpdate
   }
 
-  def initMeta(version: Version) (implicit connection: Connection): Unit = {
-    val formatter = DateTimeFormat.forPattern("dd/MM/yyy").withZoneUTC
-    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
-      'key -> "version",
-      'value -> version.value
+  def insertMeta(meta: Meta) (implicit connection: Connection): Unit = {
+    SQL("INSERT INTO meta (id, bundledate) VALUES({id}, {bundledate})").on(
+      'id -> meta.id,
+      'bundledate -> formatDateTime(meta.bundleDate).toLong
     ).executeUpdate
+  }
 
-    SQL("INSERT INTO meta (key, value) VALUES({key}, {value})").on(
-      'key -> "createdAt",
-      'value -> formatter.print(version.date)
-    ).executeUpdate
+  def createMetaSubsetsTable()(implicit connection: Connection): Unit = {
+    SQL("""
+      CREATE TABLE metasubset (
+        id TEXT PRIMARY KEY,
+        metaid TEXT,
+        updateddate NUMERIC,
+        startdate NUMERIC,
+        enddate NUMERIC,
+        FOREIGN KEY(metaid) REFERENCES meta(id)
+      )""").executeUpdate
+  }
+
+  def insertMetaSubsets(meta: Meta) (implicit connection: Connection): Unit = {
+    meta.subsets.foreach { subset =>
+      SQL("""INSERT INTO metasubset (id, metaid, updateddate, startdate, enddate)
+             VALUES({id}, {metaid}, {updateddate}, {startdate}, {enddate})""")
+      .on(
+        'id -> subset.id,
+        'metaid -> meta.id,
+        'updateddate -> formatDate(subset.updatedDate).toLong,
+        'startdate -> formatDate(subset.startDate).toLong,
+        'enddate -> formatDate(subset.endDate).toLong
+      ).executeUpdate
+    }
   }
 
   def createTripsTable()(implicit connection: Connection): Unit = {
@@ -101,10 +121,6 @@ object Sqlite {
 
   def insertStops(trips: Map[TripId, Trip])(implicit connection: Connection): Unit = {
     SQL("BEGIN TRANSACTION").executeUpdate
-    val formatTime = (time: org.joda.time.DateTime) => {
-      val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
-      formatter.print(time)
-    }
     trips.values.toList.foreach { trip =>
       trip.stopTimes.foreach { stopTime =>
         val parentId = if(Stop.isParis(stopTime.stopId)) Stop.STOP_PARIS else ""
@@ -135,7 +151,7 @@ object Sqlite {
     calendarDates.foreach { calendarDate =>
       val query = SQL("INSERT INTO calendardate (serviceid, date, type) VALUES({serviceid}, {date}, {type})")
       try {
-        query.on('id -> calendarDate.id, 'serviceid -> calendarDate.serviceId, 'date -> calendarDate.date.getMillis, 'type -> calendarDate.exceptionType).executeUpdate
+        query.on('id -> calendarDate.id, 'serviceid -> calendarDate.serviceId, 'date -> formatDate(calendarDate.date), 'type -> calendarDate.exceptionType).executeUpdate
       } catch {
         case e: Exception =>
           println(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.getMessage}")
@@ -191,8 +207,8 @@ object Sqlite {
           'friday -> calendar.friday,
           'saturday -> calendar.saturday,
           'sunday -> calendar.sunday,
-          'startdate -> calendar.startDate.getMillis,
-          'enddate -> calendar.endDate.getMillis
+          'startdate -> formatDate(calendar.startDate),
+          'enddate -> formatDate(calendar.endDate)
         ).executeUpdate
       } catch {
         case e: Exception =>
@@ -204,7 +220,7 @@ object Sqlite {
   }
 
   def create(dbDir: File, db: DB): File = {
-    val outDir = new File(dbDir.getAbsolutePath + "/" + db.version.value + "/" + db.id)
+    val outDir = new File(dbDir.getAbsolutePath + "/" + db.meta.bundleId.value + "/" + db.id)
     outDir.mkdirs
     val outFile = new File(outDir.getAbsoluteFile + "/cheminot.db")
     withConnection(outFile) { implicit connection =>
@@ -212,7 +228,11 @@ object Sqlite {
 
       println("Meta table")
       Sqlite.createMetaTable()
-      Sqlite.initMeta(db.version)
+      Sqlite.insertMeta(db.meta)
+
+      println("Meta subsets table")
+      Sqlite.createMetaSubsetsTable()
+      Sqlite.insertMetaSubsets(db.meta)
 
       println("Trips table")
       Sqlite.createTripsTable()
@@ -233,6 +253,8 @@ object Sqlite {
       println("Calendar table")
       Sqlite.createCalendarTable()
       Sqlite.insertCalendar(db.calendar)
+
+      println("DONE")
 
       outFile
     }

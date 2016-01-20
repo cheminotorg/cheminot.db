@@ -20,6 +20,7 @@ object Main {
         (config.gtfsdir flatMap DB.fromDir) orElse DB.fromDefaultDir.map { db =>
           storage.Neo4j.write(dbRootDir, db)
           storage.Sqlite.create(dbRootDir, DB.subset("chartres", db, Seq("8739400")))
+          println("-----------------------------")
         } getOrElse {
           println("Unable to find gtfs directory")
         }

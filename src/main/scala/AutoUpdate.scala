@@ -61,8 +61,8 @@ object AutoUpdate {
       scala.util.Try(Json.parse(response.body)).toOption map { json =>
         val update = Update(json)
         val bundle = gtfsBundle()
-        if(bundle.exists(gtfs => update.modified.isAfter(gtfs.version.date)) || bundle.isEmpty) {
-          val name = Version.formatter.print(update.modified)
+        if(bundle.exists(gtfs => update.modified.isAfter(gtfs.bundleId.date)) || bundle.isEmpty) {
+          val name = BundleId.formatter.print(update.modified)
           val zip = downloadGtfsZip(update.url, gtfsRootDir.getAbsolutePath + "/" + name + ".zip")
           val bundleDir = new File(gtfsRootDir.getAbsolutePath + "/" + name)
           val terDir = new File(bundleDir.getAbsolutePath + "/ter/")
@@ -73,7 +73,7 @@ object AutoUpdate {
             storage.Neo4j.write(dbDir, db)
             db
           }
-          notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.version.value).getOrElse("N/A"))
+          notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.id).getOrElse("N/A"))
           DEFAULT_RATE
         } else {
           println(s"Nothing to update")
