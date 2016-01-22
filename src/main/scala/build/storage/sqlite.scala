@@ -1,12 +1,11 @@
-package m.cheminot.storage
+package m.cheminot.build.storage
 
 import java.io.File
 import java.sql.{ Connection, DriverManager, PreparedStatement }
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import anorm._
-import m.cheminot._
-import m.cheminot.models._
+import m.cheminot.build._
 
 object Sqlite {
 

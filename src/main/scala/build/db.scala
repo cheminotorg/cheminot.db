@@ -1,10 +1,10 @@
-package m.cheminot
+package m.cheminot.build
 
 import java.io.File
 import org.joda.time.DateTime
 import scala.util.control.Exception
 import scala.concurrent.Future
-import models._
+import m.cheminot.Config
 
 case class Subset(
   id: String,
@@ -65,7 +65,7 @@ object DB {
   def fromDefaultDir(): Option[DB] =
     GtfsBundle.mostRecent().map(DB.apply)
 
-  def subset(id: String, db: DB, verticeIds: Seq[String]): DB = {
+  def subset(db: DB, verticeIds: Seq[String]): DB = {
 
     val trips = db.trips.filter {
       case (tripId, trip) =>
@@ -80,11 +80,35 @@ object DB {
       trips.values.toList.exists(_.calendar.exists(c => c.serviceId == calendar.serviceId))
     }
 
+    val id = verticeIds.sortBy(identity).mkString("#")
+
     db.copy(
-      id = s"${db.id}#${id}",
+      id = id,
       trips = trips,
       calendar = calendar,
       calendarDates = calendarDates
     )
+  }
+
+  def empty: DB = DB(
+    id = "empty",
+    graph = Map.empty,
+    trips = Map.empty,
+    calendarDates = Nil,
+    calendar = Nil,
+    meta = Meta(
+      bundleId = BundleId(DateTime.now),
+      subsets = Nil
+    )
+  )
+
+  def setupEmbed(embedDb: DB)(implicit config: Config): File =
+    storage.Sqlite.create(config.dbDir, embedDb)
+
+  def setup()(implicit config: Config): DB = {
+    DB.fromDir(config.gtfsDir).map { db =>
+      storage.Neo4j.write(config.dbDir, db)
+      db
+    } getOrElse sys.error(s"Unable to found gtfs directory from ${config.gtfsDir}")
   }
 }

@@ -1,12 +1,11 @@
-package m.cheminot
+package m.cheminot.build
 
 import java.io.File
 import scala.concurrent.Future
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-import misc._
-import models._
 import scala.collection.mutable.{ Map => MMap }
+import m.cheminot.misc.{ CSVReadFile, CSVWriteFile }
 
 object Normalizer {
 

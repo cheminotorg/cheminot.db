@@ -1,7 +1,6 @@
-package m.cheminot
+package m.cheminot.build
 
-import models._
-import misc._
+import m.cheminot.misc._
 
 object Builder {
 
@@ -55,8 +54,6 @@ object Builder {
           merged.id -> merged
         case x => sys.error("Unable to build graph: " + x)
       }.toMap
-      //val merged = Vertice.merge(Stop.parisStops, Vertice.PARIS)(graph.get)
-      //val updatedGraph = graph + (Vertice.PARIS.id -> merged)
       graph -> refs.asScala.toMap
     }
   }

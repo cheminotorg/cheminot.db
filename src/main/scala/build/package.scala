@@ -1,6 +1,6 @@
 package m.cheminot {
 
-  package object models {
+  package object build {
 
     type DbId = String
     type VerticeId = String

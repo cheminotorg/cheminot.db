@@ -1,9 +1,8 @@
-package m.cheminot.storage
+package m.cheminot.build.storage
 
 import java.io.File
-import m.cheminot._
 import m.cheminot.misc.CSVWriteFile
-import m.cheminot.models.{ Stop, StopTime }
+import m.cheminot.build._
 
 object Neo4j {
 

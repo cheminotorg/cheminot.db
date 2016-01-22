@@ -1,13 +1,17 @@
-package m.cheminot
+package m.cheminot.build
+
+import rapture.uri._
+import rapture.net._
+import rapture.io._
+import rapture.json._, jsonBackends.jackson._
 
 import java.io.File
 import java.net.URL
 import org.apache.commons.io.FileUtils
-import play.api.libs.json._
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
-
-import scalaj.http._
+import m.cheminot.Config
+import m.cheminot.misc
 
 object AutoUpdate {
 
@@ -16,8 +20,8 @@ object AutoUpdate {
   case class Update(url: String, modified: DateTime)
 
   object Update {
-    def apply(json: JsValue): Update = {
-      val modified = (json \ "metas" \ "modified").as[String]
+    def apply(json: Json): Update = {
+      val modified = json.metas.modified.as[String]
       val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/attachments/export_ter_gtfs_last_zip/"
       Update(url, DateTime.parse(modified))
     }
@@ -44,21 +48,16 @@ object AutoUpdate {
   }
 
   def notify(config: Config, message: String): Unit = {
-    for {
-      oauth <- config.twitterOAuth
-      pseudo <- config.twitterPseudo
-    } yield {
-      misc.Twitter.updateStatus(oauth, "@" + pseudo + " " + message)
-    }
+    ???
   }
 
   @annotation.tailrec
   def loop(config: Config, gtfsRootDir: File, dbDir: File, gtfsBundle: () => Option[GtfsBundle], rate: Long = DEFAULT_RATE): Unit = {
     val bestRate: Long = rateLimiter(rate) {
-      val url = "https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
-      println(s"GET $url")
-      val response = Http(url).asString
-      scala.util.Try(Json.parse(response.body)).toOption map { json =>
+      val endpoint = uri"https://ressources.data.sncf.com/api/datasets/1.0/sncf-ter-gtfs/?extrametas=true&interopmetas=true&timezone=Europe%2FBerlin"
+      println(s"GET $endpoint")
+      val response = endpoint.httpGet().slurp[Char]
+      scala.util.Try(Json.parse(response)).toOption map { json =>
         val update = Update(json)
         val bundle = gtfsBundle()
         if(bundle.exists(gtfs => update.modified.isAfter(gtfs.bundleId.date)) || bundle.isEmpty) {
@@ -68,12 +67,7 @@ object AutoUpdate {
           val terDir = new File(bundleDir.getAbsolutePath + "/ter/")
           terDir.mkdirs
           misc.ZipUtils.unzip(zip, terDir)
-          notify(config, "Je m'apprête à builder une nouvelle version de cheminotDB.")
-          val db = DB.fromDir(gtfsRootDir).map { db =>
-            storage.Neo4j.write(dbDir, db)
-            db
-          }
-          notify(config, "Une nouvelle version de cheminotDB est disponible: " + db.map(_.id).getOrElse("N/A"))
+          val db = DB.fromDir(gtfsRootDir).map(storage.Neo4j.write(dbDir, _))
           DEFAULT_RATE
         } else {
           println(s"Nothing to update")

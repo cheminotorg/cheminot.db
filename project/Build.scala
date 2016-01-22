@@ -9,17 +9,15 @@ object CheminotDB extends Build {
       version := "0.1",
       scalaVersion := "2.11.7",
       resolvers ++= Seq(
-        "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/",
-        "anormcypher" at "http://repo.anormcypher.org/"
+        "Typesafe repository releases" at "http://repo.typesafe.com/typesafe/releases/"
       ),
       libraryDependencies ++= Seq(
-        "com.typesafe.play" %% "play-json" % "2.4.0-M2",
+        "com.propensive" %% "rapture" % "2.0.0-M3" exclude("com.propensive", "rapture-json-lift_2.11"),
         "com.typesafe.play" %% "anorm" % "2.4.0-M2",
         "commons-io" % "commons-io" % "2.4",
-        "com.github.scopt" %% "scopt" % "3.2.0",
-        "org.scalaj" %% "scalaj-http" % "1.1.4",
         "com.github.tototoshi" %% "scala-csv" % "1.2.2",
-        "org.xerial" % "sqlite-jdbc" % "3.8.6"
+        "org.xerial" % "sqlite-jdbc" % "3.8.6",
+        "org.scala-stm" %% "scala-stm" % "0.7"
       ),
       scalacOptions ++= Seq("-encoding", "UTF-8", "-feature", "-Xlint", "-Ywarn-unused-import", "-Ywarn-dead-code")
     )
