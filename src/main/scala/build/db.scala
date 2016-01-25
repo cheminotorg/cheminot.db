@@ -1,10 +1,10 @@
 package m.cheminot.build
 
-import java.io.File
 import org.joda.time.DateTime
 import scala.util.control.Exception
 import scala.concurrent.Future
 import m.cheminot.Config
+import rapture.fs._
 
 case class Subset(
   id: String,
@@ -19,15 +19,8 @@ case class DB(
   trips: Map[TripId, Trip],
   calendarDates: List[CalendarDate],
   calendar: List[Calendar],
-  meta: Meta
+  bundle: GtfsBundle
 )
-
-case class Meta(bundleId: BundleId, subsets: List[MetaSubset]) {
-  lazy val id: String = bundleId.value
-  lazy val bundleDate: DateTime = bundleId.date
-}
-
-case class MetaSubset(id: String, updatedDate: DateTime, startDate: DateTime, endDate: DateTime)
 
 object DB {
 
@@ -43,23 +36,12 @@ object DB {
         calendar.exists(_.serviceId == calendarDate.serviceId)
       }
 
-    val metaSubsets = gtfsBundle.data.subsetDirs.map { subsetDir =>
-      MetaSubset(
-        id = subsetDir.id,
-        updatedDate = subsetDir.updatedDate,
-        startDate = subsetDir.startDate,
-        endDate = subsetDir.endDate
-      )
-    }
-
-    val meta = Meta(gtfsBundle.bundleId, metaSubsets)
-
-    DB("world", graph, trips, calendarDates, calendar, meta)
+    DB("world", graph, trips, calendarDates, calendar, gtfsBundle)
   }
 
-  def defaultDbDir: File = new File("db")
+  def defaultDbDir: FileUrl = File.currentDir / "db"
 
-  def fromDir(directory: File): Option[DB] =
+  def fromDir(directory: FileUrl): Option[DB] =
     GtfsBundle.mostRecent(root = Option(directory)).map(DB.apply)
 
   def fromDefaultDir(): Option[DB] =
@@ -96,13 +78,10 @@ object DB {
     trips = Map.empty,
     calendarDates = Nil,
     calendar = Nil,
-    meta = Meta(
-      bundleId = BundleId(DateTime.now),
-      subsets = Nil
-    )
+    bundle = GtfsBundle.empty
   )
 
-  def setupEmbed(embedDb: DB)(implicit config: Config): File =
+  def setupEmbed(embedDb: DB)(implicit config: Config): FileUrl =
     storage.Sqlite.create(config.dbDir, embedDb)
 
   def setup()(implicit config: Config): DB = {

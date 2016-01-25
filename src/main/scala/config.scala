@@ -1,16 +1,17 @@
 package m.cheminot
 
-import java.io.File
 import rapture.core._
 import rapture.cli._
+import rapture.fs._
 
-case class Config(dbDir: File, gtfsDir: File, daemon: Boolean, port: Int)
+case class Config(dbDir: FileUrl, gtfsDir: FileUrl, daemon: Boolean, port: Int)
 
 object Config {
 
-  implicit val fileExtractor: New.Param.Extractor[File] = new New.Param.Extractor[File] {
-    def extract(values: Vector[String]): Option[File] = values match {
-      case Vector(v) => Option(new File(v)).filter(_.exists)
+  implicit val fileExtractor: New.Param.Extractor[FileUrl] = new New.Param.Extractor[FileUrl] {
+    def extract(values: Vector[String]): Option[FileUrl] = values match {
+      case Vector(v) =>
+        scala.util.Try(File.parse(v)).toOption.filter(_.exists)
       case _ => None
     }
   }
@@ -24,8 +25,8 @@ object Config {
 
   import modes.returnOption._
 
-  val DbDir = New.Param[File]('o', 'out)
-  val GtfsDir = New.Param[File]('g', 'gtfs)
+  val DbDir = New.Param[FileUrl]('o', 'out)
+  val GtfsDir = New.Param[FileUrl]('g', 'gtfs)
   val Daemon = New.Param[Boolean]('d', 'daemon)
   val Port = New.Param[Int]('p', 'port)
 

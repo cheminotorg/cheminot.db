@@ -1,7 +1,6 @@
 package m.cheminot.misc
 
 import java.io.File
-import org.apache.commons.io.FileUtils
 import scala.language.postfixOps
 import com.github.tototoshi.csv._
 

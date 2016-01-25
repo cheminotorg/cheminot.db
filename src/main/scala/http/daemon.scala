@@ -25,10 +25,10 @@ object Daemon {
 
         Json.parse(req.body).verticeIds.as[Option[List[String]]] match {
 
-          case Some(verticeIds) if verticeIds.size <= LIMIT =>
+          case Some(verticeIds) if verticeIds.size <= LIMIT && !verticeIds.isEmpty =>
             val embed = State.subset(verticeIds)
             val file = DB.setupEmbed(embed)
-            json"""{ "uri": ${Ressources.embedURL(file)} }"""
+            json"""{ "uri": ${file.javaFile.getAbsolutePath} }"""
 
           case Some(verticeIds) =>
             BadRequest(s"You can only ask up to ${LIMIT} vertices}")
@@ -40,12 +40,6 @@ object Daemon {
       case _ => Response.NotFound
     }
   }
-}
-
-object Ressources {
-
-  def embedURL(file: File): String =
-    file.getAbsolutePath //TODO
 }
 
 object State {

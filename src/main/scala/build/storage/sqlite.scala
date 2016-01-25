@@ -1,16 +1,16 @@
 package m.cheminot.build.storage
 
-import java.io.File
 import java.sql.{ Connection, DriverManager, PreparedStatement }
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import anorm._
+import rapture.fs._
 import m.cheminot.build._
 
 object Sqlite {
 
-  def withConnection[A](dbFile: File)(block: Connection => A): A = {
-    val connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.getAbsolutePath)
+  def withConnection[A](dbFile: FileUrl)(block: Connection => A): A = {
+    val connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.javaFile.getAbsolutePath)
     val a = block(connection)
     connection.close()
     a
@@ -24,10 +24,10 @@ object Sqlite {
     SQL("CREATE TABLE meta (id TEXT PRIMARY KEY, bundledate NUMERIC)").executeUpdate
   }
 
-  def insertMeta(meta: Meta) (implicit connection: Connection): Unit = {
+  def insertMeta(gtfsBundle: GtfsBundle) (implicit connection: Connection): Unit = {
     SQL("INSERT INTO meta (id, bundledate) VALUES({id}, {bundledate})").on(
-      'id -> meta.id,
-      'bundledate -> formatDateTime(meta.bundleDate).toLong
+      'id -> gtfsBundle.id.value,
+      'bundledate -> formatDateTime(gtfsBundle.id.date).toLong
     ).executeUpdate
   }
 
@@ -43,16 +43,16 @@ object Sqlite {
       )""").executeUpdate
   }
 
-  def insertMetaSubsets(meta: Meta) (implicit connection: Connection): Unit = {
-    meta.subsets.foreach { subset =>
+  def insertMetaSubsets(gtfsBundle: GtfsBundle) (implicit connection: Connection): Unit = {
+    gtfsBundle.data.subsetDirs.foreach { subsetDir =>
       SQL("""INSERT INTO metasubset (id, metaid, updateddate, startdate, enddate)
              VALUES({id}, {metaid}, {updateddate}, {startdate}, {enddate})""")
       .on(
-        'id -> subset.id,
-        'metaid -> meta.id,
-        'updateddate -> formatDate(subset.updatedDate).toLong,
-        'startdate -> formatDate(subset.startDate).toLong,
-        'enddate -> formatDate(subset.endDate).toLong
+        'id -> subsetDir.id,
+        'metaid -> gtfsBundle.id.value,
+        'updateddate -> formatDate(subsetDir.updatedDate).toLong,
+        'startdate -> formatDate(subsetDir.startDate).toLong,
+        'enddate -> formatDate(subsetDir.endDate).toLong
       ).executeUpdate
     }
   }
@@ -218,20 +218,19 @@ object Sqlite {
     SQL("END TRANSACTION").executeUpdate
   }
 
-  def create(dbDir: File, db: DB): File = {
-    val outDir = new File(dbDir.getAbsolutePath + "/" + db.meta.bundleId.value + "/" + db.id)
-    outDir.mkdirs
-    val outFile = new File(outDir.getAbsoluteFile + "/cheminot.db")
+  def create(dbDir: FileUrl, db: DB): FileUrl = {
+    val outDir = dbDir / db.bundle.id.value / db.id
+    val outFile = outDir / "cheminot.db"
     withConnection(outFile) { implicit connection =>
       Sqlite.init()
 
       println("Meta table")
       Sqlite.createMetaTable()
-      Sqlite.insertMeta(db.meta)
+      Sqlite.insertMeta(db.bundle)
 
       println("Meta subsets table")
       Sqlite.createMetaSubsetsTable()
-      Sqlite.insertMetaSubsets(db.meta)
+      Sqlite.insertMetaSubsets(db.bundle)
 
       println("Trips table")
       Sqlite.createTripsTable()

@@ -8,11 +8,14 @@ object Main {
 
     implicit val config = Config(args)
 
-    //val db = build.DB.setup(config)
-    val db = build.DB.empty
+    val db = build.AutoUpdate.doIt() getOrElse build.DB.empty //build.DB.setup()
 
     if(config.daemon) {
+
+      build.AutoUpdate.start(db.bundle)
+
       http.Daemon.start(db)
+
     }
   }
 }

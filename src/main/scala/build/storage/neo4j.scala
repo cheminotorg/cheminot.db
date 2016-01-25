@@ -1,23 +1,23 @@
 package m.cheminot.build.storage
 
-import java.io.File
 import m.cheminot.misc.CSVWriteFile
 import m.cheminot.build._
+import rapture.fs._
+import rapture.codec._
+import encodings.`UTF-8`._
+import rapture.io._
 
 object Neo4j {
 
   type Row = List[String]
 
-  private def write(dir: File, name: String, headers: Row, data: List[Row]): Unit = {
-    val headerFile = new File(s"""${dir}/${name}_headers.csv""")
-    val dataFile = new File(s"""${dir}/${name}1.csv""")
+  private def write(dir: FileUrl, name: String, headers: Row, data: List[Row]): Unit = {
+    val dataFile = dir / s"${name}1.csv"
     println(s"Writing to ${dataFile}")
-    CSVWriteFile(dataFile).write(headers +: data)
+    CSVWriteFile(dataFile.javaFile).write(headers +: data)
   }
 
-  def writeIndexes(outdir: File, db: DB): Unit = {
-    import scala.collection.JavaConverters._
-
+  def writeIndexes(outdir: FileUrl, db: DB): Unit = {
     val lines = List(
       "CREATE INDEX ON :Meta(metaid);",
       "CREATE INDEX ON :MetaSubset(metasubsetid);",
@@ -39,27 +39,27 @@ object Neo4j {
       "CREATE INDEX ON :CalendarDate(date);",
       "CREATE INDEX ON :Trip(serviceid);"
     )
-    val file = new File(s"""${outdir}/indexes.cypher""")
-    org.apache.commons.io.FileUtils.writeLines(file, lines.asJava)
+    val file = outdir / "index.cypher"
+    lines.foreach (line => s"\n$line" >> outdir / "index.cypher")
   }
 
   object Nodes {
 
-    def writeMeta(outdir: File, db: DB): Unit = {
+    def writeMeta(outdir: FileUrl, db: DB): Unit = {
       val headers = List("metaid:ID(Meta)", "bundledate:int", ":LABEL")
-      val data = List(List(db.meta.id, formatDateTime(db.meta.bundleDate), "Meta"))
+      val data = List(List(db.bundle.id.value, formatDateTime(db.bundle.id.date), "Meta"))
       write(outdir, name = "meta", headers = headers, data = data)
     }
 
-    def writeMetaSubsets(outdir: File, db: DB): Unit = {
+    def writeMetaSubsets(outdir: FileUrl, db: DB): Unit = {
       val headers = List("metasubsetid:ID(MetaSubset)", "updateddate:int", "startdate:int", "enddate:int", ":LABEL")
-      val data = db.meta.subsets.map { subset =>
-        List(subset.id, formatDate(subset.updatedDate), formatDate(subset.startDate), formatDate(subset.endDate), "MetaSubset")
+      val data = db.bundle.data.subsetDirs.map { subsetDir =>
+        List(subsetDir.id, formatDate(subsetDir.updatedDate), formatDate(subsetDir.startDate), formatDate(subsetDir.endDate), "MetaSubset")
       }
       write(outdir, name = "metasubsets", headers = headers, data = data)
     }
 
-    def writeStations(outdir: File, db: DB): Unit = {
+    def writeStations(outdir: FileUrl, db: DB): Unit = {
       val headers = List("stationid:ID(Station)", "name:string", "parentid:string", "lat:double", "lng:double", ":LABEL")
       val data = db.graph.values.toList.map { stop =>
         val parentId = if(Stop.isParis(stop.id)) Stop.STOP_PARIS else ""
@@ -68,7 +68,7 @@ object Neo4j {
       write(outdir, name = "stations", headers = headers, data = data)
     }
 
-    def writeStops(outdir: File, db: DB): Unit = {
+    def writeStops(outdir: FileUrl, db: DB): Unit = {
       val headers = List("stopid:ID(Stop)", "stationid:string", "parentid:string", ":LABEL")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.map { stopTime =>
@@ -79,7 +79,7 @@ object Neo4j {
       write(outdir, name = "stops", headers = headers, data = data)
     }
 
-    def writeTrips(outdir: File, db: DB): Unit = {
+    def writeTrips(outdir: FileUrl, db: DB): Unit = {
       val headers = List("tripid:ID(Trip)", "serviceid:string", ":LABEL")
       val data = db.trips.values.toList.map { trip =>
         List(trip.id, trip.calendar.map(_.serviceId).getOrElse(""), "Trip")
@@ -87,7 +87,7 @@ object Neo4j {
       write(outdir, name = "trips", headers = headers, data = data)
     }
 
-    def writeCalendar(outdir: File, db: DB): Unit = {
+    def writeCalendar(outdir: FileUrl, db: DB): Unit = {
       val headers = List(
         "serviceid:ID(Calendar)",
         "monday:boolean",
@@ -121,7 +121,7 @@ object Neo4j {
       write(outdir, name = "calendar", headers = headers, data = data)
     }
 
-    def writeCalendarDates(outdir: File, db: DB): Unit = {
+    def writeCalendarDates(outdir: FileUrl, db: DB): Unit = {
       val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", ":LABEL")
       val data = db.calendarDates.map { calendarDate =>
         List(calendarDate.id, calendarDate.serviceId, formatDate(calendarDate.date), "CalendarDate")
@@ -132,7 +132,7 @@ object Neo4j {
 
   object Relationships {
 
-    def writeStop2Station(outdir: File, db: DB): Unit = {
+    def writeStop2Station(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Stop)", ":END_ID(Station)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
@@ -147,7 +147,7 @@ object Neo4j {
       write(outdir, name = "stop2station", headers = headers, data = data)
     }
 
-    def writeTrip2Stop(outdir: File, db: DB): Unit = {
+    def writeTrip2Stop(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Stop)", "arrival:int", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.headOption.toList.map { stopTime =>
@@ -157,7 +157,7 @@ object Neo4j {
       write(outdir, name = "trip2stop", headers = headers, data = data)
     }
 
-    def writeTrip2Calendar(outdir: File, db: DB): Unit = {
+    def writeTrip2Calendar(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Calendar)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.calendar.map { calendar =>
@@ -167,7 +167,7 @@ object Neo4j {
       write(outdir, name = "trip2calendar", headers = headers, data = data)
     }
 
-    def writeCalendar2CalendarDates(outdir: File, db: DB): Unit = {
+    def writeCalendar2CalendarDates(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Calendar)", ":END_ID(CalendarDate)", ":TYPE")
       val data = db.calendarDates.map { calendarDate =>
         val `type` = if(calendarDate.exceptionType == 1) "ON" else "OFF"
@@ -176,7 +176,7 @@ object Neo4j {
       write(outdir, name = "calendar2calendardates", headers = headers, data = data)
     }
 
-    def writeStop2Stop(outdir: File, db: DB): Unit = {
+    def writeStop2Stop(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Stop)", "departure:int", "arrival:int", ":END_ID(Stop)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
@@ -197,19 +197,17 @@ object Neo4j {
       write(outdir, name = "stop2stop", headers = headers, data = data)
     }
 
-    def writeMeta2MetaSubsets(outdir: File, db: DB): Unit = {
+    def writeMeta2MetaSubsets(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Meta)", ":END_ID(MetaSubset)", ":TYPE")
-      val data = db.meta.subsets.map { subset =>
-        List(db.meta.id, subset.id, "HAS")
+      val data = db.bundle.data.subsetDirs.map { subsetDir =>
+        List(db.bundle.id.value, subsetDir.id, "HAS")
       }
       write(outdir, name = "meta2metasubsets", headers = headers, data = data)
     }
   }
 
-  def write(dbDir: File, db: DB): Unit = {
-    val outdir = new File(dbDir.getAbsolutePath + "/" + db.meta.id + "/" + db.id)
-    outdir.mkdirs
-
+  def write(dbDir: FileUrl, db: DB): Unit = {
+    val outdir = dbDir / db.bundle.id.value / db.id
     Nodes.writeStations(outdir, db);
     Nodes.writeTrips(outdir, db)
     Nodes.writeStops(outdir, db)
