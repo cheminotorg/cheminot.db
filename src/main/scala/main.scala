@@ -10,7 +10,7 @@ object Main {
 
     val maybeMostRecentBuild = build.GtfsBundle.mostRecent(config.gtfsDir)
 
-    val db = build.AutoUpdate.doIt(maybeMostRecentBuild) getOrElse build.DB.empty //build.DB.mount()
+    val db = build.AutoUpdate.doIt(maybeMostRecentBuild) getOrElse build.DB.mount()
 
     if(config.daemon) {
 

@@ -110,9 +110,15 @@ object SubsetDir {
     SubsetDir(File / "fake", "xxx", "fake", None, None, None)
 }
 
-case class GtfsBundle(id: BundleId, data: ParsedGtfsDirectory)
+class GtfsBundle(_id: BundleId, _data: => ParsedGtfsDirectory) {
+  lazy val id = _id
+  lazy val data = _data
+}
 
 object GtfsBundle {
+
+  def apply(id: BundleId, data: => ParsedGtfsDirectory) =
+    new GtfsBundle(id, data)
 
   def empty: GtfsBundle =
     GtfsBundle(BundleId.next, ParsedGtfsDirectory.empty)
@@ -131,11 +137,10 @@ object GtfsBundle {
   private def fromDir(directory: FileUrl): Option[GtfsBundle] =
     open(directory) map {
       case (bundleId, terDir, transDir, interDir) =>
-        val gtfsTer = GtfsDirectory.ter(terDir)
-        val gtfsTrans = GtfsDirectory.trans(transDir)
-        val gtfsInter = GtfsDirectory.inter(interDir)
-        //GtfsBundle(bundleId, gtfsTer merge gtfsTrans merge gtfsInter, metaSubsets)
-        GtfsBundle(bundleId, gtfsTer)
+        lazy val gtfsTer = GtfsDirectory.ter(terDir)
+        lazy val gtfsTrans = GtfsDirectory.trans(transDir)
+        lazy val gtfsInter = GtfsDirectory.inter(interDir)
+        GtfsBundle(bundleId, gtfsTer merge gtfsTrans merge gtfsInter)
     }
 
   def mostRecent(root: FileUrl): Option[GtfsBundle] =
