@@ -1,11 +1,13 @@
 package m.cheminot.build.storage
 
+import scala.util.Try
 import m.cheminot.misc.CSVWriteFile
 import m.cheminot.build._
 import rapture.fs._
 import rapture.codec._
 import encodings.`UTF-8`._
 import rapture.io._
+import rapture.cli._
 
 object Neo4j {
 
@@ -40,7 +42,44 @@ object Neo4j {
       "CREATE INDEX ON :Trip(serviceid);"
     )
     val file = outdir / "index.cypher"
-    lines.foreach (line => s"\n$line" >> outdir / "index.cypher")
+    lines.foreach (line => s"\n$line" >> outdir / "indexes.cypher")
+  }
+
+  private def dbfilePath(rootDir: FileUrl, name: String): String =
+    (rootDir / name).javaFile.getAbsolutePath
+
+  def applyIndexes(outdir: FileUrl): String = {
+    val result = Process(
+      "neo4j-shell",
+      "-file", dbfilePath(outdir, "indexes.cypher"),
+      "-path", dbfilePath(outdir, "cheminot.db")
+    ).as[String]
+    println(result)
+    result
+  }
+
+  def doImport(outdir: FileUrl): String = {
+    val cmd = Process(
+      "neo4j-import",
+      "--into", dbfilePath(outdir, "cheminot.db"),
+      "--id-type", "string",
+      "--nodes:Station", dbfilePath(outdir, "stations1.csv"),
+      "--nodes:Stop", dbfilePath(outdir, "stops1.csv"),
+      "--nodes:Trip", dbfilePath(outdir, "trips1.csv"),
+      "--nodes:Calendar", dbfilePath(outdir, "calendar1.csv"),
+      "--nodes:CalendarDate", dbfilePath(outdir, "calendardates1.csv"),
+      "--nodes:Meta", dbfilePath(outdir, "meta1.csv"),
+      "--nodes:MetaSubset", dbfilePath(outdir, "metasubsets1.csv"),
+      "-relationships", dbfilePath(outdir, "stop2stop1.csv"),
+      "-relationships", dbfilePath(outdir, "trip2stop1.csv"),
+      "-relationships", dbfilePath(outdir, "trip2calendar1.csv"),
+      "-relationships", dbfilePath(outdir, "calendar2calendardates1.csv"),
+      "-relationships", dbfilePath(outdir, "stop2station1.csv"),
+      "-relationships", dbfilePath(outdir, "meta2metasubsets1.csv")
+    )
+    val result = cmd.as[String]
+    println(result)
+    result
   }
 
   object Nodes {
@@ -228,6 +267,8 @@ object Neo4j {
     Relationships.writeTrip2Stop(outdir, db)
     Relationships.writeTrip2Calendar(outdir, db)
     Relationships.writeCalendar2CalendarDates(outdir, db)
-    writeIndexes(outdir, db);
+    writeIndexes(outdir, db)
+    doImport(outdir)
+    applyIndexes(outdir)
   }
 }
