@@ -19,8 +19,13 @@ import m.cheminot.http
 
 object AutoUpdate {
 
-  case class Build(name: String, url: HttpUrl, updatedDate: DateTime, startDate: DateTime, endDate: DateTime) {
-    lazy val id = s"${name}-${updatedDate.getMillis}-${startDate.getMillis}-${endDate.getMillis}"
+  case class Build(recordId: String, name: String, url: HttpUrl, updatedDate: Option[DateTime], startDate: Option[DateTime], endDate: Option[DateTime]) {
+    lazy val id = {
+      def formatDate(date: Option[DateTime]): String =
+        (date.map(SubsetDir.formatter.print) getOrElse "xxxxXXxx").toString
+
+      s"${name}-${recordId}-${formatDate(updatedDate)}-${formatDate(startDate)}-${formatDate(endDate)}"
+    }
   }
 
   private lazy val executor = m.cheminot.misc.ScheduledExecutor(1)
@@ -41,46 +46,55 @@ object AutoUpdate {
   def stop(): Unit =
     executor.stop()
 
-  private def fetchBuild(name: String, endpoint: HttpUrl): Build = {
+  private def fetchBuild(name: String, endpoint: HttpUrl, dataset: String): Build = {
 
     val formatter = DateTimeFormat.forPattern("dd/MM/yyyy")
 
-    val response = endpoint.httpGet()
+    val params = Map(
+      'dataset -> dataset,
+      'rows -> "1",
+      'start -> "0",
+      'timezone -> "UTC"
+    )
+
+    val ressource = endpoint.query(params)
+
+    println(s"GET $ressource")
+
+    val response = ressource.httpGet()
 
     val json = Json.parse(response.slurp[Char])
 
-    val fields = json.records.as[List[Json]].head.fields
+    val record = json.records.as[List[Json]].head
 
-    val updatedDate = formatter.parseDateTime(
-      fields.mise_a_jour.as[String]
-    )
+    val recordId = record.recordid.as[String]
 
-    val startDate = formatter.parseDateTime(
-      fields.date_de_debut_de_validite.as[String]
-    )
+    val fields = record.fields
 
-    val endDate = formatter.parseDateTime(
-      fields.date_de_fin_de_validite.as[String]
-    )
+    val updatedDate = fields.mise_a_jour.as[Option[String]].map(formatter.parseDateTime)
+
+    val startDate = fields.date_de_debut_de_validite.as[Option[String]].map(formatter.parseDateTime)
+
+    val endDate = fields.date_de_fin_de_validite.as[Option[String]].map(formatter.parseDateTime)
 
     val url = Http.parse(fields.url.as[String])
 
-    Build(name, url, updatedDate, startDate, endDate)
+    Build(recordId, name, url, updatedDate, startDate, endDate)
   }
 
   private def fetchTerBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search/?dataset=sncf-ter-gtfs&rows=40&start=0&timezone=Europe%2FBerlin"
-    fetchBuild("ter", endpoint)
+    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    fetchBuild("ter", endpoint, dataset = "sncf-ter-gtfs")
   }
 
   private def fetchTransBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search/?dataset=sncf-transilien-gtfs&rows=40&start=0&timezone=Europe%2FBerlin"
-    fetchBuild("trans", endpoint)
+    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    fetchBuild("trans", endpoint, dataset = "sncf-transilien-gtfs")
   }
 
   private def fetchInterBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search/?dataset=sncf-intercites-gtfs&rows=40&start=0&timezone=Europe%2FBerlin"
-    fetchBuild("inter", endpoint)
+    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    fetchBuild("inter", endpoint, dataset = "sncf-intercites-gtfs")
   }
 
   def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): Option[DB] = {
@@ -96,30 +110,31 @@ object AutoUpdate {
       val subsetsById: Map[String, SubsetDir] = currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
 
       val buildsWithSubsets: Map[Build, SubsetDir] = List(terBuild, interBuild, transBuild).flatMap { build =>
-        subsetsById.get(build.name).map(build -> _)
+        subsetsById.get(build.recordId).map(build -> _)
       }.toMap
 
       buildsWithSubsets.foldLeft(false) {
         case (b, (build, subset)) =>
           if(b) true else {
-            subset.updatedDate.isAfter(build.updatedDate)
+            subset.id != build.recordId
           }
       }
     } getOrElse true
 
     if(needUpdate) {
 
-      val rootDir = config.gtfsDir / DateTime.now.getMillis.toString
+      val rootDir = config.gtfsDir / BundleId.next.value
 
       setupBuilds(rootDir, terBuild, interBuild, transBuild)
 
-      Option(build.DB.setup())
+      Option(build.DB.mount())
 
     } else None
   }
 
   private def setupBuild(rootDir: FileUrl, build: Build): Unit = {
     val buildDir = rootDir / build.id
+    buildDir.mkdir(makeParents = true)
     val buildFile = buildDir / s"${build.name}.zip"
     build.url > buildFile
     misc.ZipUtils.unzip(buildFile.javaFile, buildDir.javaFile)

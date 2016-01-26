@@ -54,7 +54,13 @@ object Neo4j {
     def writeMetaSubsets(outdir: FileUrl, db: DB): Unit = {
       val headers = List("metasubsetid:ID(MetaSubset)", "updateddate:int", "startdate:int", "enddate:int", ":LABEL")
       val data = db.bundle.data.subsetDirs.map { subsetDir =>
-        List(subsetDir.id, formatDate(subsetDir.updatedDate), formatDate(subsetDir.startDate), formatDate(subsetDir.endDate), "MetaSubset")
+        List(
+          subsetDir.id,
+          subsetDir.updatedDate map(formatDate) getOrElse "",
+          subsetDir.startDate map(formatDate) getOrElse "",
+          subsetDir.endDate map(formatDate) getOrElse "",
+          "MetaSubset"
+        )
       }
       write(outdir, name = "metasubsets", headers = headers, data = data)
     }
@@ -208,6 +214,7 @@ object Neo4j {
 
   def write(dbDir: FileUrl, db: DB): Unit = {
     val outdir = dbDir / db.bundle.id.value / db.id
+    outdir.mkdir(makeParents = true)
     Nodes.writeStations(outdir, db);
     Nodes.writeTrips(outdir, db)
     Nodes.writeStops(outdir, db)

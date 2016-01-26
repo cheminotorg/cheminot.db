@@ -50,9 +50,9 @@ object Sqlite {
       .on(
         'id -> subsetDir.id,
         'metaid -> gtfsBundle.id.value,
-        'updateddate -> formatDate(subsetDir.updatedDate).toLong,
-        'startdate -> formatDate(subsetDir.startDate).toLong,
-        'enddate -> formatDate(subsetDir.endDate).toLong
+        'updateddate -> subsetDir.updatedDate.map(formatDate(_).toLong),
+        'startdate -> subsetDir.startDate.map(formatDate(_).toLong),
+        'enddate -> subsetDir.endDate.map(formatDate(_).toLong)
       ).executeUpdate
     }
   }

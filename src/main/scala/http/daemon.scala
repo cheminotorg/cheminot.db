@@ -27,7 +27,7 @@ object Daemon {
 
           case Some(verticeIds) if verticeIds.size <= LIMIT && !verticeIds.isEmpty =>
             val embed = State.subset(verticeIds)
-            val file = DB.setupEmbed(embed)
+            val file = DB.buildEmbed(embed)
             json"""{ "uri": ${file.javaFile.getAbsolutePath} }"""
 
           case Some(verticeIds) =>

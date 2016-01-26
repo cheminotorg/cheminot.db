@@ -8,7 +8,9 @@ object Main {
 
     implicit val config = Config(args)
 
-    val db = build.AutoUpdate.doIt() getOrElse build.DB.empty //build.DB.setup()
+    val maybeMostRecentBuild = build.GtfsBundle.mostRecent(config.gtfsDir)
+
+    val db = build.AutoUpdate.doIt(maybeMostRecentBuild) getOrElse build.DB.empty //build.DB.mount()
 
     if(config.daemon) {
 

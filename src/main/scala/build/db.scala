@@ -81,10 +81,10 @@ object DB {
     bundle = GtfsBundle.empty
   )
 
-  def setupEmbed(embedDb: DB)(implicit config: Config): FileUrl =
+  def buildEmbed(embedDb: DB)(implicit config: Config): FileUrl =
     storage.Sqlite.create(config.dbDir, embedDb)
 
-  def setup()(implicit config: Config): DB = {
+  def mount()(implicit config: Config): DB = {
     DB.fromDir(config.gtfsDir).map { db =>
       storage.Neo4j.write(config.dbDir, db)
       db

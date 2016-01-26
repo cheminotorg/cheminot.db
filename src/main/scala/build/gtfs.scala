@@ -76,17 +76,17 @@ object Gtfs {
   }
 }
 
-case class SubsetDir(dir: FileUrl, id: String, updatedDate: DateTime, startDate: DateTime, endDate: DateTime)
+case class SubsetDir(dir: FileUrl, id: String, name: String, updatedDate: Option[DateTime], startDate: Option[DateTime], endDate: Option[DateTime])
 
 object SubsetDir {
 
-  val R = """^(.+)-(.+)-(.+)-(.+)$""".r
+  val R = """^(.+)-(.+)-(.+)-(.+)-(.+)$""".r
 
   val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyyMMdd")
 
   object AsDateTime {
-    def unapply(d: String): Option[DateTime] = {
-      scala.util.Try(formatter.parseDateTime(d)).toOption
+    def unapply(d: String): Option[Option[DateTime]] = {
+      Option(scala.util.Try(formatter.parseDateTime(d)).toOption)
     }
   }
 
@@ -101,13 +101,13 @@ object SubsetDir {
 
   private def fromDir(rootDir: FileUrl, id: String): Option[SubsetDir] =
     rootDir.children.map(_.filename).collect {
-      case name@R(subsetId, AsDateTime(updatedDate), AsDateTime(startDate), AsDateTime(endDate)) if subsetId == id =>
+      case name@R(subsetId, recordId, AsDateTime(updatedDate), AsDateTime(startDate), AsDateTime(endDate)) if subsetId == id =>
         val dir = rootDir / name
-        SubsetDir(dir, subsetId, updatedDate, startDate, endDate)
+        SubsetDir(dir, recordId, subsetId, updatedDate, startDate, endDate)
     }.headOption.filter(s => GtfsDirectory.check(s.dir).isDefined)
 
   def empty: SubsetDir =
-    SubsetDir(File / "fake", "fake", DateTime.now, DateTime.now, DateTime.now)
+    SubsetDir(File / "fake", "xxx", "fake", None, None, None)
 }
 
 case class GtfsBundle(id: BundleId, data: ParsedGtfsDirectory)
@@ -137,6 +137,9 @@ object GtfsBundle {
         //GtfsBundle(bundleId, gtfsTer merge gtfsTrans merge gtfsInter, metaSubsets)
         GtfsBundle(bundleId, gtfsTer)
     }
+
+  def mostRecent(root: FileUrl): Option[GtfsBundle] =
+    mostRecent(Option(root))
 
   def mostRecent(root: Option[FileUrl] = None): Option[GtfsBundle] =
     root.getOrElse(defaultRoot).children.toList.filter (_.isDirectory)
