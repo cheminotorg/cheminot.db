@@ -123,13 +123,20 @@ object AutoUpdate {
 
     if(needUpdate) {
 
+      println("Update found")
+
       val rootDir = config.gtfsDir / BundleId.next.value
 
       setupBuilds(rootDir, terBuild, interBuild, transBuild)
 
       Option(build.DB.mount())
 
-    } else None
+    } else {
+
+      println("No update found")
+
+      None
+    }
   }
 
   private def setupBuild(rootDir: FileUrl, build: Build): Unit = {

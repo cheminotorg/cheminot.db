@@ -28,8 +28,15 @@ object DB {
     val (graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip]) =
       Builder.build(gtfsBundle)
 
+    val tripsByServiceId = trips.toSeq.flatMap {
+      case (_, trip) =>
+        trip.calendar.map(_.serviceId -> trip)
+    }.toMap
+
     val calendar: List[Calendar] =
-      gtfsBundle.data.calendar.map(Calendar.fromRecord)
+      gtfsBundle.data.calendar.map(Calendar.fromRecord).filter { c =>
+        tripsByServiceId.get(c.serviceId).isDefined
+      }
 
     val calendarDates: List[CalendarDate] =
       gtfsBundle.data.calendarDates.map(CalendarDate.fromRecord).filter { calendarDate =>

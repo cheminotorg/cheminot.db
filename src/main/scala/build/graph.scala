@@ -32,8 +32,36 @@ object Builder {
     )
   }
 
+  private[build] def distinctTrips(trips: List[Trip]): List[Trip] = {
+    val distinctTrips = trips.distinct
+    val table = distinctTrips.foldLeft(Map.empty[StopTime, Seq[Trip]]) {
+      case (acc, trip) =>
+      trip.stopTimes.foldLeft(acc) {
+        case (acc, stopTime) =>
+          val updatedStopTimes = acc.get(stopTime) match {
+            case None => Seq(trip)
+            case Some(trips) => (trip +: trips).distinct
+          }
+          acc + (stopTime -> updatedStopTimes)
+      }
+    }
+    distinctTrips.filterNot { trip =>
+      (for {
+        departure <- trip.stopTimes.headOption
+        arrival <- trip.stopTimes.lastOption
+        tripsA <- table.get(departure)
+        tripsB <- table.get(arrival)
+      } yield {
+        val tripsAB = tripsA ++: tripsB
+        tripsAB.exists { t =>
+          trip != t && t.contains(trip)
+        }
+      }) getOrElse false
+    }
+  }
+
   private def fixTrips(trips: List[Trip], refs: Map[StopId, VerticeId]): Map[TripId, Trip] = {
-    trips.map(trip => trip.id -> fixTrip(trip)(refs.get)).toMap
+    distinctTrips(trips.map(fixTrip(_)(refs.get))).map(trip => trip.id -> trip).toMap
   }
 
   private def buildGraph(stopRecords: List[StopRecord], trips: List[Trip]): (Map[VerticeId, Vertice], Map[StopId, VerticeId]) = {

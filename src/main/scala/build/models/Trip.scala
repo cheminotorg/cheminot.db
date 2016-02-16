@@ -18,6 +18,34 @@ case class Trip(id: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]
       stopTimes.lift(index - 1).toList ++ stopTimes.lift(index + 1).toList
     }.map(_.stopId)
   }
+
+  def contains(t: Trip): Boolean =
+    stopTimes.containsSlice(t.stopTimes)
+
+  override def equals(o: Any): Boolean =
+    o match {
+      case r: Trip if r.id == id => true
+      case r: Trip =>
+        (for {
+          firstStopTime <- stopTimes.headOption
+          otherFirstStopTime <- r.stopTimes.headOption
+          if firstStopTime == otherFirstStopTime
+
+          lastStopTime <- stopTimes.lastOption
+          otherLastStopTime <- r.stopTimes.lastOption
+          if lastStopTime == otherLastStopTime
+        } yield true).isDefined
+      case _ => false
+    }
+
+  override def hashCode =
+    (for {
+      firstStopTime <- stopTimes.headOption
+      lastStopTime <- stopTimes.lastOption
+      if firstStopTime != lastStopTime
+    } yield {
+      firstStopTime.hashCode + lastStopTime.hashCode
+    }) getOrElse id.hashCode
 }
 
 object Trip {
