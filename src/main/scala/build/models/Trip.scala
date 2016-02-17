@@ -44,7 +44,7 @@ case class Trip(id: String, calendar: Option[Calendar], stopTimes: Seq[StopTime]
       lastStopTime <- stopTimes.lastOption
       if firstStopTime != lastStopTime
     } yield {
-      firstStopTime.hashCode + lastStopTime.hashCode
+      List(firstStopTime, lastStopTime, calendar.map(_.serviceId)).map(_.hashCode).mkString("").hashCode
     }) getOrElse id.hashCode
 }
 
