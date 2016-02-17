@@ -90,13 +90,14 @@ object Builder {
     Measure.duration("Trips") {
       println(s"** Trips: ${parsed.trips.size}\n** StopTimes: ${parsed.stopTimes.size}\n** Calendar: ${parsed.calendar.size}")
       par(parsed.trips, debug = true) { tripRecord =>
-        val maybeService = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
+        val maybeCalendar = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
+        val maybeCalendarDate = parsed.calendarDates.view.find(_.serviceId == tripRecord.serviceId).map(CalendarDate.fromRecord)
         val stopTimesForTrip = parsed.stopTimes.collect {
           case stopTimeRecord if(stopTimeRecord.tripId == tripRecord.tripId) =>
             StopTime.fromRecord(stopTimeRecord)
         }.toList
 
-        Trip.fromRecord(tripRecord, tripRecord.routeId, maybeService, stopTimesForTrip)
+        Trip.fromRecord(tripRecord, tripRecord.routeId, maybeCalendar, maybeCalendarDate, stopTimesForTrip)
       }.toList
     }
 }

@@ -128,7 +128,7 @@ object Neo4j {
     def writeTrips(outdir: FileUrl, db: DB): Unit = {
       val headers = List("tripid:ID(Trip)", "serviceid:string", ":LABEL")
       val data = db.trips.values.toList.map { trip =>
-        List(trip.id, trip.calendar.map(_.serviceId).getOrElse(""), "Trip")
+        List(trip.id, trip.serviceId, "Trip")
       }
       write(outdir, name = "trips", headers = headers, data = data)
     }
@@ -216,7 +216,7 @@ object Neo4j {
     def writeTrip2CalendarDates(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(CalendarDate)", ":TYPE")
       val tripsByServiceId = db.trips.values.toList.collect {
-        case t@Trip(id, Some(calendar), _) => id -> calendar.serviceId
+        case t@Trip(id, serviceId, _, _) => id -> serviceId
       }.groupBy { case (_, serviceId) => serviceId }
 
       val data = db.calendarDates.flatMap { calendarDate =>
@@ -241,7 +241,6 @@ object Neo4j {
               None
             }
             next <- trip.stopTimes.lift(stopTime.pos + 1)
-            serviceId <- trip.calendar.map(_.serviceId)
           } yield {
             val departure = formatTime(stopTime.departure)
             val arrival = formatTime(next.arrival)

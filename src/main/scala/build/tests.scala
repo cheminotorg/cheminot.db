@@ -18,12 +18,14 @@ object BuilderTests {
       "tripA",
       "xxx",
       None,
+      None,
       List(
         StopTime(
           "OCESN862418F0100545013",
           ISODateTimeFormat.dateTime.parseDateTime("2016-02-05T17:02:06.232+01:00"),
           ISODateTimeFormat.dateTime.parseDateTime("2016-02-05T17:02:06.232+01:00"),
           "8739400",
+
           0
         ),
         StopTime(
@@ -53,6 +55,7 @@ object BuilderTests {
     val tripB = Trip(
       "tripB",
       "xxx",
+      None,
       None,
       List(
         StopTime(
@@ -89,6 +92,7 @@ object BuilderTests {
     val tripC = Trip(
       "tripC",
       "xxx",
+      None,
       None,
       List(
         StopTime(
