@@ -99,44 +99,54 @@ object AutoUpdate {
 
   def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): Option[DB] = {
 
-    val terBuild = fetchTerBuild()
+    scala.util.Try {
 
-    val interBuild = fetchInterBuild()
+      val terBuild = fetchTerBuild()
 
-    val transBuild = fetchTransBuild()
+      val interBuild = fetchInterBuild()
 
-    val needUpdate = maybeBundle.map { currentBundle =>
+      val transBuild = fetchTransBuild()
 
-      val subsetsById: Map[String, SubsetDir] = currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
+      val needUpdate = maybeBundle.map { currentBundle =>
 
-      val buildsWithSubsets: Map[Build, SubsetDir] = List(terBuild, interBuild, transBuild).flatMap { build =>
-        subsetsById.get(build.recordId).map(build -> _)
-      }.toMap
+        val subsetsById: Map[String, SubsetDir] =
+          currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
 
-      buildsWithSubsets.foldLeft(false) {
-        case (b, (build, subset)) =>
-          if(b) true else {
-            subset.id != build.recordId
-          }
+        val buildsWithSubsets: Map[Build, SubsetDir] =
+          List(terBuild, interBuild, transBuild).flatMap { build =>
+            subsetsById.get(build.recordId).map(build -> _)
+          }.toMap
+
+        buildsWithSubsets.foldLeft(false) {
+          case (b, (build, subset)) =>
+            if(b) true else {
+              subset.id != build.recordId
+            }
+        }
+      } getOrElse true
+
+      if(needUpdate) {
+
+        println("Update found")
+
+        val rootDir = config.gtfsDir / BundleId.next.value
+
+        setupBuilds(rootDir, terBuild, interBuild, transBuild)
+
+        Option(build.DB.mount())
+
+      } else {
+
+        println("No update found")
+
+        None
       }
-    } getOrElse true
 
-    if(needUpdate) {
-
-      println("Update found")
-
-      val rootDir = config.gtfsDir / BundleId.next.value
-
-      setupBuilds(rootDir, terBuild, interBuild, transBuild)
-
-      Option(build.DB.mount())
-
-    } else {
-
-      println("No update found")
-
-      None
-    }
+    }.recover {
+      case e: Exception =>
+        e.printStackTrace
+        None
+    }.toOption.flatten
   }
 
   private def setupBuild(rootDir: FileUrl, build: Build): Unit = {

@@ -16,6 +16,7 @@ object BuilderTests {
 
     val tripA = Trip(
       "tripA",
+      "xxx",
       None,
       List(
         StopTime(
@@ -51,6 +52,7 @@ object BuilderTests {
 
     val tripB = Trip(
       "tripB",
+      "xxx",
       None,
       List(
         StopTime(
@@ -86,6 +88,7 @@ object BuilderTests {
 
     val tripC = Trip(
       "tripC",
+      "xxx",
       None,
       List(
         StopTime(
