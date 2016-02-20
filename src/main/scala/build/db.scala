@@ -39,9 +39,7 @@ object DB {
       }
 
     val calendarDates: List[CalendarDate] =
-      gtfsBundle.data.calendarDates.map(CalendarDate.fromRecord).filter { calendarDate =>
-        calendar.exists(_.serviceId == calendarDate.serviceId)
-      }
+      gtfsBundle.data.calendarDates.map(CalendarDate.fromRecord)
 
     DB("world", graph, trips, calendarDates, calendar, gtfsBundle)
   }

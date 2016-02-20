@@ -39,7 +39,8 @@ object Neo4j {
       "CREATE INDEX ON :Calendar(startdate);",
       "CREATE INDEX ON :Calendar(enddate);",
       "CREATE INDEX ON :CalendarDate(date);",
-      "CREATE INDEX ON :Trip(serviceid);"
+      "CREATE INDEX ON :Trip(serviceid);",
+      "CREATE INDEX ON :ParentStation(parentstationid);"
     )
     val file = outdir / "index.cypher"
     lines.foreach (line => s"\n$line" >> outdir / "indexes.cypher")
@@ -70,6 +71,7 @@ object Neo4j {
       "--nodes:CalendarDate", dbfilePath(outdir, "calendardates1.csv"),
       "--nodes:Meta", dbfilePath(outdir, "meta1.csv"),
       "--nodes:MetaSubset", dbfilePath(outdir, "metasubsets1.csv"),
+      "--nodes:ParentStation", dbfilePath(outdir, "parentstations1.csv"),
       "-relationships", dbfilePath(outdir, "stop2stop1.csv"),
       "-relationships", dbfilePath(outdir, "trip2stop1.csv"),
       "-relationships", dbfilePath(outdir, "trip2calendar1.csv"),
@@ -103,6 +105,14 @@ object Neo4j {
         )
       }
       write(outdir, name = "metasubsets", headers = headers, data = data)
+    }
+
+    def writeParentStations(outdir: FileUrl, db: DB): Unit = {
+      val headers = List("parentstationid:ID(ParentStation)", "name:string", "lat:double", "lng:double", ":LABEL")
+      val data = Stop.parentStations.map { stop =>
+        List(stop.id, stop.name, stop.lat.toString, stop.lng.toString, "ParentStation")
+      }
+      write(outdir, name = "parentstations", headers = headers, data = data)
     }
 
     def writeStations(outdir: FileUrl, db: DB): Unit = {
@@ -215,17 +225,10 @@ object Neo4j {
 
     def writeTrip2CalendarDates(outdir: FileUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(CalendarDate)", ":TYPE")
-      val tripsByServiceId = db.trips.values.toList.collect {
-        case t@Trip(id, serviceId, _, _) => id -> serviceId
-      }.groupBy { case (_, serviceId) => serviceId }
-
-      val data = db.calendarDates.flatMap { calendarDate =>
-        tripsByServiceId.get(calendarDate.serviceId).toList.flatMap { tripIds =>
+      val data = db.trips.values.toList.flatMap { trip =>
+        trip.calendarDate.map { calendarDate =>
           val `type` = if(calendarDate.exceptionType == 1) "ON" else "OFF"
-          tripIds.map {
-            case (tripId, _) =>
-              List(tripId, calendarDate.id, `type`)
-          }
+          List(trip.id, calendarDate.id, `type`)
         }
       }
       write(outdir, name = "trip2calendardates", headers = headers, data = data)
@@ -270,6 +273,7 @@ object Neo4j {
     Nodes.writeCalendarDates(outdir, db)
     Nodes.writeMeta(outdir, db)
     Nodes.writeMetaSubsets(outdir, db)
+    Nodes.writeParentStations(outdir, db)
     Relationships.writeMeta2MetaSubsets(outdir, db)
     Relationships.writeStop2Station(outdir, db)
     Relationships.writeStop2Stop(outdir, db)

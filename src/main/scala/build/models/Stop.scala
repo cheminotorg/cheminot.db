@@ -31,6 +31,8 @@ object Stop {
     STOP_PARIS_AUSTERLITZ
   )
 
+  lazy val parentStations = List(Stop(STOP_PARIS, "Paris", 48.8588377D, 2.2775173D))
+
   val parisLyon = List(STOP_PARIS_LYON_1, STOP_PARIS_LYON_2, STOP_PARIS_LYON_3)
 
   val parisNord = List(STOP_PARIS_NORD_1, STOP_PARIS_NORD_2, STOP_PARIS_NORD_3)
