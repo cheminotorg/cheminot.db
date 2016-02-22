@@ -2,7 +2,7 @@ package m.cheminot.http
 
 import java.io.File
 import rapture.core._
-import rapture.json._, jsonBackends.jackson._
+import rapture.json._, jsonBackends.jawn._
 import rapture.uri._
 import rapture.http._, httpBackends.jetty._, RequestExtractors._
 import rapture.codec._

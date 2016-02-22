@@ -8,7 +8,7 @@ import rapture.fs._
 import rapture.uri._
 import rapture.net._
 import rapture.io._
-import rapture.json._, jsonBackends.jackson._
+import rapture.json._, jsonBackends.jawn._
 import rapture.time._
 
 import m.cheminot.Config
