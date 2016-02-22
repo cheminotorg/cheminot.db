@@ -9,39 +9,6 @@ import m.cheminot.misc.{ CSVReadFile, CSVWriteFile }
 
 object Normalizer {
 
-  def handleCompoundWords(stopName: String): List[String] = {
-    val spaceIndex = Option(stopName.indexOf(" ")).filterNot(_ == -1)
-    val dashIndex = Option(stopName.indexOf("-")).filterNot(_ == -1)
-    val (sep, newsep) = {
-      val isSpace = spaceIndex.getOrElse(stopName.size) < dashIndex.getOrElse(stopName.size)
-      if (isSpace) " " -> "-" else "-" -> " "
-    }
-    val splitStopName = stopName.split(sep).toList
-    if(!spaceIndex.isEmpty && !dashIndex.isEmpty) {
-      val x = stopName.split(newsep).toList match {
-        case h :: t => h.replaceAll(sep, newsep) + newsep + t.mkString(newsep)
-        case _ => sys.error("Unexpected case in handleCompoundWords")
-      }
-      x +: splitStopName
-    } else {
-      stopName.replaceAll(sep, newsep) +: splitStopName
-    }
-  }
-
-  def handleSaintWords(stopName: String): List[String] = {
-    val SaintReg = """^Saint([-|\s])(.*)$""".r
-    val StReg = """^St([-|\s])(.*)$""".r
-    stopName match {
-      case SaintReg(sep, n) =>
-        val st = List("St " + n, "St-" + n)
-        if(sep == " ") ("Saint-" + n) +: st else ("Saint " + n) +: st
-      case StReg(sep, n) =>
-        val saint = List("Saint " + n, "Saint-" + n)
-        if(sep == " ") ("St-" + n) +: saint else ("St " + n) +: saint
-      case _ => Nil
-    }
-  }
-
   def stopName(name: String): String =
     name.toLowerCase.split("\\s").map(_.capitalize).mkString(" ")
 }
