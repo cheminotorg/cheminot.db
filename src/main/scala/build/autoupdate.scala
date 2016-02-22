@@ -2,7 +2,6 @@ package m.cheminot.build
 
 import scala.concurrent.duration._
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import java.io.{File => JFile}
 
 import rapture.fs._
@@ -19,7 +18,14 @@ import m.cheminot.http
 
 object AutoUpdate {
 
-  case class Build(recordId: String, name: String, url: HttpUrl, updatedDate: Option[DateTime], startDate: Option[DateTime], endDate: Option[DateTime]) {
+  case class Build(
+    recordId: String,
+    name: String,
+    url: HttpUrl,
+    updatedDate: Option[DateTime],
+    startDate: Option[DateTime],
+    endDate: Option[DateTime]
+  ) {
     lazy val id = {
       def formatDate(date: Option[DateTime]): String =
         (date.map(SubsetDir.formatter.print) getOrElse "xxxxXXxx").toString
@@ -48,7 +54,7 @@ object AutoUpdate {
 
   private def fetchBuild(name: String, endpoint: HttpUrl, dataset: String): Build = {
 
-    val formatter = DateTimeFormat.forPattern("dd/MM/yyyy")
+    val formatter = misc.DateTime.forPattern("dd/MM/yyyy")
 
     val params = Map(
       'dataset -> dataset,

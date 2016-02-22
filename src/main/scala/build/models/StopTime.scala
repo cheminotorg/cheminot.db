@@ -37,9 +37,4 @@ object StopTime {
       record.stopSeq
     )
   }
-
-  def formatTime(time: DateTime): String = {
-    val formatter = org.joda.time.format.DateTimeFormat.forPattern("HH:mm")
-    formatter.print(time)
-  }
 }

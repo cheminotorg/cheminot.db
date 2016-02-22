@@ -2,9 +2,9 @@ package m.cheminot.build
 
 import scala.concurrent.Future
 import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
 import scala.collection.mutable.{ Map => MMap }
 import rapture.fs._
+import m.cheminot.misc
 import m.cheminot.misc.{ CSVReadFile, CSVWriteFile }
 
 object Normalizer {
@@ -49,7 +49,7 @@ object Normalizer {
 object Gtfs {
 
   def parseDateTime(str: String): DateTime = {
-    val formatter = DateTimeFormat.forPattern("yyyyMMdd").withZoneUTC
+    val formatter = misc.DateTime.forPattern("yyyyMMdd")
     DateTime.parse(str, formatter)
   }
 
@@ -76,13 +76,20 @@ object Gtfs {
   }
 }
 
-case class SubsetDir(dir: FileUrl, id: String, name: String, updatedDate: Option[DateTime], startDate: Option[DateTime], endDate: Option[DateTime])
+case class SubsetDir(
+  dir: FileUrl,
+  id: String,
+  name: String,
+  updatedDate: Option[DateTime],
+  startDate: Option[DateTime],
+  endDate: Option[DateTime]
+)
 
 object SubsetDir {
 
   val R = """^(.+)-(.+)-(.+)-(.+)-(.+)$""".r
 
-  val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyyMMdd")
+  val formatter = misc.DateTime.forPattern("yyyyMMdd")
 
   object AsDateTime {
     def unapply(d: String): Option[Option[DateTime]] = {
@@ -427,13 +434,10 @@ case class BundleId(date: DateTime) {
 
 object BundleId {
 
-  private def parse(name: String): Option[DateTime] = {
-    scala.util.Try {
-      formatter.parseDateTime(name)
-    }.toOption
-  }
+  private def parse(name: String): Option[DateTime] =
+    scala.util.Try(formatter.parseDateTime(name)).toOption
 
-  val formatter = org.joda.time.format.DateTimeFormat.forPattern("yyyyMMddHHmmss")
+  val formatter = misc.DateTime.forPattern("yyyyMMddHHmmss")
 
   def fromDir(dir: FileUrl): Option[BundleId] = {
     for {

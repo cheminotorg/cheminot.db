@@ -1,5 +1,6 @@
 package m.cheminot.build
 
+import m.cheminot.misc
 import org.joda.time.DateTime
 
 package object storage {
@@ -7,11 +8,11 @@ package object storage {
   def formatDate(date: DateTime): String =
     (date.withTimeAtStartOfDay().getMillis() / 1000).toString
 
-  def formatDateTime(date: org.joda.time.DateTime): String =
+  def formatDateTime(date: DateTime): String =
     (date.getMillis() / 1000).toString
 
-  def formatTime(time: org.joda.time.DateTime): String = {
-    val formatter = org.joda.time.format.DateTimeFormat.forPattern("HHmm")
+  def formatTime(time: DateTime): String = {
+    val formatter = misc.DateTime.forPattern("HHmm")
     formatter.print(time)
   }
 }

@@ -32,11 +32,6 @@ object Calendar {
     )
   }
 
-  private def formatDate(date: DateTime): String = {
-    val formatter = org.joda.time.format.DateTimeFormat.forPattern("dd/MM/YYYY")
-    formatter.print(date)
-  }
-
   private def formatBoolean(bool: Boolean): String =
     if(bool) "1" else "0"
 }
@@ -60,10 +55,5 @@ object CalendarDate {
       record.date,
       record.exceptionType
     )
-  }
-
-  private def formatDate(date: DateTime): String = {
-    val formatter = org.joda.time.format.DateTimeFormat.forPattern("dd/MM/YYYY")
-    formatter.print(date)
   }
 }

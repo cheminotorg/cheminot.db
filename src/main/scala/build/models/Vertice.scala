@@ -1,8 +1,13 @@
 package m.cheminot.build
 
-import org.joda.time.DateTime
-
-case class Vertice(id: String, name: String, lat: Double, lng: Double, edges: Seq[String], stopTimes: Seq[StopTime])
+case class Vertice(
+  id: String,
+  name: String,
+  lat: Double,
+  lng: Double,
+  edges: Seq[String],
+  stopTimes: Seq[StopTime]
+)
 
 object Vertice {
 
