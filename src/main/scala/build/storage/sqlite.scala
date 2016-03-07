@@ -81,6 +81,26 @@ object Sqlite {
     SQL("END TRANSACTION").executeUpdate
   }
 
+  def createStationsFtsTable()(implicit connection: Connection): Unit = {
+    SQL("CREATE VIRTUAL TABLE stationfts USING fts4 (id, name)").executeUpdate
+  }
+
+  def insertStationsFts(graph: Map[VerticeId, Vertice])(implicit connection: Connection): Unit = {
+    SQL("BEGIN TRANSACTION").executeUpdate
+
+    graph.values.toList.foreach { vertice =>
+      val query = SQL("INSERT INTO stationfts (id, name) VALUES({id}, {name})")
+      try {
+        query.on('id -> vertice.id, 'name -> vertice.name).executeUpdate
+      } catch {
+        case e: Exception =>
+          println(s"Unable to insert stationfts ${vertice.id}: ${e.getMessage}")
+      }
+    }
+
+    SQL("END TRANSACTION").executeUpdate
+  }
+
   def createStationsTable()(implicit connection: Connection): Unit =  {
     SQL("CREATE TABLE station (id TEXT PRIMARY KEY, name TEXT, parentid TEXT, lat REAL, lng REAL)").executeUpdate
     SQL("CREATE INDEX station_name ON station(name)").executeUpdate
@@ -244,6 +264,10 @@ object Sqlite {
       println("Stations table")
       Sqlite.createStationsTable()
       Sqlite.insertStations(db.graph)
+
+      println("Stations fts table")
+      Sqlite.createStationsFtsTable()
+      Sqlite.insertStationsFts(db.graph)
 
       println("Stops table")
       Sqlite.createStopsTable()
