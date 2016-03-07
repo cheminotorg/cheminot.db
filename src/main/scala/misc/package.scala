@@ -1,6 +1,5 @@
 import java.util.concurrent.Executors
 import scala.concurrent.duration._
-import play.api.libs.iteratee.{ Enumerator, Iteratee }
 import scala.concurrent.{ Await, Future, ExecutionContext }
 import java.util.concurrent.atomic.AtomicInteger
 
