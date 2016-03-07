@@ -3,6 +3,7 @@ package m.cheminot.build.storage
 import scala.util.Try
 import m.cheminot.misc.CSVWriteFile
 import m.cheminot.build._
+import rapture.uri._
 import rapture.fs._
 import rapture.codec._
 import encodings.`UTF-8`._
@@ -13,13 +14,13 @@ object Neo4j {
 
   type Row = List[String]
 
-  private def write(dir: FileUrl, name: String, headers: Row, data: List[Row]): Unit = {
+  private def write(dir: FsUrl, name: String, headers: Row, data: List[Row]): Unit = {
     val dataFile = dir / s"${name}1.csv"
-    println(s"Writing to ${dataFile}")
+    println(s"Writing to ${dataFile.javaFile}")
     CSVWriteFile(dataFile.javaFile).write(headers +: data)
   }
 
-  def writeIndexes(outdir: FileUrl, db: DB): Unit = {
+  def writeIndexes(outdir: FsUrl, db: DB): Unit = {
     val lines = List(
       "CREATE INDEX ON :Meta(metaid);",
       "CREATE INDEX ON :MetaSubset(metasubsetid);",
@@ -46,21 +47,21 @@ object Neo4j {
     lines.foreach (line => s"\n$line" >> outdir / "indexes.cypher")
   }
 
-  private def dbfilePath(rootDir: FileUrl, name: String): String =
+  private def dbfilePath(rootDir: FsUrl, name: String): String =
     (rootDir / name).javaFile.getAbsolutePath
 
-  def applyIndexes(outdir: FileUrl): String = {
-    val result = Process(
+  def applyIndexes(outdir: FsUrl): String = {
+    val result = Process(Vector(
       "neo4j-shell",
       "-file", dbfilePath(outdir, "indexes.cypher"),
       "-path", dbfilePath(outdir, "cheminot.db")
-    ).as[String]
+    )).exec[String]
     println(result)
     result
   }
 
-  def doImport(outdir: FileUrl): String = {
-    val cmd = Process(
+  def doImport(outdir: FsUrl): String = {
+    val cmd = Process(Vector(
       "neo4j-import",
       "--into", dbfilePath(outdir, "cheminot.db"),
       "--id-type", "string",
@@ -78,21 +79,21 @@ object Neo4j {
       "-relationships", dbfilePath(outdir, "trip2calendardates1.csv"),
       "-relationships", dbfilePath(outdir, "stop2station1.csv"),
       "-relationships", dbfilePath(outdir, "meta2metasubsets1.csv")
-    )
-    val result = cmd.as[String]
+    ))
+    val result = cmd.exec[String]
     println(result)
     result
   }
 
   object Nodes {
 
-    def writeMeta(outdir: FileUrl, db: DB): Unit = {
+    def writeMeta(outdir: FsUrl, db: DB): Unit = {
       val headers = List("metaid:ID(Meta)", "bundledate:int", ":LABEL")
       val data = List(List(db.bundle.id.value, formatDateTime(db.bundle.id.date), "Meta"))
       write(outdir, name = "meta", headers = headers, data = data)
     }
 
-    def writeMetaSubsets(outdir: FileUrl, db: DB): Unit = {
+    def writeMetaSubsets(outdir: FsUrl, db: DB): Unit = {
       val headers = List("metasubsetid:ID(MetaSubset)", "metasubsetname:string", "updateddate:int", "startdate:int", "enddate:int", ":LABEL")
       val data = db.bundle.data.subsetDirs.map { subsetDir =>
         List(
@@ -107,7 +108,7 @@ object Neo4j {
       write(outdir, name = "metasubsets", headers = headers, data = data)
     }
 
-    def writeParentStations(outdir: FileUrl, db: DB): Unit = {
+    def writeParentStations(outdir: FsUrl, db: DB): Unit = {
       val headers = List("parentstationid:ID(ParentStation)", "name:string", "lat:double", "lng:double", ":LABEL")
       val data = Stop.parentStations.map { stop =>
         List(stop.id, stop.name, stop.lat.toString, stop.lng.toString, "ParentStation")
@@ -115,7 +116,7 @@ object Neo4j {
       write(outdir, name = "parentstations", headers = headers, data = data)
     }
 
-    def writeStations(outdir: FileUrl, db: DB): Unit = {
+    def writeStations(outdir: FsUrl, db: DB): Unit = {
       val headers = List("stationid:ID(Station)", "name:string", "parentid:string", "lat:double", "lng:double", ":LABEL")
       val data = db.graph.values.toList.map { stop =>
         val parentId = if(Stop.isParis(stop.id)) Stop.STOP_PARIS else ""
@@ -124,7 +125,7 @@ object Neo4j {
       write(outdir, name = "stations", headers = headers, data = data)
     }
 
-    def writeStops(outdir: FileUrl, db: DB): Unit = {
+    def writeStops(outdir: FsUrl, db: DB): Unit = {
       val headers = List("stopid:ID(Stop)", "stationid:string", "parentid:string", ":LABEL")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.map { stopTime =>
@@ -135,7 +136,7 @@ object Neo4j {
       write(outdir, name = "stops", headers = headers, data = data)
     }
 
-    def writeTrips(outdir: FileUrl, db: DB): Unit = {
+    def writeTrips(outdir: FsUrl, db: DB): Unit = {
       val headers = List("tripid:ID(Trip)", "serviceid:string", ":LABEL")
       val data = db.trips.values.toList.map { trip =>
         List(trip.id, trip.serviceId, "Trip")
@@ -143,7 +144,7 @@ object Neo4j {
       write(outdir, name = "trips", headers = headers, data = data)
     }
 
-    def writeCalendar(outdir: FileUrl, db: DB): Unit = {
+    def writeCalendar(outdir: FsUrl, db: DB): Unit = {
       val headers = List(
         "serviceid:ID(Calendar)",
         "monday:boolean",
@@ -177,7 +178,7 @@ object Neo4j {
       write(outdir, name = "calendar", headers = headers, data = data)
     }
 
-    def writeCalendarDates(outdir: FileUrl, db: DB): Unit = {
+    def writeCalendarDates(outdir: FsUrl, db: DB): Unit = {
       val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", ":LABEL")
       val data = db.calendarDates.map { calendarDate =>
         List(calendarDate.id, calendarDate.serviceId, formatDate(calendarDate.date), "CalendarDate")
@@ -188,7 +189,7 @@ object Neo4j {
 
   object Relationships {
 
-    def writeStop2Station(outdir: FileUrl, db: DB): Unit = {
+    def writeStop2Station(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Stop)", ":END_ID(Station)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
@@ -203,7 +204,7 @@ object Neo4j {
       write(outdir, name = "stop2station", headers = headers, data = data)
     }
 
-    def writeTrip2Stop(outdir: FileUrl, db: DB): Unit = {
+    def writeTrip2Stop(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Stop)", "arrival:int", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.headOption.toList.map { stopTime =>
@@ -213,7 +214,7 @@ object Neo4j {
       write(outdir, name = "trip2stop", headers = headers, data = data)
     }
 
-    def writeTrip2Calendar(outdir: FileUrl, db: DB): Unit = {
+    def writeTrip2Calendar(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Calendar)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.calendar.map { calendar =>
@@ -223,7 +224,7 @@ object Neo4j {
       write(outdir, name = "trip2calendar", headers = headers, data = data)
     }
 
-    def writeTrip2CalendarDates(outdir: FileUrl, db: DB): Unit = {
+    def writeTrip2CalendarDates(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(CalendarDate)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.calendarDate.map { calendarDate =>
@@ -234,7 +235,7 @@ object Neo4j {
       write(outdir, name = "trip2calendardates", headers = headers, data = data)
     }
 
-    def writeStop2Stop(outdir: FileUrl, db: DB): Unit = {
+    def writeStop2Stop(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Stop)", "departure:int", "arrival:int", ":END_ID(Stop)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
@@ -254,7 +255,7 @@ object Neo4j {
       write(outdir, name = "stop2stop", headers = headers, data = data)
     }
 
-    def writeMeta2MetaSubsets(outdir: FileUrl, db: DB): Unit = {
+    def writeMeta2MetaSubsets(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Meta)", ":END_ID(MetaSubset)", ":TYPE")
       val data = db.bundle.data.subsetDirs.map { subsetDir =>
         List(db.bundle.id.value, subsetDir.id, "HAS")
@@ -263,7 +264,7 @@ object Neo4j {
     }
   }
 
-  def write(dbDir: FileUrl, db: DB): Unit = {
+  def write(dbDir: FsUrl, db: DB): Unit = {
     val outdir = dbDir / db.bundle.id.value / db.id
     outdir.mkdir(makeParents = true)
     Nodes.writeStations(outdir, db);

@@ -4,6 +4,7 @@ import scala.concurrent.Future
 import org.joda.time.DateTime
 import scala.collection.mutable.{ Map => MMap }
 import rapture.fs._
+import rapture.uri._
 import m.cheminot.misc
 import m.cheminot.misc.{ CSVReadFile, CSVWriteFile }
 
@@ -44,7 +45,7 @@ object Gtfs {
 }
 
 case class SubsetDir(
-  dir: FileUrl,
+  dir: FsUrl,
   id: String,
   name: String,
   updatedDate: Option[DateTime],
@@ -64,16 +65,16 @@ object SubsetDir {
     }
   }
 
-  def ter(rootDir: FileUrl): Option[SubsetDir] =
+  def ter(rootDir: FsUrl): Option[SubsetDir] =
     SubsetDir.fromDir(rootDir, "ter")
 
-  def trans(rootDir: FileUrl): Option[SubsetDir] =
+  def trans(rootDir: FsUrl): Option[SubsetDir] =
     SubsetDir.fromDir(rootDir, "trans")
 
-  def inter(rootDir: FileUrl): Option[SubsetDir] =
+  def inter(rootDir: FsUrl): Option[SubsetDir] =
     SubsetDir.fromDir(rootDir, "inter")
 
-  private def fromDir(rootDir: FileUrl, id: String): Option[SubsetDir] =
+  private def fromDir(rootDir: FsUrl, id: String): Option[SubsetDir] =
     rootDir.children.map(_.filename).collect {
       case name@R(subsetId, recordId, AsDateTime(updatedDate), AsDateTime(startDate), AsDateTime(endDate)) if subsetId == id =>
         val dir = rootDir / name
@@ -97,9 +98,9 @@ object GtfsBundle {
   def empty: GtfsBundle =
     GtfsBundle(BundleId.next, ParsedGtfsDirectory.empty)
 
-  def defaultRoot: FileUrl= File.currentDir / "gtfs"
+  def defaultRoot: FsUrl= misc.File.currentDir / "gtfs"
 
-  private def open(rootDir: FileUrl): Option[(BundleId, SubsetDir, SubsetDir, SubsetDir)] = {
+  private def open(rootDir: FsUrl): Option[(BundleId, SubsetDir, SubsetDir, SubsetDir)] = {
     for {
       bundleId <- BundleId.fromDir(rootDir)
       terDir <- SubsetDir.ter(rootDir)
@@ -108,7 +109,7 @@ object GtfsBundle {
     } yield (bundleId, terDir, transDir, interDir)
   }
 
-  private def fromDir(directory: FileUrl): Option[GtfsBundle] =
+  private def fromDir(directory: FsUrl): Option[GtfsBundle] =
     open(directory) map {
       case (bundleId, terDir, transDir, interDir) =>
         lazy val gtfsTer = GtfsDirectory.ter(terDir)
@@ -117,10 +118,10 @@ object GtfsBundle {
         GtfsBundle(bundleId, gtfsTer merge gtfsTrans merge gtfsInter)
     }
 
-  def mostRecent(root: FileUrl): Option[GtfsBundle] =
+  def mostRecent(root: FsUrl): Option[GtfsBundle] =
     mostRecent(Option(root))
 
-  def mostRecent(root: Option[FileUrl] = None): Option[GtfsBundle] =
+  def mostRecent(root: Option[FsUrl] = None): Option[GtfsBundle] =
     root.getOrElse(defaultRoot).children.toList.filter (_.isDirectory)
       .filter(d => open(d).isDefined)
       .flatMap(dir => BundleId.fromDir(dir) map (dir -> _))
@@ -153,7 +154,7 @@ object GtfsDirectory {
   val InterParentStopId = """StopArea:OCE(.*).""".r
 
   def ter(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading ter from ${subset.dir}")
+    println(s"[GTFS] Reading ter from ${subset.dir.javaFile}")
 
     val terServiceId = (id: String) => s"ter#${id}"
 
@@ -212,7 +213,7 @@ object GtfsDirectory {
   }
 
   def trans(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading trans from ${subset.dir}")
+    println(s"[GTFS] Reading trans from ${subset.dir.javaFile}")
 
     val transServiceId = (id: String) => s"trans#${id}"
 
@@ -271,7 +272,7 @@ object GtfsDirectory {
   }
 
   def inter(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading inter from ${subset.dir}]")
+    println(s"[GTFS] Reading inter from ${subset.dir.javaFile}]")
 
     val interServiceId = (id: String) => s"inter#${id}"
 
@@ -340,7 +341,7 @@ object GtfsDirectory {
     "trips.txt"
   )
 
-  def check(directory: FileUrl): Option[FileUrl] = {
+  def check(directory: FsUrl): Option[FsUrl] = {
     Option(directory).filter { dir =>
       dir.exists && dir.isDirectory
     } filter { _ =>
@@ -406,7 +407,7 @@ object BundleId {
 
   val formatter = misc.DateTime.forPattern("yyyyMMddHHmmss")
 
-  def fromDir(dir: FileUrl): Option[BundleId] = {
+  def fromDir(dir: FsUrl): Option[BundleId] = {
     for {
       _ <- Option(dir).filter(_.isDirectory)
       date <- parse(dir.filename)
@@ -422,21 +423,21 @@ object BundleId {
 
 object GtfsDirReader {
 
-  private def file(root: FileUrl, name: String): java.io.File =
+  private def file(root: FsUrl, name: String): java.io.File =
     (root / name).javaFile
 
-  def stopTimes(gtfsDir: FileUrl)(collect: CSVReadFile.CollectFunct[StopTimeRecord]): List[StopTimeRecord] =
+  def stopTimes(gtfsDir: FsUrl)(collect: CSVReadFile.CollectFunct[StopTimeRecord]): List[StopTimeRecord] =
     CSVReadFile(file(gtfsDir, "stop_times.txt")).read(collect)
 
-  def trips(gtfsDir: FileUrl)(collect: CSVReadFile.CollectFunct[TripRecord]): List[TripRecord] =
+  def trips(gtfsDir: FsUrl)(collect: CSVReadFile.CollectFunct[TripRecord]): List[TripRecord] =
     CSVReadFile(file(gtfsDir, "trips.txt")).read(collect)
 
-  def stops(gtfsDir: FileUrl)(collect: CSVReadFile.CollectFunct[StopRecord]): List[StopRecord] =
+  def stops(gtfsDir: FsUrl)(collect: CSVReadFile.CollectFunct[StopRecord]): List[StopRecord] =
     CSVReadFile(file(gtfsDir, "stops.txt")).read(collect)
 
-  def calendar(gtfsDir: FileUrl)(collect: CSVReadFile.CollectFunct[CalendarRecord]): List[CalendarRecord] =
+  def calendar(gtfsDir: FsUrl)(collect: CSVReadFile.CollectFunct[CalendarRecord]): List[CalendarRecord] =
     CSVReadFile(file(gtfsDir, "calendar.txt")).read(collect)
 
-  def calendarDates(gtfsDir: FileUrl)(collect: CSVReadFile.CollectFunct[CalendarDateRecord]): List[CalendarDateRecord] =
+  def calendarDates(gtfsDir: FsUrl)(collect: CSVReadFile.CollectFunct[CalendarDateRecord]): List[CalendarDateRecord] =
     CSVReadFile(file(gtfsDir, "calendar_dates.txt")).read(collect)
 }

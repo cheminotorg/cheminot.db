@@ -2,8 +2,10 @@ package m.cheminot.build
 
 import scala.util.control.Exception
 import scala.concurrent.Future
-import m.cheminot.Config
 import rapture.fs._
+import rapture.uri._
+import m.cheminot.misc
+import m.cheminot.Config
 
 case class Subset(
   id: String,
@@ -43,9 +45,9 @@ object DB {
     DB("world", graph, trips, calendarDates, calendar, gtfsBundle)
   }
 
-  def defaultDbDir: FileUrl = File.currentDir / "db"
+  def defaultDbDir: FsUrl = misc.File.currentDir / "db"
 
-  def fromDir(directory: FileUrl): Option[DB] =
+  def fromDir(directory: FsUrl): Option[DB] =
     GtfsBundle.mostRecent(root = Option(directory)).map(DB.apply)
 
   def fromDefaultDir(): Option[DB] =
@@ -85,7 +87,7 @@ object DB {
     bundle = GtfsBundle.empty
   )
 
-  def buildEmbed(embedDb: DB)(implicit config: Config): FileUrl =
+  def buildEmbed(embedDb: DB)(implicit config: Config): FsUrl =
     storage.Sqlite.create(config.dbDir, embedDb)
 
   def mount()(implicit config: Config): DB = {

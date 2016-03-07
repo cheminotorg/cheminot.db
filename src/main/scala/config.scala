@@ -4,12 +4,12 @@ import rapture.core._
 import rapture.cli._
 import rapture.fs._
 
-case class Config(dbDir: FileUrl, gtfsDir: FileUrl, daemon: Boolean, port: Int)
+case class Config(dbDir: FsUrl, gtfsDir: FsUrl, daemon: Boolean, port: Int)
 
 object Config {
 
-  implicit val fileExtractor: New.Param.Extractor[FileUrl] = new New.Param.Extractor[FileUrl] {
-    def extract(values: Vector[String]): Option[FileUrl] = values match {
+  implicit val fileExtractor: New.Param.Extractor[FsUrl] = new New.Param.Extractor[FsUrl] {
+    def extract(values: Vector[String]): Option[FsUrl] = values match {
       case Vector(v) =>
         scala.util.Try(File.parse(v)).toOption.filter(_.exists)
       case _ => None
@@ -25,8 +25,8 @@ object Config {
 
   import modes.returnOption._
 
-  val DbDir = New.Param[FileUrl]('o', 'out)
-  val GtfsDir = New.Param[FileUrl]('g', 'gtfs)
+  val DbDir = New.Param[FsUrl]('o', 'out)
+  val GtfsDir = New.Param[FsUrl]('g', 'gtfs)
   val Daemon = New.Param[Boolean]('d', 'daemon)
   val Port = New.Param[Int]('p', 'port)
 

@@ -5,12 +5,15 @@ import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import anorm._
 import rapture.fs._
+import rapture.uri._
 import m.cheminot.build._
 
 object Sqlite {
 
-  def withConnection[A](dbFile: FileUrl)(block: Connection => A): A = {
-    val connection = DriverManager.getConnection("jdbc:sqlite:" + dbFile.javaFile.getAbsolutePath)
+  def withConnection[A](dbFile: FsUrl)(block: Connection => A): A = {
+    val dbpath = "jdbc:sqlite:" + dbFile.javaFile.getAbsolutePath
+    println(dbpath)
+    val connection = DriverManager.getConnection(dbpath)
     val a = block(connection)
     connection.close()
     a
@@ -218,9 +221,11 @@ object Sqlite {
     SQL("END TRANSACTION").executeUpdate
   }
 
-  def create(dbDir: FileUrl, db: DB): FileUrl = {
-    val outDir = dbDir / db.bundle.id.value / db.id
-    val outFile = outDir / "cheminot.db"
+  def create(dbDir: FsUrl, db: DB): FsUrl = {
+
+    val outFile = dbDir / db.bundle.id.value / db.id / "cheminot.db"
+    outFile.parent.mkdir(makeParents = true)
+
     withConnection(outFile) { implicit connection =>
       Sqlite.init()
 

@@ -16,10 +16,10 @@ object DateTime {
     f.withZone(parisZone).withLocale(Locale.ENGLISH)
 
   def parse(s: String): Option[JDateTime] =
-    scala.util.Try(isoFormatter.parseDateTime(s)).toOption
+    scala.util.Try(parseOrFail(s)).toOption
 
   def parseOrFail(s: String): JDateTime =
-    parse(s) getOrElse sys.error(s"Unable to parse datetime $s")
+    isoFormatter.parseDateTime(s)
 
   def forPattern(s: String) =
     defaultSettings(DateTimeFormat.forPattern(s))

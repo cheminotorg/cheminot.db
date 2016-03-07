@@ -1,6 +1,6 @@
 package m.cheminot.misc
 
-import java.io.File
+import java.io.{ File => JFile }
 import scala.language.postfixOps
 import com.github.tototoshi.csv._
 
@@ -10,7 +10,7 @@ object CSVReadFile {
   case class Verbose(msg: String) extends Exception(msg)
 }
 
-case class CSVReadFile(file: File) {
+case class CSVReadFile(file: JFile) {
 
   lazy val reader = CSVReader.open(file)
 
@@ -25,7 +25,7 @@ case class CSVReadFile(file: File) {
   }
 }
 
-case class CSVWriteFile(file: File) {
+case class CSVWriteFile(file: JFile) {
 
   val writer = CSVWriter.open(file)
 

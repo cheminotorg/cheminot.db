@@ -57,13 +57,13 @@ object AutoUpdate {
     val formatter = misc.DateTime.forPattern("dd/MM/yyyy")
 
     val params = Map(
-      'dataset -> dataset,
-      'rows -> "1",
-      'start -> "0",
-      'timezone -> "UTC"
+      "dataset" -> dataset,
+      "rows" -> "1",
+      "start" -> "0",
+      "timezone" -> "UTC"
     )
 
-    val ressource = endpoint.query(params)
+    val ressource = Http.parse(endpoint.query(params).toString) //TODO
 
     println(s"GET $ressource")
 
@@ -155,7 +155,7 @@ object AutoUpdate {
     }.toOption.flatten
   }
 
-  private def setupBuild(rootDir: FileUrl, build: Build): Unit = {
+  private def setupBuild(rootDir: FsUrl, build: Build): Unit = {
     val buildDir = rootDir / build.id
     buildDir.mkdir(makeParents = true)
     val buildFile = buildDir / s"${build.name}.zip"
@@ -163,6 +163,6 @@ object AutoUpdate {
     misc.ZipUtils.unzip(buildFile.javaFile, buildDir.javaFile)
   }
 
-  private def setupBuilds(rootDir: FileUrl, builds: Build*): Unit =
+  private def setupBuilds(rootDir: FsUrl, builds: Build*): Unit =
     builds.foreach(setupBuild(rootDir, _))
 }
