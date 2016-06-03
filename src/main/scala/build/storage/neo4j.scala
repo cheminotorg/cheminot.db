@@ -97,7 +97,7 @@ object Neo4j {
       val data = db.bundle.subsetDirs.map { subsetDir =>
         List(
           subsetDir.id,
-          subsetDir.name,
+          subsetDir.recordId,
           subsetDir.updatedDate map(formatDate) getOrElse "",
           subsetDir.startDate map(formatDate) getOrElse "",
           subsetDir.endDate map(formatDate) getOrElse "",

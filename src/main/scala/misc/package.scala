@@ -15,7 +15,7 @@ package m.cheminot {
       val p = (progress * 70) / 100
       val todo = 70 - p
       val total = List.fill(p)("#") ++: List.fill(todo)(" ")
-      print(s"[${total.mkString}] ${p}%\r")
+      print(s"[${total.mkString}] ${progress}%\r")
     }
 
     def par[A, B](aaa: Seq[A], debug: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {

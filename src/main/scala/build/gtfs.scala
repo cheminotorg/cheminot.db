@@ -45,7 +45,7 @@ object Gtfs {
 case class SubsetDir(
   dir: FsUrl,
   id: String,
-  name: String,
+  recordId: String,
   updatedDate: Option[DateTime],
   startDate: Option[DateTime],
   endDate: Option[DateTime]
@@ -76,7 +76,7 @@ object SubsetDir {
     rootDir.children.map(_.filename).collect {
       case name@R(subsetId, recordId, AsDateTime(updatedDate), AsDateTime(startDate), AsDateTime(endDate)) if subsetId == id =>
         val dir = rootDir / name
-        SubsetDir(dir, recordId, subsetId, updatedDate, startDate, endDate)
+        SubsetDir(dir, id, recordId, updatedDate, startDate, endDate)
     }.headOption.filter(s => GtfsDirectory.check(s.dir).isDefined)
 
   def empty: SubsetDir =
@@ -87,6 +87,10 @@ class GtfsBundle(_id: BundleId, _subsetDirs: List[SubsetDir], _data: => ParsedGt
   val id = _id
   val subsetDirs = _subsetDirs
   lazy val data = _data
+
+  override def toString() = {
+    s"""GtfsBundle($id, $subsetDirs)"""
+  }
 }
 
 object GtfsBundle {

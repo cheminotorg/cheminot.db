@@ -1,6 +1,7 @@
 package m.cheminot.build
 
 import scala.concurrent.duration._
+import scala.collection.immutable.HashSet
 import org.joda.time.DateTime
 
 import rapture.fs._
@@ -111,26 +112,18 @@ object AutoUpdate {
     val transBuild = fetchTransBuild()
 
     val needUpdate = maybeBundle.map { currentBundle =>
-
-      val subsetsById: Map[String, SubsetDir] =
-        currentBundle.subsetDirs.map(s => s.id -> s).toMap
-
-      val buildsWithSubsets: Map[Build, SubsetDir] =
-        List(terBuild, interBuild, transBuild).flatMap { build =>
-          subsetsById.get(build.recordId).map(build -> _)
-        }.toMap
-
-      buildsWithSubsets.foldLeft(false) {
-        case (b, (build, subset)) =>
-          if(b) true else {
-            subset.id != build.recordId
-          }
+      val subsetsByRecordId = HashSet(currentBundle.subsetDirs.map(s => s.recordId):_*)
+      List(terBuild, interBuild, transBuild).exists { build =>
+        val isUpToDate = subsetsByRecordId.contains(build.recordId)
+        val n = if(isUpToDate) "" else "NOT"
+        println(s"#> ${build.name} is $n up to date")
+        !isUpToDate
       }
     } getOrElse true
 
     if(needUpdate) {
 
-      println("Update found")
+      println("\n**** Update found ***\n")
 
       val rootDir = config.gtfsDir / BundleId.next.value
 
@@ -140,7 +133,7 @@ object AutoUpdate {
 
     } else {
 
-      println("No update found")
+      println("\n**** No update found ***\n")
 
       None
     }
