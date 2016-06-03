@@ -83,18 +83,19 @@ object SubsetDir {
     SubsetDir(File / "fake", "xxx", "fake", None, None, None)
 }
 
-class GtfsBundle(_id: BundleId, _data: => ParsedGtfsDirectory) {
-  lazy val id = _id
+class GtfsBundle(_id: BundleId, _subsetDirs: List[SubsetDir], _data: => ParsedGtfsDirectory) {
+  val id = _id
+  val subsetDirs = _subsetDirs
   lazy val data = _data
 }
 
 object GtfsBundle {
 
-  def apply(id: BundleId, data: => ParsedGtfsDirectory) =
-    new GtfsBundle(id, data)
+  def apply(id: BundleId, subsetDir: List[SubsetDir], data: => ParsedGtfsDirectory) =
+    new GtfsBundle(id, subsetDir, data)
 
   def empty: GtfsBundle =
-    GtfsBundle(BundleId.next, ParsedGtfsDirectory.empty)
+    GtfsBundle(BundleId.next, List.empty[SubsetDir], ParsedGtfsDirectory.empty)
 
   def defaultRoot: FsUrl= misc.File.currentDir / "gtfs"
 
@@ -110,10 +111,13 @@ object GtfsBundle {
   private def fromDir(directory: FsUrl): Option[GtfsBundle] =
     open(directory) map {
       case (bundleId, terDir, transDir, interDir) =>
-        lazy val gtfsTer = GtfsDirectory.ter(terDir)
-        lazy val gtfsTrans = GtfsDirectory.trans(transDir)
-        lazy val gtfsInter = GtfsDirectory.inter(interDir)
-        GtfsBundle(bundleId, gtfsTer merge gtfsTrans merge gtfsInter)
+        lazy val data = {
+          val gtfsTer = GtfsDirectory.ter(terDir)
+          val gtfsTrans = GtfsDirectory.trans(transDir)
+          val gtfsInter = GtfsDirectory.inter(interDir)
+          gtfsTer merge gtfsTrans merge gtfsInter
+        }
+        GtfsBundle(bundleId, List(terDir, transDir, interDir), data)
     }
 
   def mostRecent(root: FsUrl): Option[GtfsBundle] =
@@ -351,7 +355,6 @@ object GtfsDirectory {
 }
 
 case class ParsedGtfsDirectory(
-  subsetDirs: List[SubsetDir],
   stopTimes: List[StopTimeRecord],
   trips: List[TripRecord],
   stops: List[StopRecord],
@@ -360,7 +363,6 @@ case class ParsedGtfsDirectory(
 ) {
   def merge(p: ParsedGtfsDirectory): ParsedGtfsDirectory = {
     p.copy(
-      p.subsetDirs ++: subsetDirs,
       p.stopTimes ++: stopTimes,
       p.trips ++: trips,
       p.stops ++: stops,
@@ -380,7 +382,7 @@ object ParsedGtfsDirectory {
     calendar: List[CalendarRecord],
     calendarDates: List[CalendarDateRecord]
   ): ParsedGtfsDirectory = {
-    ParsedGtfsDirectory(subsetDir :: Nil, stopTimes, trips, stops, calendar, calendarDates)
+    ParsedGtfsDirectory(stopTimes, trips, stops, calendar, calendarDates)
   }
 
   def empty: ParsedGtfsDirectory =

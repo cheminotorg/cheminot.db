@@ -113,7 +113,7 @@ object AutoUpdate {
     val needUpdate = maybeBundle.map { currentBundle =>
 
       val subsetsById: Map[String, SubsetDir] =
-        currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
+        currentBundle.subsetDirs.map(s => s.id -> s).toMap
 
       val buildsWithSubsets: Map[Build, SubsetDir] =
         List(terBuild, interBuild, transBuild).flatMap { build =>

@@ -45,7 +45,7 @@ object Sqlite {
   }
 
   def insertMetaSubsets(gtfsBundle: GtfsBundle) (implicit connection: Connection): Unit = {
-    gtfsBundle.data.subsetDirs.foreach { subsetDir =>
+    gtfsBundle.subsetDirs.foreach { subsetDir =>
       SQL("""INSERT INTO metasubset (id, metaid, updateddate, startdate, enddate)
              VALUES({id}, {metaid}, {updateddate}, {startdate}, {enddate})""")
       .on(
