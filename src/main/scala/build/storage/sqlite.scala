@@ -1,8 +1,6 @@
 package m.cheminot.build.storage
 
-import java.sql.{ Connection, DriverManager, PreparedStatement }
-import org.joda.time.DateTime
-import org.joda.time.format.DateTimeFormat
+import java.sql.{ Connection, DriverManager }
 import anorm._
 import rapture.fs._
 import rapture.uri._

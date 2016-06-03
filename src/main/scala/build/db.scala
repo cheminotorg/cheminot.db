@@ -1,7 +1,5 @@
 package m.cheminot.build
 
-import scala.util.control.Exception
-import scala.concurrent.Future
 import rapture.fs._
 import rapture.uri._
 import m.cheminot.misc

@@ -1,12 +1,10 @@
 package m.cheminot.build
 
-import scala.concurrent.Future
 import org.joda.time.DateTime
-import scala.collection.mutable.{ Map => MMap }
 import rapture.fs._
 import rapture.uri._
 import m.cheminot.misc
-import m.cheminot.misc.{ CSVReadFile, CSVWriteFile }
+import m.cheminot.misc.CSVReadFile
 
 object Normalizer {
 

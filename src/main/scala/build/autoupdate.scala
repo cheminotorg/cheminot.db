@@ -2,7 +2,6 @@ package m.cheminot.build
 
 import scala.concurrent.duration._
 import org.joda.time.DateTime
-import java.io.{File => JFile}
 
 import rapture.fs._
 import rapture.uri._
@@ -63,7 +62,7 @@ object AutoUpdate {
       "timezone" -> "UTC"
     )
 
-    val ressource = Http.parse(endpoint.query(params).toString) //TODO
+    val ressource = endpoint.query(params)
 
     println(s"GET $ressource")
 
@@ -89,70 +88,62 @@ object AutoUpdate {
   }
 
   private def fetchTerBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    val endpoint = Http.parse("https://ressources.data.sncf.com/api/records/1.0/search")
     fetchBuild("ter", endpoint, dataset = "sncf-ter-gtfs")
   }
 
   private def fetchTransBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    val endpoint = Http.parse("https://ressources.data.sncf.com/api/records/1.0/search")
     fetchBuild("trans", endpoint, dataset = "sncf-transilien-gtfs")
   }
 
   private def fetchInterBuild(): Build = {
-    val endpoint = uri"https://ressources.data.sncf.com/api/records/1.0/search"
+    val endpoint = Http.parse("https://ressources.data.sncf.com/api/records/1.0/search")
     fetchBuild("inter", endpoint, dataset = "sncf-intercites-gtfs")
   }
 
   def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): Option[DB] = {
 
-    scala.util.Try {
+    val terBuild = fetchTerBuild()
 
-      val terBuild = fetchTerBuild()
+    val interBuild = fetchInterBuild()
 
-      val interBuild = fetchInterBuild()
+    val transBuild = fetchTransBuild()
 
-      val transBuild = fetchTransBuild()
+    val needUpdate = maybeBundle.map { currentBundle =>
 
-      val needUpdate = maybeBundle.map { currentBundle =>
+      val subsetsById: Map[String, SubsetDir] =
+        currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
 
-        val subsetsById: Map[String, SubsetDir] =
-          currentBundle.data.subsetDirs.map(s => s.id -> s).toMap
+      val buildsWithSubsets: Map[Build, SubsetDir] =
+        List(terBuild, interBuild, transBuild).flatMap { build =>
+          subsetsById.get(build.recordId).map(build -> _)
+        }.toMap
 
-        val buildsWithSubsets: Map[Build, SubsetDir] =
-          List(terBuild, interBuild, transBuild).flatMap { build =>
-            subsetsById.get(build.recordId).map(build -> _)
-          }.toMap
-
-        buildsWithSubsets.foldLeft(false) {
-          case (b, (build, subset)) =>
-            if(b) true else {
-              subset.id != build.recordId
-            }
-        }
-      } getOrElse true
-
-      if(needUpdate) {
-
-        println("Update found")
-
-        val rootDir = config.gtfsDir / BundleId.next.value
-
-        setupBuilds(rootDir, terBuild, interBuild, transBuild)
-
-        Option(build.DB.mount())
-
-      } else {
-
-        println("No update found")
-
-        None
+      buildsWithSubsets.foldLeft(false) {
+        case (b, (build, subset)) =>
+          if(b) true else {
+            subset.id != build.recordId
+          }
       }
+    } getOrElse true
 
-    }.recover {
-      case e: Exception =>
-        e.printStackTrace
-        None
-    }.toOption.flatten
+    if(needUpdate) {
+
+      println("Update found")
+
+      val rootDir = config.gtfsDir / BundleId.next.value
+
+      setupBuilds(rootDir, terBuild, interBuild, transBuild)
+
+      Option(build.DB.mount())
+
+    } else {
+
+      println("No update found")
+
+      None
+    }
   }
 
   private def setupBuild(rootDir: FsUrl, build: Build): Unit = {

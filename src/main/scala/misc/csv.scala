@@ -1,7 +1,6 @@
 package m.cheminot.misc
 
 import java.io.{ File => JFile }
-import scala.language.postfixOps
 import com.github.tototoshi.csv._
 
 object CSVReadFile {

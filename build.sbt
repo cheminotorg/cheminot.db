@@ -2,7 +2,7 @@ enablePlugins(GitVersioning, GitBranchPrompt)
 
 lazy val buildSettings = Seq(
   organization := "org.cheminot",
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   crossPaths := false
 )
 
@@ -25,8 +25,8 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(name := "cheminotdb").
   settings(cheminotorgSettings:_*).
-  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-SNAPSHOTS").
-  settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-SNAPSHOTS").
+  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7").
+  settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M7").
   settings(libraryDependencies += "com.typesafe.play" %% "anorm" % "2.4.0-M2").
   settings(libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.2.2").
   settings(libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.8.6").
@@ -39,7 +39,6 @@ git.useGitDescribe := true
 git.formattedShaVersion := git.gitHeadCommit.value map { sha => s"$sha".take(7) }
 
 resolvers ++= Seq(
-  Resolver.file("local", file(Path.userHome.absolutePath + "/.ivy2/local"))(Resolver.ivyStylePatterns),
-  Resolver.sonatypeRepo("snapshots"),
-  Resolver.typesafeRepo("releases")
+  Resolver.typesafeRepo("releases"),
+  Resolver.url("rapture", new URL("https://raw.githubusercontent.com/srenault/central/master"))(Resolver.ivyStylePatterns)
 )

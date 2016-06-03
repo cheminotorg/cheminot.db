@@ -12,6 +12,8 @@ object Main {
 
     val db = build.AutoUpdate.doIt(maybeMostRecentBuild) getOrElse build.DB.mount()
 
+    build.storage.Sqlite.create(config.dbDir, build.DB.subset(db, Nil))
+
     if(config.daemon) {
 
       build.AutoUpdate.start(db.bundle)

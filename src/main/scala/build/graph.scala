@@ -32,7 +32,7 @@ object Builder {
     )
   }
 
-  private[build] def distinctTrips(trips: List[Trip]): List[Trip] = {
+  def distinctTrips(trips: List[Trip]): List[Trip] = {
     val distinctTrips = trips.distinct
     val table = distinctTrips.foldLeft(Map.empty[StopTime, Seq[Trip]]) {
       case (acc, trip) =>

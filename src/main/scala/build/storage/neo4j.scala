@@ -1,6 +1,5 @@
 package m.cheminot.build.storage
 
-import scala.util.Try
 import m.cheminot.misc.CSVWriteFile
 import m.cheminot.build._
 import rapture.uri._
