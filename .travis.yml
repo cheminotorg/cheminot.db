@@ -1,0 +1,17 @@
+language: scala
+
+scala: 2.11.7
+
+sudo: required
+
+services:
+  - docker
+
+before_install:
+  - openssl aes-256-cbc -K $encrypted_5abaae856943_key -iv $encrypted_5abaae856943_iv -in ./dist/.dropbox_uploader.enc -out dropbox_uploader -d
+
+script:
+  - sbt test
+  - sbt one-jar
+  - chmod a+x ./dist/upload.sh
+  - dist/upload.sh
