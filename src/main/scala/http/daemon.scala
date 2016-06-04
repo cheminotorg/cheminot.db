@@ -16,6 +16,8 @@ object Daemon {
 
   def start(db: DB)(implicit config: Config): Unit = {
 
+    println(s"Starting http server...")
+
     State.set(db)
 
     HttpServer.listen(config.port) {
@@ -38,6 +40,8 @@ object Daemon {
 
       case _ => Response.NotFound
     }
+
+    println(s"Listening on port ${config.port}")
   }
 }
 

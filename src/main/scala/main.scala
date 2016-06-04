@@ -10,7 +10,9 @@ object Main {
 
     val maybeMostRecentBuild = build.GtfsBundle.mostRecent(config.gtfsDir)
 
-    val db = build.AutoUpdate.doIt(maybeMostRecentBuild) getOrElse build.DB.mount()
+    val db = build.AutoUpdate.doIt(maybeMostRecentBuild)
+
+    build.storage.Neo4j.write(config.dbDir, db)
 
     build.storage.Sqlite.create(config.dbDir, build.DB.subset(db, Nil))
 

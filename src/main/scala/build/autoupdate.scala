@@ -1,7 +1,6 @@
 package m.cheminot.build
 
 import scala.concurrent.duration._
-import scala.collection.immutable.HashSet
 import org.joda.time.DateTime
 
 import rapture.fs._
@@ -13,25 +12,12 @@ import rapture.time._
 
 import m.cheminot.Config
 import m.cheminot.misc
-import m.cheminot.build
 import m.cheminot.http
 
 object AutoUpdate {
 
-  case class Build(
-    recordId: String,
-    name: String,
-    url: HttpUrl,
-    updatedDate: Option[DateTime],
-    startDate: Option[DateTime],
-    endDate: Option[DateTime]
-  ) {
-    lazy val id = {
-      def formatDate(date: Option[DateTime]): String =
-        (date.map(SubsetDir.formatter.print) getOrElse "xxxxXXxx").toString
-
-      s"${name}-${recordId}-${formatDate(updatedDate)}-${formatDate(startDate)}-${formatDate(endDate)}"
-    }
+  case class Build(id: String, url: HttpUrl, timestamp: DateTime) {
+    lazy val filename = s"${id}-${SubsetDir.formatter.print(timestamp)}"
   }
 
   private lazy val executor = m.cheminot.misc.ScheduledExecutor(1)
@@ -52,9 +38,9 @@ object AutoUpdate {
   def stop(): Unit =
     executor.stop()
 
-  private def fetchBuild(name: String, endpoint: HttpUrl, dataset: String): Build = {
+  private def fetchBuild(id: String, endpoint: HttpUrl, dataset: String): Build = {
 
-    val formatter = misc.DateTime.forPattern("dd/MM/yyyy")
+    val datetimeFormater = org.joda.time.format.ISODateTimeFormat.dateTimeParser()
 
     val params = Map(
       "dataset" -> dataset,
@@ -73,19 +59,11 @@ object AutoUpdate {
 
     val record = json.records.as[List[Json]].head
 
-    val recordId = record.recordid.as[String]
+    val url = Http.parse(record.fields.url.as[String])
 
-    val fields = record.fields
+    val timestamp = datetimeFormater.parseDateTime(record.record_timestamp.as[String])
 
-    val updatedDate = fields.mise_a_jour.as[Option[String]].map(formatter.parseDateTime)
-
-    val startDate = fields.date_de_debut_de_validite.as[Option[String]].map(formatter.parseDateTime)
-
-    val endDate = fields.date_de_fin_de_validite.as[Option[String]].map(formatter.parseDateTime)
-
-    val url = Http.parse(fields.url.as[String])
-
-    Build(recordId, name, url, updatedDate, startDate, endDate)
+    Build(id, url, timestamp)
   }
 
   private def fetchTerBuild(): Build = {
@@ -103,7 +81,7 @@ object AutoUpdate {
     fetchBuild("inter", endpoint, dataset = "sncf-intercites-gtfs")
   }
 
-  def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): Option[DB] = {
+  def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): DB = {
 
     val terBuild = fetchTerBuild()
 
@@ -112,11 +90,11 @@ object AutoUpdate {
     val transBuild = fetchTransBuild()
 
     val needUpdate = maybeBundle.map { currentBundle =>
-      val subsetsByRecordId = HashSet(currentBundle.subsetDirs.map(s => s.recordId):_*)
+      val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
       List(terBuild, interBuild, transBuild).exists { build =>
-        val isUpToDate = subsetsByRecordId.contains(build.recordId)
-        val n = if(isUpToDate) "" else "NOT"
-        println(s"#> ${build.name} is $n up to date")
+        val isUpToDate = subsetsById.get(build.id).filter(build.timestamp.isAfter(_)).isDefined
+        val n = if(isUpToDate) "" else "NOT "
+        println(s"#> ${build.id} is ${n}up to date")
         !isUpToDate
       }
     } getOrElse true
@@ -129,24 +107,26 @@ object AutoUpdate {
 
       setupBuilds(rootDir, terBuild, interBuild, transBuild)
 
-      Option(build.DB.mount())
-
     } else {
 
       println("\n**** No update found ***\n")
 
-      None
+      maybeBundle.map(DB.apply).getOrElse {
+        sys.error("Something goes wrong: No update were found and nothing were found locally")
+      }
     }
   }
 
   private def setupBuild(rootDir: FsUrl, build: Build): Unit = {
-    val buildDir = rootDir / build.id
+    val buildDir = rootDir / build.filename
     buildDir.mkdir(makeParents = true)
-    val buildFile = buildDir / s"${build.name}.zip"
+    val buildFile = buildDir / s"${build.filename}.zip"
     build.url > buildFile
     misc.ZipUtils.unzip(buildFile.javaFile, buildDir.javaFile)
   }
 
-  private def setupBuilds(rootDir: FsUrl, builds: Build*): Unit =
+  private def setupBuilds(rootDir: FsUrl, builds: Build*): DB = {
     builds.foreach(setupBuild(rootDir, _))
+    DB.fromDirOrFail(rootDir)
+  }
 }

@@ -37,23 +37,19 @@ object Sqlite {
       CREATE TABLE metasubset (
         id TEXT PRIMARY KEY,
         metaid TEXT,
-        updateddate NUMERIC,
-        startdate NUMERIC,
-        enddate NUMERIC,
+        timestamp NUMERIC,
         FOREIGN KEY(metaid) REFERENCES meta(id)
       )""").executeUpdate
   }
 
   def insertMetaSubsets(gtfsBundle: GtfsBundle) (implicit connection: Connection): Unit = {
     gtfsBundle.subsetDirs.foreach { subsetDir =>
-      SQL("""INSERT INTO metasubset (id, metaid, updateddate, startdate, enddate)
-             VALUES({id}, {metaid}, {updateddate}, {startdate}, {enddate})""")
+      SQL("""INSERT INTO metasubset (id, metaid, timestamp)
+             VALUES({id}, {metaid}, {timestamp})""")
       .on(
         'id -> subsetDir.id,
         'metaid -> gtfsBundle.id.value,
-        'updateddate -> subsetDir.updatedDate.map(formatDate(_).toLong),
-        'startdate -> subsetDir.startDate.map(formatDate(_).toLong),
-        'enddate -> subsetDir.endDate.map(formatDate(_).toLong)
+        'timestamp -> formatDateTime(subsetDir.timestamp).toLong
       ).executeUpdate
     }
   }

@@ -93,14 +93,11 @@ object Neo4j {
     }
 
     def writeMetaSubsets(outdir: FsUrl, db: DB): Unit = {
-      val headers = List("metasubsetid:ID(MetaSubset)", "metasubsetname:string", "updateddate:int", "startdate:int", "enddate:int", ":LABEL")
+      val headers = List("metasubsetid:ID(MetaSubset)", "timestamp:int", ":LABEL")
       val data = db.bundle.subsetDirs.map { subsetDir =>
         List(
           subsetDir.id,
-          subsetDir.recordId,
-          subsetDir.updatedDate map(formatDate) getOrElse "",
-          subsetDir.startDate map(formatDate) getOrElse "",
-          subsetDir.endDate map(formatDate) getOrElse "",
+          formatDateTime(subsetDir.timestamp),
           "MetaSubset"
         )
       }

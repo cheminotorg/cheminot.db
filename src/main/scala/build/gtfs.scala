@@ -45,22 +45,18 @@ object Gtfs {
 case class SubsetDir(
   dir: FsUrl,
   id: String,
-  recordId: String,
-  updatedDate: Option[DateTime],
-  startDate: Option[DateTime],
-  endDate: Option[DateTime]
+  timestamp: DateTime
 )
 
 object SubsetDir {
 
-  val R = """^(.+)-(.+)-(.+)-(.+)-(.+)$""".r
+  val R = """^(.+)-(.+)$""".r
 
-  val formatter = misc.DateTime.forPattern("yyyyMMdd")
+  val formatter = misc.DateTime.forPattern("yyyyMMddHHmmss")
 
   object AsDateTime {
-    def unapply(d: String): Option[Option[DateTime]] = {
-      Option(scala.util.Try(formatter.parseDateTime(d)).toOption)
-    }
+    def unapply(d: String): Option[DateTime] =
+      scala.util.Try(formatter.parseDateTime(d)).toOption
   }
 
   def ter(rootDir: FsUrl): Option[SubsetDir] =
@@ -74,13 +70,12 @@ object SubsetDir {
 
   private def fromDir(rootDir: FsUrl, id: String): Option[SubsetDir] =
     rootDir.children.map(_.filename).collect {
-      case name@R(subsetId, recordId, AsDateTime(updatedDate), AsDateTime(startDate), AsDateTime(endDate)) if subsetId == id =>
-        val dir = rootDir / name
-        SubsetDir(dir, id, recordId, updatedDate, startDate, endDate)
+      case filename@R(subsetId, AsDateTime(timestamp)) if subsetId == id =>
+        SubsetDir(rootDir / filename, subsetId, timestamp)
     }.headOption.filter(s => GtfsDirectory.check(s.dir).isDefined)
 
   def empty: SubsetDir =
-    SubsetDir(File / "fake", "xxx", "fake", None, None, None)
+    SubsetDir(dir = File / "fake", id = "fake", timestamp = DateTime.now)
 }
 
 class GtfsBundle(_id: BundleId, _subsetDirs: List[SubsetDir], _data: => ParsedGtfsDirectory) {
@@ -112,7 +107,7 @@ object GtfsBundle {
     } yield (bundleId, terDir, transDir, interDir)
   }
 
-  private def fromDir(directory: FsUrl): Option[GtfsBundle] =
+  def fromDir(directory: FsUrl): Option[GtfsBundle] =
     open(directory) map {
       case (bundleId, terDir, transDir, interDir) =>
         lazy val data = {

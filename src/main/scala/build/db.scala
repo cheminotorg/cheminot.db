@@ -46,13 +46,14 @@ object DB {
   def defaultDbDir: FsUrl = misc.File.currentDir / "db"
 
   def fromDir(directory: FsUrl): Option[DB] =
-    GtfsBundle.mostRecent(root = Option(directory)).map(DB.apply)
+    GtfsBundle.fromDir(directory).map(apply)
 
-  def fromDefaultDir(): Option[DB] =
-    GtfsBundle.mostRecent().map(DB.apply)
+  def fromDirOrFail(directory: FsUrl): DB =
+    fromDir(directory).getOrElse {
+      sys.error(s"Unable to build db from dir $directory")
+    }
 
   def subset(db: DB, verticeIds: Seq[String]): DB = {
-
     val trips = db.trips.filter {
       case (tripId, trip) =>
         trip.stopTimes.exists(stopTime => verticeIds.exists(_ == stopTime.stopId))
@@ -87,11 +88,4 @@ object DB {
 
   def buildEmbed(embedDb: DB)(implicit config: Config): FsUrl =
     storage.Sqlite.create(config.dbDir, embedDb)
-
-  def mount()(implicit config: Config): DB = {
-    DB.fromDir(config.gtfsDir).map { db =>
-      storage.Neo4j.write(config.dbDir, db)
-      db
-    } getOrElse sys.error(s"Unable to found gtfs directory from ${config.gtfsDir}")
-  }
 }
