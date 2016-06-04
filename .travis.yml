@@ -1,17 +1,14 @@
 language: scala
-
 scala: 2.11.7
-
-sudo: required
-
-services:
-  - docker
-
 before_install:
-  - openssl aes-256-cbc -K $encrypted_5abaae856943_key -iv $encrypted_5abaae856943_iv -in ./dist/.dropbox_uploader.enc -out dropbox_uploader -d
-
+- openssl aes-256-cbc -K $encrypted_5abaae856943_key -iv $encrypted_5abaae856943_iv
+  -in ./dist/.dropbox_uploader.enc -out dropbox_uploader -d
 script:
-  - sbt test
-  - sbt one-jar
-  - chmod a+x ./dist/upload.sh
-  - dist/upload.sh
+- sbt test
+- sbt one-jar
+- chmod a+x ./dist/upload.sh
+- dist/upload.sh
+- curl -X https://registry.hub.docker.com/u/cheminotorg/cheminot.db/trigger/$DOCKER_TOKEN
+env:
+  global:
+    secure: FVl+JKQCt4fsDhbk6gXkrJU5YGFL2Gtb/dEHF3VS+hOeXNbqh4PiS8rn0S9J00rM5dtIQEJIAfva3m2gY4KVOiwm6cwXSxCmHYZ0Nx1YJ68iNr7VBlLjA4c68nh+u8ZNoyshPfEcvsgUDuSuJzYFveO+c0StKfrCGAv3PnD5Kp4=
