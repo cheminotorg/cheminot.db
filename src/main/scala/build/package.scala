@@ -1,4 +1,4 @@
-package m.cheminot {
+package org.cheminot.db {
 
   package object build {
 

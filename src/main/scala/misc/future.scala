@@ -1,4 +1,4 @@
-package m.cheminot.misc
+package org.cheminot.db.misc
 
 import scala.concurrent.{ Future, ExecutionContext }
 

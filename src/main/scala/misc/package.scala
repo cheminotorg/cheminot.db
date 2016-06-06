@@ -2,8 +2,9 @@ import java.util.concurrent.Executors
 import scala.concurrent.duration._
 import scala.concurrent.{ Await, Future, ExecutionContext }
 import java.util.concurrent.atomic.AtomicInteger
+import org.cheminot.db.log.Logger
 
-package m.cheminot {
+package org.cheminot.db {
 
   package object misc {
 
@@ -18,15 +19,15 @@ package m.cheminot {
       print(s"[${total.mkString}] ${progress}%\r")
     }
 
-    def par[A, B](aaa: Seq[A], debug: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
+    def par[A, B](aaa: Seq[A], progress: Boolean = false)(f: (A) => B)(implicit ec: ExecutionContext): Seq[B] = {
       val n = 20 //aaa.size / (THREADS_PER_POOL * 2)
-      if(debug) { println(s"[progress] total: ${aaa.size} | grouped: ${n}") }
+      if(progress) { Logger.info(s"[progress] total: ${aaa.size} | grouped: ${n}") }
       val counter = new AtomicInteger(0);
       val result = Await.result(
         misc.FutureUtils.groupSequentially(aaa, n) { a =>
           Future(f(a)).andThen {
             case _ =>
-              if(debug) {
+              if(progress) {
                 val progress = scala.math.round(counter.incrementAndGet.toFloat / aaa.size.toFloat * 100)
                 displayProgress(progress.toInt)
               }
@@ -34,7 +35,6 @@ package m.cheminot {
         },
         1.hours
       )
-      println("");
       result
     }
   }

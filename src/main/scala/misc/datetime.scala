@@ -1,4 +1,4 @@
-package m.cheminot.misc
+package org.cheminot.db.misc
 
 import java.util.Locale
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}

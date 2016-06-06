@@ -1,10 +1,11 @@
-package m.cheminot.build
+package org.cheminot.db.build
 
 import org.joda.time.DateTime
 import rapture.fs._
 import rapture.uri._
-import m.cheminot.misc
-import m.cheminot.misc.CSVReadFile
+import org.cheminot.db.misc
+import org.cheminot.db.misc.CSVReadFile
+import org.cheminot.db.log.Logger
 
 object Normalizer {
 
@@ -155,7 +156,7 @@ object GtfsDirectory {
   val InterParentStopId = """StopArea:OCE(.*).""".r
 
   def ter(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading ter from ${subset.dir.javaFile}")
+    Logger.info(s"[GTFS] Reading ter from ${subset.dir.javaFile}")
 
     val terServiceId = (id: String) => s"ter#${id}"
 
@@ -214,7 +215,7 @@ object GtfsDirectory {
   }
 
   def trans(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading trans from ${subset.dir.javaFile}")
+    Logger.info(s"[GTFS] Reading trans from ${subset.dir.javaFile}")
 
     val transServiceId = (id: String) => s"trans#${id}"
 
@@ -273,7 +274,7 @@ object GtfsDirectory {
   }
 
   def inter(subset: SubsetDir): ParsedGtfsDirectory = {
-    println(s"[GTFS] Reading inter from ${subset.dir.javaFile}]")
+    Logger.info(s"[GTFS] Reading inter from ${subset.dir.javaFile}]")
 
     val interServiceId = (id: String) => s"inter#${id}"
 

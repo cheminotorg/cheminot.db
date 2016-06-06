@@ -1,4 +1,4 @@
-package m.cheminot.misc
+package org.cheminot.db.misc
 
 import java.io.{ File => JFile }
 import com.github.tototoshi.csv._

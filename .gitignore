@@ -1,5 +1,4 @@
 db
 gtfs
 target
-protobuf/cpp
-protobuf/java
+logs

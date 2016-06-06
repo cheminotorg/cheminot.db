@@ -1,12 +1,13 @@
-package m.cheminot.misc
+package org.cheminot.db.misc
 
 import java.io._
 import java.util.zip._
+import org.cheminot.db.log.Logger
 
 object ZipUtils {
 
   def unzip(zipfile: File, directory: File): Unit = {
-    println(s"Unzipping $zipfile to $directory")
+    Logger.info(s"Unzipping $zipfile to $directory")
     val zfile = new ZipFile(zipfile)
     val entries = zfile.entries()
     while (entries.hasMoreElements()) {
@@ -24,7 +25,7 @@ object ZipUtils {
         }
       }
     }
-    println("Unzipping done")
+    Logger.info("Unzipping done")
   }
 
 

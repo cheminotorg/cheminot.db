@@ -1,16 +1,17 @@
-package m.cheminot.build.storage
+package org.cheminot.db.build.storage
 
 import java.sql.{ Connection, DriverManager }
 import anorm._
 import rapture.fs._
 import rapture.uri._
-import m.cheminot.build._
+import org.cheminot.db.build._
+import org.cheminot.db.log.Logger
 
 object Sqlite {
 
   def withConnection[A](dbFile: FsUrl)(block: Connection => A): A = {
     val dbpath = "jdbc:sqlite:" + dbFile.javaFile.getAbsolutePath
-    println(dbpath)
+    Logger.info(dbpath)
     val connection = DriverManager.getConnection(dbpath)
     val a = block(connection)
     connection.close()
@@ -68,7 +69,7 @@ object Sqlite {
         query.on('id -> trip.id, 'serviceid -> trip.calendar.map(_.serviceId)).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert trip ${trip.id}: ${e.getMessage}")
+          Logger.error(s"Unable to insert trip ${trip.id}: ${e.getMessage}")
       }
     }
 
@@ -88,7 +89,7 @@ object Sqlite {
         query.on('id -> vertice.id, 'name -> vertice.name).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert stationfts ${vertice.id}: ${e.getMessage}")
+          Logger.error(s"Unable to insert stationfts ${vertice.id}: ${e.getMessage}")
       }
     }
 
@@ -113,7 +114,7 @@ object Sqlite {
         query.on('id -> vertice.id, 'name -> vertice.name, 'parentid -> parentId, 'lat -> vertice.lat, 'lng -> vertice.lng).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert station ${vertice.id}: ${e.getMessage}")
+          Logger.error(s"Unable to insert station ${vertice.id}: ${e.getMessage}")
       }
     }
 
@@ -147,7 +148,7 @@ object Sqlite {
           query.on('id -> stopTime.id, 'stationid -> stopTime.stopId , 'arrival -> arrival, 'departure -> departure, 'parentid -> parentId, 'tripid -> trip.id, 'pos -> stopTime.pos).executeUpdate
         } catch {
           case e: Exception =>
-            println(s"Unable to insert stop ${trip.id}: ${e.getMessage}")
+            Logger.error(s"Unable to insert stop ${trip.id}: ${e.getMessage}")
         }
       }
     }
@@ -170,7 +171,7 @@ object Sqlite {
         query.on('id -> calendarDate.id, 'serviceid -> calendarDate.serviceId, 'date -> formatDate(calendarDate.date), 'type -> calendarDate.exceptionType).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.getMessage}")
+          Logger.error(s"Unable to insert calendardate ${calendarDate.serviceId}: ${e.getMessage}")
       }
     }
 
@@ -228,7 +229,7 @@ object Sqlite {
         ).executeUpdate
       } catch {
         case e: Exception =>
-          println(s"Unable to insert calendar ${calendar.serviceId}: ${e.getMessage}")
+          Logger.error(s"Unable to insert calendar ${calendar.serviceId}: ${e.getMessage}")
       }
     }
 
@@ -243,39 +244,39 @@ object Sqlite {
     withConnection(outFile) { implicit connection =>
       Sqlite.init()
 
-      println("Meta table")
+      Logger.info("Meta table")
       Sqlite.createMetaTable()
       Sqlite.insertMeta(db.bundle)
 
-      println("Meta subsets table")
+      Logger.info("Meta subsets table")
       Sqlite.createMetaSubsetsTable()
       Sqlite.insertMetaSubsets(db.bundle)
 
-      println("Trips table")
+      Logger.info("Trips table")
       Sqlite.createTripsTable()
       Sqlite.insertTrips(db.trips)
 
-      println("Stations table")
+      Logger.info("Stations table")
       Sqlite.createStationsTable()
       Sqlite.insertStations(db.graph)
 
-      println("Stations fts table")
+      Logger.info("Stations fts table")
       Sqlite.createStationsFtsTable()
       Sqlite.insertStationsFts(db.graph)
 
-      println("Stops table")
+      Logger.info("Stops table")
       Sqlite.createStopsTable()
       Sqlite.insertStops(db.trips)
 
-      println("CalendarDates table")
+      Logger.info("CalendarDates table")
       Sqlite.createCalendarDatesTable()
       Sqlite.insertCalendarDates(db.calendarDates)
 
-      println("Calendar table")
+      Logger.info("Calendar table")
       Sqlite.createCalendarTable()
       Sqlite.insertCalendar(db.calendar)
 
-      println("DONE")
+      Logger.info("DONE")
 
       outFile
     }

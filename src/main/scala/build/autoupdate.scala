@@ -1,4 +1,4 @@
-package m.cheminot.build
+package org.cheminot.db.build
 
 import scala.concurrent.duration._
 import org.joda.time.DateTime
@@ -10,9 +10,8 @@ import rapture.io._
 import rapture.json._, jsonBackends.jawn._
 import rapture.time._
 
-import m.cheminot.Config
-import m.cheminot.misc
-import m.cheminot.http
+import org.cheminot.db.log.Logger
+import org.cheminot.db.{Config, misc, http}
 
 object AutoUpdate {
 
@@ -20,7 +19,7 @@ object AutoUpdate {
     lazy val filename = s"${id}-${SubsetDir.formatter.print(timestamp)}"
   }
 
-  private lazy val executor = m.cheminot.misc.ScheduledExecutor(1)
+  private lazy val executor = org.cheminot.db.misc.ScheduledExecutor(1)
 
   def start(bundle: GtfsBundle)(implicit config: Config): Unit =
     executor.schedule {
@@ -51,7 +50,7 @@ object AutoUpdate {
 
     val ressource = endpoint.query(params)
 
-    println(s"GET $ressource")
+    Logger.info(s"GET $ressource")
 
     val response = ressource.httpGet()
 
@@ -94,14 +93,14 @@ object AutoUpdate {
       List(terBuild, interBuild, transBuild).exists { build =>
         val isUpToDate = subsetsById.get(build.id).filter(build.timestamp.isAfter(_)).isDefined
         val n = if(isUpToDate) "" else "NOT "
-        println(s"#> ${build.id} is ${n}up to date")
+        Logger.info(s"** ${build.id} is ${n}up to date **")
         !isUpToDate
       }
     } getOrElse true
 
     if(needUpdate) {
 
-      println("\n**** Update found ***\n")
+      Logger.info("* UPDATE FOUND *")
 
       val rootDir = config.gtfsDir / BundleId.next.value
 
@@ -109,7 +108,7 @@ object AutoUpdate {
 
     } else {
 
-      println("\n**** No update found ***\n")
+      Logger.info("* NO UPDATE FOUND *")
 
       maybeBundle.map(DB.apply).getOrElse {
         sys.error("Something goes wrong: No update were found and nothing were found locally")

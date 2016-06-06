@@ -1,13 +1,14 @@
-package m.cheminot.build.storage
+package org.cheminot.db.build.storage
 
-import m.cheminot.misc.CSVWriteFile
-import m.cheminot.build._
 import rapture.uri._
 import rapture.fs._
 import rapture.codec._
 import encodings.`UTF-8`._
 import rapture.io._
 import rapture.cli._
+import org.cheminot.db.misc.CSVWriteFile
+import org.cheminot.db.build._
+import org.cheminot.db.log.Logger
 
 object Neo4j {
 
@@ -15,7 +16,7 @@ object Neo4j {
 
   private def write(dir: FsUrl, name: String, headers: Row, data: List[Row]): Unit = {
     val dataFile = dir / s"${name}1.csv"
-    println(s"Writing to ${dataFile.javaFile}")
+    Logger.info(s"Writing to ${dataFile.javaFile}")
     CSVWriteFile(dataFile.javaFile).write(headers +: data)
   }
 
@@ -55,7 +56,7 @@ object Neo4j {
       "-file", dbfilePath(outdir, "indexes.cypher"),
       "-path", dbfilePath(outdir, "cheminot.db")
     )).exec[String]
-    println(result)
+    Logger.info(result)
     result
   }
 
@@ -80,7 +81,7 @@ object Neo4j {
       "-relationships", dbfilePath(outdir, "meta2metasubsets1.csv")
     ))
     val result = cmd.exec[String]
-    println(result)
+    Logger.info(result)
     result
   }
 
@@ -190,7 +191,7 @@ object Neo4j {
       val data = db.trips.values.toList.flatMap { trip =>
         trip.stopTimes.flatMap { stopTime =>
           db.trips.get(stopTime.tripId).orElse {
-            println(">> Not a valid trip " + stopTime.tripId)
+            Logger.warn(s"** Not a valid trip ${stopTime.tripId} **")
             None
           }.map { trip =>
             List(stopTime.id, stopTime.stopId, "AT")
@@ -237,7 +238,7 @@ object Neo4j {
         trip.stopTimes.flatMap { stopTime =>
           for {
             trip <- db.trips.get(stopTime.tripId).orElse {
-              println(">> Not a valid trip " + stopTime.tripId)
+              Logger.warn(s"** Not a valid trip ${stopTime.tripId}")
               None
             }
             next <- trip.stopTimes.lift(stopTime.pos + 1)

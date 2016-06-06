@@ -1,4 +1,4 @@
-package m.cheminot.build
+package org.cheminot.db.build
 
 case class Vertice(
   id: String,

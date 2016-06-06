@@ -1,4 +1,4 @@
-package m.cheminot
+package org.cheminot.db
 
 import rapture.core._
 import rapture.cli._

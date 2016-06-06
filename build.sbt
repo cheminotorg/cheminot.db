@@ -31,6 +31,7 @@ lazy val root = (project in file(".")).
   settings(libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.2.2").
   settings(libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.8.6").
   settings(libraryDependencies += "org.scala-stm" %% "scala-stm" % "0.7").
+  settings(libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13").
   settings(com.github.retronym.SbtOneJar.oneJarSettings: _*)
 
 // versioning

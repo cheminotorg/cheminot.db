@@ -1,4 +1,4 @@
-package m.cheminot
+package org.cheminot.db
 
 import rapture.http._
 import rapture.net._

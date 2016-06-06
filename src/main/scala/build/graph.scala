@@ -1,6 +1,7 @@
-package m.cheminot.build
+package org.cheminot.db.build
 
-import m.cheminot.misc._
+import org.cheminot.db.misc._
+import org.cheminot.db.log.Logger
 
 object Builder {
 
@@ -70,7 +71,7 @@ object Builder {
     Measure.duration("Graph") {
       val refs = new java.util.concurrent.ConcurrentHashMap[StopId, VerticeId]()
       val groupedByParent: Map[StopId, Seq[StopRecord]] = stopRecords.groupBy(_.parentStation)
-      val graph: Map[VerticeId, Vertice] = par(groupedByParent.toSeq, debug = true) {
+      val graph: Map[VerticeId, Vertice] = par(groupedByParent.toSeq, progress = true) {
         case (parentStationId, child :: children) =>
           val vertice = Vertice.fromStopRecord(child, trips).copy(id = parentStationId)
           val merged = Vertice.merge(children, vertice) { vertice =>
@@ -88,8 +89,8 @@ object Builder {
 
   private def buildTrips(parsed: ParsedGtfsDirectory): List[Trip] =
     Measure.duration("Trips") {
-      println(s"** Trips: ${parsed.trips.size}\n** StopTimes: ${parsed.stopTimes.size}\n** Calendar: ${parsed.calendar.size}")
-      par(parsed.trips, debug = true) { tripRecord =>
+      Logger.info(s"** Trips: ${parsed.trips.size}\n** StopTimes: ${parsed.stopTimes.size}\n** Calendar: ${parsed.calendar.size}")
+      par(parsed.trips, progress = true) { tripRecord =>
         val maybeCalendar = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
         val maybeCalendarDate = parsed.calendarDates.view.find(_.serviceId == tripRecord.serviceId).map(CalendarDate.fromRecord)
         val stopTimesForTrip = parsed.stopTimes.collect {
