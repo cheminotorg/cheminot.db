@@ -6,9 +6,9 @@ import rapture.codec._
 import encodings.`UTF-8`._
 import rapture.io._
 import rapture.cli._
-import org.cheminot.db.misc.CSVWriteFile
+import org.cheminot.misc.csv.CSVWriteFile
+import org.cheminot.db.Logger
 import org.cheminot.db.build._
-import org.cheminot.db.log.Logger
 
 object Neo4j {
 

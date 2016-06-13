@@ -1,9 +1,15 @@
 package org.cheminot.db.build
 
-import org.cheminot.db.misc._
-import org.cheminot.db.log.Logger
+import java.util.concurrent.Executors
+import scala.concurrent.ExecutionContext
+import org.cheminot.misc.{Debug, FutureUtils}
+import org.cheminot.db.Logger
 
 object Builder {
+
+  private val THREADS_PER_POOL = Option(System.getProperty("threads")).map(_.toInt).getOrElse(20)
+
+  private val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(THREADS_PER_POOL))
 
   def build(gtfsBundle: GtfsBundle): (Map[VerticeId, Vertice], Map[TripId, Trip]) = {
     val t = Builder.buildTrips(gtfsBundle.data)
@@ -68,10 +74,10 @@ object Builder {
   private def buildGraph(stopRecords: List[StopRecord], trips: List[Trip]): (Map[VerticeId, Vertice], Map[StopId, VerticeId]) = {
     import scala.collection.JavaConverters._
 
-    Measure.duration("Graph") {
+    Debug.measure("Graph") {
       val refs = new java.util.concurrent.ConcurrentHashMap[StopId, VerticeId]()
       val groupedByParent: Map[StopId, Seq[StopRecord]] = stopRecords.groupBy(_.parentStation)
-      val graph: Map[VerticeId, Vertice] = par(groupedByParent.toSeq, progress = true) {
+      val graph: Map[VerticeId, Vertice] = FutureUtils.par(groupedByParent.toSeq, progress = true) {
         case (parentStationId, child :: children) =>
           val vertice = Vertice.fromStopRecord(child, trips).copy(id = parentStationId)
           val merged = Vertice.merge(children, vertice) { vertice =>
@@ -82,15 +88,15 @@ object Builder {
           }
           merged.id -> merged
         case x => sys.error("Unable to build graph: " + x)
-      }.toMap
+      }(ec).toMap
       graph -> refs.asScala.toMap
-    }
+    }(t => Logger.info(s"Graph build in $t ms"))
   }
 
   private def buildTrips(parsed: ParsedGtfsDirectory): List[Trip] =
-    Measure.duration("Trips") {
+    Debug.measure("Trips") {
       Logger.info(s"** Trips: ${parsed.trips.size}\n** StopTimes: ${parsed.stopTimes.size}\n** Calendar: ${parsed.calendar.size}")
-      par(parsed.trips, progress = true) { tripRecord =>
+      FutureUtils.par(parsed.trips, progress = true) { tripRecord =>
         val maybeCalendar = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
         val maybeCalendarDate = parsed.calendarDates.view.find(_.serviceId == tripRecord.serviceId).map(CalendarDate.fromRecord)
         val stopTimesForTrip = parsed.stopTimes.collect {
@@ -99,6 +105,6 @@ object Builder {
         }.toList
 
         Trip.fromRecord(tripRecord, tripRecord.routeId, maybeCalendar, maybeCalendarDate, stopTimesForTrip)
-      }.toList
-    }
+      }(ec).toList
+    }(t => s"Trips built in $t ms")
 }

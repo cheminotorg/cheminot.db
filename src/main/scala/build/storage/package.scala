@@ -1,6 +1,6 @@
 package org.cheminot.db.build
 
-import org.cheminot.db.misc
+import org.cheminot.misc
 import org.joda.time.DateTime
 
 package object storage {

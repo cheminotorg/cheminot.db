@@ -1,5 +1,6 @@
 package org.cheminot.db.build
 
+import scala.language.postfixOps
 import scala.concurrent.duration._
 import org.joda.time.DateTime
 
@@ -10,8 +11,9 @@ import rapture.io._
 import rapture.json._, jsonBackends.jawn._
 import rapture.time._
 
-import org.cheminot.db.log.Logger
-import org.cheminot.db.{Config, misc, http}
+import org.cheminot.misc
+import org.cheminot.misc.scheduler.Scheduler
+import org.cheminot.db.{Config, Logger}
 
 object AutoUpdate {
 
@@ -19,23 +21,12 @@ object AutoUpdate {
     lazy val filename = s"${id}-${SubsetDir.formatter.print(timestamp)}"
   }
 
-  private lazy val executor = org.cheminot.db.misc.ScheduledExecutor(1)
-
-  def start(bundle: GtfsBundle)(implicit config: Config): Unit =
-    executor.schedule {
-      AutoUpdate.stop()
-      doIt(
-        maybeBundle = Option(bundle),
-        onBeforeUpdate = AutoUpdate.stop(),
-        onAfterUpdate = { newdb =>
-          http.State.set(newdb)
-          AutoUpdate.start(newdb.bundle)
-        }
-      )
-    }(1.seconds)
-
-  def stop(): Unit =
-    executor.stop()
+  def start(bundle: GtfsBundle)(implicit config: Config): Unit = {
+    Scheduler.schedule(0 seconds, 10 seconds) { executor =>
+      executor.stop()
+      doIt(maybeBundle = Option(bundle))
+    }
+  }
 
   private def fetchBuild(id: String, endpoint: HttpUrl, dataset: String): Build = {
 
@@ -80,7 +71,7 @@ object AutoUpdate {
     fetchBuild("inter", endpoint, dataset = "sncf-intercites-gtfs")
   }
 
-  def doIt(maybeBundle: Option[GtfsBundle] = None, onBeforeUpdate: => Unit = (), onAfterUpdate: DB => Unit = _ => ())(implicit config: Config): DB = {
+  def doIt(maybeBundle: Option[GtfsBundle] = None)(implicit config: Config): DB = {
 
     val terBuild = fetchTerBuild()
 
