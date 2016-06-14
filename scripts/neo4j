@@ -1,0 +1,28 @@
+#!/bin/bash
+
+PORT=7474
+
+while [[ $# -gt 1 ]]
+do
+    key="$1"
+
+    case $key in
+        -p|--port)
+            PORT="$2"
+            shift
+            ;;
+        *)
+            ;;
+    esac
+    shift
+done
+
+echo $PORT
+
+cp /etc/neo4j/neo4j-server.properties neo4j-server.properties.bk
+
+awk -F"=" -v value="$PORT" 'BEGIN {OFS="=";} /org.neo4j.server.webserver.port/{$2=value;print;next}1' neo4j-server.properties.bk > /etc/neo4j/neo4j-server.properties
+
+rm neo4j-server.properties.bk
+
+neo4j console
