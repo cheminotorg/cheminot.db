@@ -25,4 +25,4 @@ awk -F"=" -v value="$PORT" 'BEGIN {OFS="=";} /org.neo4j.server.webserver.port/{$
 
 rm neo4j-server.properties.bk
 
-neo4j console
+/var/lib/neo4j/bin/neo4j console
