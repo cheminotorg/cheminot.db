@@ -4,9 +4,12 @@ eval "$(docker-machine env default)"
 
 DEPRECATED=()
 PORT=7474
+IMAGE="cheminotorg/dbtest"
+MOUNT_SRC="/Users/sre/docker/"
+MOUNT_DEST="/data"
 
 function electport() {
-    awk="BEGIN { FS = \"( ){2,}\" } { if (\$2 == \"cheminotorg/dbtest\") print \$6 }"
+    awk="BEGIN { FS = \"( ){2,}\" } { if (\$2 == \"$IMAGE\") print \$6 }"
 
     ports=($(docker ps | awk -- "$awk"))
 
@@ -24,7 +27,7 @@ function electport() {
 }
 
 function identifydeprecated() {
-    awk="BEGIN { FS = \"( ){2,}\" } { if (\$2 == \"cheminotorg/dbtest\") print \$1 }"
+    awk="BEGIN { FS = \"( ){2,}\" } { if (\$2 == \"$IMAGE\") print \$1 }"
 
     DEPRECATED=($(docker ps | awk -- "$awk"))
 }
@@ -37,17 +40,16 @@ function shutdowndeprecated() {
     done
 }
 
-####################################################
-
 electport
 
 identifydeprecated
 
-docker run  -d -p $PORT:$PORT cheminotorg/dbtest
+docker run -d -p $PORT:$PORT -v $MOUNT_SRC:$MOUNT_DEST $IMAGE
+
 echo "Listening on ${PORT}..."
 
 sleep 1
 
 shutdowndeprecated
 
-docker ps | grep "cheminotorg/dbtest"
+docker ps | grep $IMAGE

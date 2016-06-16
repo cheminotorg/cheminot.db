@@ -1,0 +1,8 @@
+version: '2'
+
+services:
+  cli:
+    build:
+      context: .
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock"

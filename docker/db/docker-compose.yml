@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  db:
+    cpuset: "0"
+    container_name: neo4j
+    build:
+      context: .
+    ports:
+      - "7474:7474"
+    volumes:
+      - "/Users/sre/docker/:/data"

@@ -1,6 +1,7 @@
 #!/bin/bash
 
 PORT=7474
+DIR="/data"
 
 while [[ $# -gt 1 ]]
 do
@@ -11,17 +12,22 @@ do
             PORT="$2"
             shift
             ;;
+
+        -p|--path)
+            DIR="$2"
+            shift
+            ;;
         *)
             ;;
     esac
     shift
 done
 
-echo $PORT
-
 cp /etc/neo4j/neo4j-server.properties neo4j-server.properties.bk
 
 awk -F"=" -v value="$PORT" 'BEGIN {OFS="=";} /org.neo4j.server.webserver.port/{$2=value;print;next}1' neo4j-server.properties.bk > /etc/neo4j/neo4j-server.properties
+
+awk -F"=" -v value="$DIR/cheminot.db" 'BEGIN {OFS="=";} /org.neo4j.server.database.location/{$2=value;print;next}1' neo4j-server.properties.bk > /etc/neo4j/neo4j-server.properties
 
 rm neo4j-server.properties.bk
 

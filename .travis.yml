@@ -10,4 +10,4 @@ script:
 - dist/upload.sh
 env:
   global:
-    secure: FVl+JKQCt4fsDhbk6gXkrJU5YGFL2Gtb/dEHF3VS+hOeXNbqh4PiS8rn0S9J00rM5dtIQEJIAfva3m2gY4KVOiwm6cwXSxCmHYZ0Nx1YJ68iNr7VBlLjA4c68nh+u8ZNoyshPfEcvsgUDuSuJzYFveO+c0StKfrCGAv3PnD5Kp4=
+  - secure: W9JLW+Hz0MUGbT9A0Ef5pcF9xMuL04BfxtzqSC5umwCerRoetJo5e7NyIHiTaUP9qFsWvLc38lnJxjEXCENbiCc0JWYhTq4xgkUTC7jVBvQhcwo0/a+2ziW+qDwyTKlFO7WG89BxBKdcR8v8wMANr046QdTgbcCC6dCGyTMn/FI=
