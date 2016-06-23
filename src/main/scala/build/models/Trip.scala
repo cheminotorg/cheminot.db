@@ -1,4 +1,4 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
 case class Trip(id: String, serviceId: String, calendar: Option[Calendar], calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]) {
 

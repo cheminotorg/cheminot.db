@@ -1,4 +1,4 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
 case class Stop(id: String, name: String, lat: Double, lng: Double)
 

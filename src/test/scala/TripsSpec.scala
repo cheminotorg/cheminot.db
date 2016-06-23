@@ -2,7 +2,7 @@ package org.cheminot.build.tests
 
 import org.scalatest._
 import org.cheminot.misc
-import org.cheminot.db.build._
+import org.cheminot.db._
 
 abstract class CheminotSpec extends FlatSpec
 

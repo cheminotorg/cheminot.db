@@ -1,7 +1,5 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
-import scala.language.postfixOps
-import scala.concurrent.duration._
 import org.joda.time.DateTime
 
 import rapture.fs._
@@ -12,20 +10,11 @@ import rapture.json._, jsonBackends.jawn._
 import rapture.time._
 
 import org.cheminot.misc
-import org.cheminot.misc.scheduler.Scheduler
-import org.cheminot.db.{Config, Logger}
 
-object AutoUpdate {
+object Upgrade {
 
   case class Build(id: String, url: HttpUrl, timestamp: DateTime) {
     lazy val filename = s"${id}-${SubsetDir.formatter.print(timestamp)}"
-  }
-
-  def start(bundle: GtfsBundle)(implicit config: Config): Unit = {
-    Scheduler.schedule(0 seconds, 10 seconds) { executor =>
-      executor.stop()
-      doIt(maybeBundle = Option(bundle))
-    }
   }
 
   private def fetchBuild(id: String, endpoint: HttpUrl, dataset: String): Build = {

@@ -4,7 +4,7 @@ import rapture.core._
 import rapture.cli._
 import rapture.fs._
 
-case class Config(dbDir: FsUrl, gtfsDir: FsUrl, daemon: Boolean, port: Int)
+case class Config(dbDir: FsUrl, gtfsDir: FsUrl, daemon: Boolean)
 
 object Config {
 
@@ -27,16 +27,14 @@ object Config {
 
   val DbDir = New.Param[FsUrl]('o', 'out)
   val GtfsDir = New.Param[FsUrl]('g', 'gtfs)
-  val Daemon = New.Param[Boolean]('d', 'daemon)
-  val Port = New.Param[Int]('p', 'port)
+  val Daemon = New.Param[Boolean]('n', 'daemon)
 
   def apply(args: Array[String]): Config = {
     val params = New.ParamMap(args:_*)
     Config(
-      dbDir = DbDir.parse(params) getOrElse build.DB.defaultDbDir,
-      gtfsDir = GtfsDir.parse(params) getOrElse build.GtfsBundle.defaultRoot,
-      daemon = Daemon.parse(params) getOrElse false,
-      port = Port.parse(params) getOrElse 8080
+      dbDir = DbDir.parse(params) getOrElse DB.defaultDbDir,
+      gtfsDir = GtfsDir.parse(params) getOrElse GtfsBundle.defaultRoot,
+      daemon = Daemon.parse(params) getOrElse false
     )
   }
 }

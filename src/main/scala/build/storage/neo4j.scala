@@ -1,4 +1,4 @@
-package org.cheminot.db.build.storage
+package org.cheminot.db.storage
 
 import rapture.uri._
 import rapture.fs._
@@ -7,8 +7,7 @@ import encodings.`UTF-8`._
 import rapture.io._
 import rapture.cli._
 import org.cheminot.misc.csv.CSVWriteFile
-import org.cheminot.db.Logger
-import org.cheminot.db.build._
+import org.cheminot.db._
 
 object Neo4j {
 

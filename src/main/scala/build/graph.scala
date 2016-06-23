@@ -1,9 +1,8 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
 import java.util.concurrent.Executors
 import scala.concurrent.ExecutionContext
 import org.cheminot.misc.{Debug, FutureUtils}
-import org.cheminot.db.Logger
 
 object Builder {
 

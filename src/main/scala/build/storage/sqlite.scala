@@ -1,11 +1,10 @@
-package org.cheminot.db.build.storage
+package org.cheminot.db.storage
 
 import java.sql.{ Connection, DriverManager }
 import anorm._
 import rapture.fs._
 import rapture.uri._
-import org.cheminot.db.build._
-import org.cheminot.db.log.Logger
+import org.cheminot.db._
 
 object Sqlite {
 

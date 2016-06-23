@@ -8,20 +8,12 @@ object Main {
 
     implicit val config = Config(args)
 
-    val maybeMostRecentBuild = build.GtfsBundle.mostRecent(config.gtfsDir)
+    val maybeMostRecentBuild = GtfsBundle.mostRecent(config.gtfsDir)
 
-    val db = build.AutoUpdate.doIt(maybeMostRecentBuild)
+    val db = Upgrade.doIt(maybeMostRecentBuild)
 
-    build.storage.Neo4j.write(config.dbDir, db)
+    storage.Neo4j.write(config.dbDir, db)
 
-    build.storage.Sqlite.create(config.dbDir, build.DB.subset(db, Nil))
-
-    if(config.daemon) {
-
-      build.AutoUpdate.start(db.bundle)
-
-      http.Daemon.start(db)
-
-    }
+    storage.Sqlite.create(config.dbDir, DB.subset(db, Nil))
   }
 }

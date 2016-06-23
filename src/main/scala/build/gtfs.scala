@@ -1,11 +1,10 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
 import org.joda.time.DateTime
 import rapture.fs._
 import rapture.uri._
 import org.cheminot.misc
 import org.cheminot.misc.csv.CSVReadFile
-import org.cheminot.db.Logger
 
 object Normalizer {
 

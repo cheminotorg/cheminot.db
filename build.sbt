@@ -25,8 +25,7 @@ lazy val root = (project in file(".")).
   settings(commonSettings: _*).
   settings(name := "db").
   settings(cheminotorgSettings:_*).
-  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7" exclude ("javax.servlet", "servlet-api")).
-  settings(libraryDependencies += "com.propensive" %% "rapture-http-jetty" % "2.0.0-M7").
+  settings(libraryDependencies += "com.propensive" %% "rapture" % "2.0.0-M7").
   settings(libraryDependencies += "com.typesafe.play" %% "anorm" % "2.4.0-M2").
   settings(libraryDependencies += "com.github.tototoshi" %% "scala-csv" % "1.2.2").
   settings(libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.8.6").

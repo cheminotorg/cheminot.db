@@ -1,9 +1,8 @@
-package org.cheminot.db.build
+package org.cheminot.db
 
 import rapture.fs._
 import rapture.uri._
 import org.cheminot.misc
-import org.cheminot.db.Config
 
 case class Subset(
   id: String,

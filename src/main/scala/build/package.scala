@@ -1,6 +1,6 @@
-package org.cheminot.db {
+package org.cheminot {
 
-  package object build {
+  package object db {
 
     type DbId = String
     type VerticeId = String
