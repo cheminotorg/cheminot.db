@@ -96,7 +96,11 @@ object GtfsBundle {
   def empty: GtfsBundle =
     GtfsBundle(BundleId.next, List.empty[SubsetDir], ParsedGtfsDirectory.empty)
 
-  def defaultRoot: FsUrl = misc.File.currentDir / "gtfs"
+  def defaultRoot: FsUrl = {
+    val dir = misc.File.currentDir / "gtfs"
+    dir. mkdir(makeParents = true)
+    dir
+  }
 
   private def open(rootDir: FsUrl): Option[(BundleId, SubsetDir, SubsetDir, SubsetDir)] = {
     for {

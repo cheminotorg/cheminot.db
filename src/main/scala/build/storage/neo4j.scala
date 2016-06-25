@@ -261,7 +261,7 @@ object Neo4j {
   }
 
   def write(dbDir: FsUrl, db: DB): Unit = {
-    val outdir = dbDir / db.bundle.id.value / db.id
+    val outdir = db.outDir(dbDir)
     outdir.mkdir(makeParents = true)
     Nodes.writeStations(outdir, db);
     Nodes.writeTrips(outdir, db)

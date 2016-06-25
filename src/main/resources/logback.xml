@@ -1,6 +1,6 @@
 <configuration>
 
-  <conversionRule conversionWord="coloredLevel" converterClass="org.cheminot.db.log.ColoredLevel" />
+  <conversionRule conversionWord="coloredLevel" converterClass="org.cheminot.misc.log.ColoredLevel" />
 
   <appender name="FILE" class="ch.qos.logback.core.FileAppender">
      <file>logs/application.log</file>

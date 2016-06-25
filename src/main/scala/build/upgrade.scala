@@ -13,7 +13,7 @@ import org.cheminot.misc
 
 object Upgrade {
 
-  case class Build(id: String, url: HttpUrl, timestamp: DateTime) {
+  case class Build(id: String, url: HttpQuery, timestamp: DateTime) {
     lazy val filename = s"${id}-${SubsetDir.formatter.print(timestamp)}"
   }
 
@@ -38,7 +38,7 @@ object Upgrade {
 
     val record = json.records.as[List[Json]].head
 
-    val url = Http.parse(record.fields.url.as[String])
+    val url = Http.parse(record.fields.url.as[String]).query(Map("dl" -> true))
 
     val timestamp = datetimeFormater.parseDateTime(record.record_timestamp.as[String])
 
@@ -68,15 +68,18 @@ object Upgrade {
 
     val transBuild = fetchTransBuild()
 
-    val needUpdate = maybeBundle.map { currentBundle =>
-      val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
-      List(terBuild, interBuild, transBuild).exists { build =>
-        val isUpToDate = subsetsById.get(build.id).filter(build.timestamp.isAfter(_)).isDefined
-        val n = if(isUpToDate) "" else "NOT "
-        Logger.info(s"** ${build.id} is ${n}up to date **")
-        !isUpToDate
-      }
-    } getOrElse true
+    val needUpdate = maybeBundle match {
+      case Some(currentBundle) =>
+        val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
+        List(terBuild, interBuild, transBuild).exists { build =>
+          val isUpToDate = subsetsById.get(build.id).filter(build.timestamp.isAfter(_)).isDefined
+          val n = if(isUpToDate) "" else "NOT "
+          Logger.info(s"** ${build.id} is ${n}up to date **")
+          !isUpToDate
+        }
+      case None =>
+        true
+    }
 
     if(needUpdate) {
 

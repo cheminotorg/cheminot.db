@@ -14,6 +14,8 @@ object Main {
 
     storage.Neo4j.write(config.dbDir, db)
 
-    storage.Sqlite.create(config.dbDir, DB.subset(db, Nil))
+    storage.Sqlite.createWithStops(config.dbDir, db)
+
+    db.setAsCurrent(config.dbDir)
   }
 }

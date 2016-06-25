@@ -1,11 +1,12 @@
-package org.cheminot.db.build.storage
+package org.cheminot.db.storage
 
 import rapture.cli._
 
 object Docker {
 
-  def run(cmd: String): String =
+  def upgradedb(): String =
     Process(Vector(
-      "/bin/sh"
+      "/bin/sh",
+      "scripts/upgradedb"
     )).exec[String]
 }

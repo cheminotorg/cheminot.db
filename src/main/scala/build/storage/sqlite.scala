@@ -235,9 +235,11 @@ object Sqlite {
     SQL("END TRANSACTION").executeUpdate
   }
 
-  def create(dbDir: FsUrl, db: DB): FsUrl = {
+  def createWithStops(dbDir: FsUrl, db: DB): FsUrl =
+    create(dbDir, DB.subset(db, Nil))
 
-    val outFile = dbDir / db.bundle.id.value / db.id / "cheminot.db"
+  def create(dbDir: FsUrl, db: DB): FsUrl = {
+    val outFile = db.outDir(dbDir) / "cheminot.db"
     outFile.parent.mkdir(makeParents = true)
 
     withConnection(outFile) { implicit connection =>

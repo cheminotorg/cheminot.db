@@ -1,6 +1,7 @@
 package org.cheminot.db
 
 import rapture.fs._
+import java.nio.file.Files
 import rapture.uri._
 import org.cheminot.misc
 
@@ -18,7 +19,17 @@ case class DB(
   calendarDates: List[CalendarDate],
   calendar: List[Calendar],
   bundle: GtfsBundle
-)
+) {
+  def outDir(rootDir: FsUrl) =
+    rootDir / bundle.id.value / id
+
+  def setAsCurrent(rootDir: FsUrl): Unit = {
+    val currentLink = rootDir / "current"
+    currentLink.javaFile.delete
+    val dbDir = outDir(rootDir)
+    Files.createSymbolicLink(currentLink.javaFile.toPath, dbDir.javaFile.toPath);
+  }
+}
 
 object DB {
 
