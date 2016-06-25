@@ -13,6 +13,8 @@ object Neo4j {
 
   type Row = List[String]
 
+  private val DATABASE_NAME = "cheminot.db"
+
   private def write(dir: FsUrl, name: String, headers: Row, data: List[Row]): Unit = {
     val dataFile = dir / s"${name}1.csv"
     Logger.info(s"Writing to ${dataFile.javaFile}")
@@ -53,7 +55,7 @@ object Neo4j {
     val result = Process(Vector(
       "neo4j-shell",
       "-file", dbfilePath(outdir, "indexes.cypher"),
-      "-path", dbfilePath(outdir, "cheminot.db")
+      "-path", dbfilePath(outdir, DATABASE_NAME)
     )).exec[String]
     Logger.info(result)
     result
@@ -62,7 +64,7 @@ object Neo4j {
   def doImport(outdir: FsUrl): String = {
     val cmd = Process(Vector(
       "neo4j-import",
-      "--into", dbfilePath(outdir, "cheminot.db"),
+      "--into", dbfilePath(outdir, DATABASE_NAME),
       "--id-type", "string",
       "--nodes:Station", dbfilePath(outdir, "stations1.csv"),
       "--nodes:Stop", dbfilePath(outdir, "stops1.csv"),

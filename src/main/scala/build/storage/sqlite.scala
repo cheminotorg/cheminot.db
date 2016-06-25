@@ -239,7 +239,7 @@ object Sqlite {
     create(dbDir, DB.subset(db, Nil))
 
   def create(dbDir: FsUrl, db: DB): FsUrl = {
-    val outFile = db.outDir(dbDir) / "cheminot.db"
+    val outFile = db.outDir(dbDir) / "sqlite" / "cheminot.db"
     outFile.parent.mkdir(makeParents = true)
 
     withConnection(outFile) { implicit connection =>

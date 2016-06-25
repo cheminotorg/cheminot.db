@@ -62,40 +62,52 @@ object Upgrade {
 
   def doIt(maybeBundle: Option[GtfsBundle] = None)(implicit config: Config): DB = {
 
-    val terBuild = fetchTerBuild()
-
-    val interBuild = fetchInterBuild()
-
-    val transBuild = fetchTransBuild()
-
-    val needUpdate = maybeBundle match {
-      case Some(currentBundle) =>
-        val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
-        List(terBuild, interBuild, transBuild).exists { build =>
-          val isUpToDate = subsetsById.get(build.id).filter(build.timestamp.isAfter(_)).isDefined
-          val n = if(isUpToDate) "" else "NOT "
-          Logger.info(s"** ${build.id} is ${n}up to date **")
-          !isUpToDate
-        }
-      case None =>
-        true
-    }
-
-    if(needUpdate) {
-
-      Logger.info("* UPDATE FOUND *")
-
-      val rootDir = config.gtfsDir / BundleId.next.value
-
-      setupBuilds(rootDir, terBuild, interBuild, transBuild)
-
-    } else {
-
+    lazy val noUpdateFound = {
       Logger.info("* NO UPDATE FOUND *")
 
       maybeBundle.map(DB.apply).getOrElse {
         sys.error("Something goes wrong: No update were found and nothing were found locally")
       }
+    }
+
+    try {
+
+      val terBuild = fetchTerBuild()
+
+      val interBuild = fetchInterBuild()
+
+      val transBuild = fetchTransBuild()
+
+      val needUpdate = maybeBundle match {
+        case Some(currentBundle) =>
+          val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
+          List(terBuild, interBuild, transBuild).exists { build =>
+            println(build.timestamp.isAfter(subsetsById.get(build.id).get))
+            val isNotUpToDate = subsetsById.get(build.id).exists(build.timestamp.isAfter(_))
+            val n = if(isNotUpToDate) "" else "NOT "
+            Logger.info(s"** ${build.id} is ${n}up to date **")
+            isNotUpToDate
+          }
+        case None =>
+          true
+      }
+
+      if(needUpdate) {
+
+        Logger.info("* UPDATE FOUND *")
+
+        val rootDir = config.gtfsDir / BundleId.next.value
+
+        setupBuilds(rootDir, terBuild, interBuild, transBuild)
+
+      } else {
+        noUpdateFound
+      }
+
+    } catch {
+      case e: Exception =>
+        Logger.error("Unablet to fetch build", e)
+        noUpdateFound
     }
   }
 

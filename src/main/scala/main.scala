@@ -6,6 +6,8 @@ object Main {
 
   def main(args: Array[String]): Unit = {
 
+    Config.displayInfo()
+
     implicit val config = Config(args)
 
     val maybeMostRecentBuild = GtfsBundle.mostRecent(config.gtfsDir)

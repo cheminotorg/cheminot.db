@@ -29,6 +29,15 @@ object Config {
   val GtfsDir = New.Param[FsUrl]('g', 'gtfs)
   val Daemon = New.Param[Boolean]('n', 'daemon)
 
+  def displayInfo(): Unit = {
+    val availableCpus = Runtime.getRuntime().availableProcessors()
+
+    Logger.info(s"""
+    | Available CPUs: ${availableCpus}
+    """.stripMargin
+    )
+  }
+
   def apply(args: Array[String]): Config = {
     val params = New.ParamMap(args:_*)
     Config(
