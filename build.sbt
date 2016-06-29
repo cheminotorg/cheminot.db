@@ -43,3 +43,20 @@ resolvers ++= Seq(
   Resolver.typesafeRepo("releases"),
   Resolver.url("rapture", new URL("https://raw.githubusercontent.com/srenault/central/master"))(Resolver.ivyStylePatterns)
 )
+
+sourceGenerators in Compile <+= (version, sourceManaged in Compile).map {
+  case (gitVersion, sources) =>
+    val file = sources / "Settings.scala"
+    val code = """package org.cheminot.db { trait Settings { val GIT_TAG = "%s" } }""".format(gitVersion)
+    scala.util.Try(IO read file).map { current =>
+      Some(current)
+    }.recover {
+      case _: java.io.FileNotFoundException =>
+        None
+    }.foreach { maybeCurrent =>
+      if(maybeCurrent.isEmpty || maybeCurrent.exists(_ != code)) {
+        IO.write(file, code)
+      }
+    }
+    Seq(file)
+}

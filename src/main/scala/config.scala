@@ -6,7 +6,7 @@ import rapture.fs._
 
 case class Config(dbDir: FsUrl, gtfsDir: FsUrl)
 
-object Config {
+object Config extends Settings {
 
   implicit val fileExtractor: New.Param.Extractor[FsUrl] = new New.Param.Extractor[FsUrl] {
     def extract(values: Vector[String]): Option[FsUrl] = values match {
@@ -33,6 +33,7 @@ object Config {
     val availableCpus = Runtime.getRuntime().availableProcessors()
 
     Logger.info(s"""
+    | [cheminot.db - ${GIT_TAG}]
     | Available CPUs: ${availableCpus}
     """.stripMargin
     )
