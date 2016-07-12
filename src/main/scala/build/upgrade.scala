@@ -38,7 +38,11 @@ object Upgrade {
 
     val record = json.records.as[List[Json]].head
 
-    val url = Http.parse(record.fields.url.as[String]).query(Map("dl" -> true))
+    val datasetId = record.datasetid.as[String]
+
+    val downloadId = record.fields.download.id.as[String]
+
+    val url = HttpQuery.parse(s"https://ressources.data.sncf.com/explore/dataset/${datasetId}/files/${downloadId}/download/")
 
     val timestamp = datetimeFormater.parseDateTime(record.record_timestamp.as[String])
 
@@ -82,7 +86,6 @@ object Upgrade {
         case Some(currentBundle) =>
           val subsetsById = currentBundle.subsetDirs.map(s => s.id -> s.timestamp).toMap
           List(terBuild, interBuild, transBuild).exists { build =>
-            println(build.timestamp.isAfter(subsetsById.get(build.id).get))
             val isNotUpToDate = subsetsById.get(build.id).exists(build.timestamp.isAfter(_))
             val n = if(isNotUpToDate) "" else "NOT "
             Logger.info(s"** ${build.id} is ${n}up to date **")
@@ -106,7 +109,7 @@ object Upgrade {
 
     } catch {
       case e: Exception =>
-        Logger.error("Unablet to fetch build", e)
+        Logger.error("Unable to fetch build", e)
         noUpdateFound
     }
   }
@@ -115,6 +118,7 @@ object Upgrade {
     val buildDir = rootDir / build.filename
     buildDir.mkdir(makeParents = true)
     val buildFile = buildDir / s"${build.filename}.zip"
+    Logger.info(s"Downloading ${build.url} to ${buildFile}")
     build.url > buildFile
     misc.ZipUtils.unzip(buildFile.javaFile, buildDir.javaFile)
   }
