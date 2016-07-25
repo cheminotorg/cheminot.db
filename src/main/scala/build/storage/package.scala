@@ -1,6 +1,5 @@
 package org.cheminot.db
 
-import org.cheminot.misc
 import org.joda.time.DateTime
 
 package object storage {
@@ -11,8 +10,6 @@ package object storage {
   def formatDateTime(date: DateTime): String =
     (date.getMillis() / 1000).toString
 
-  def formatTime(time: DateTime): String = {
-    val formatter = misc.DateTime.forPattern("HHmm")
-    formatter.print(time)
-  }
+  def formatTime(time: DateTime): String =
+    org.cheminot.misc.DateTime.minutesOfDay(time).toString
 }
