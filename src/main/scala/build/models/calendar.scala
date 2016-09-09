@@ -17,6 +17,22 @@ case class Calendar(
 
 object Calendar {
 
+  lazy val off = {
+    val now = DateTime.now
+    Calendar(
+      serviceId = "off",
+      monday = false,
+      tuesday = false,
+      wednesday = false,
+      thursday = false,
+      friday = false,
+      saturday = false,
+      sunday = false,
+      startDate = now.minusYears(1),
+      endDate = now.plusYears(1)
+    )
+  }
+
   def fromRecord(record: CalendarRecord): Calendar = {
     Calendar(
       record.serviceId,

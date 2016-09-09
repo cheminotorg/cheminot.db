@@ -65,7 +65,7 @@ object Sqlite {
     trips.values.toList.foreach { trip =>
       val query = SQL("INSERT INTO trip (id, serviceid) VALUES({id}, {serviceid})")
       try {
-        query.on('id -> trip.id, 'serviceid -> trip.calendar.map(_.serviceId)).executeUpdate
+        query.on('id -> trip.id, 'serviceid -> trip.calendar.serviceId).executeUpdate
       } catch {
         case e: Exception =>
           Logger.error(s"Unable to insert trip ${trip.id}: ${e.getMessage}")

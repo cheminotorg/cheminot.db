@@ -1,6 +1,6 @@
 package org.cheminot.db
 
-case class Trip(id: String, serviceId: String, calendar: Option[Calendar], calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]) {
+case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]) {
 
   lazy val stops: Seq[String] = {
     stopTimes.map(_.stopId).distinct
@@ -44,13 +44,13 @@ case class Trip(id: String, serviceId: String, calendar: Option[Calendar], calen
       lastStopTime <- stopTimes.lastOption
       if firstStopTime != lastStopTime
     } yield {
-      List(firstStopTime, lastStopTime, calendar.map(_.serviceId)).map(_.hashCode).mkString("").hashCode
+      List(firstStopTime, lastStopTime, calendar.serviceId).map(_.hashCode).mkString("").hashCode
     }) getOrElse id.hashCode
 }
 
 object Trip {
 
   def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]): Trip = {
-    Trip(record.tripId, record.serviceId, calendar, calendarDate, stopTimes)
+    Trip(record.tripId, record.serviceId, calendar.getOrElse(Calendar.off), calendarDate, stopTimes)
   }
 }

@@ -29,7 +29,7 @@ object Mock {
   val tripA = Trip(
     "tripA",
     "xxx",
-    None,
+    Calendar.off,
     None,
     List(
       StopTime(
@@ -67,7 +67,7 @@ object Mock {
   val tripB = Trip(
     "tripB",
     "xxx",
-    None,
+    Calendar.off,
     None,
     List(
       StopTime(
@@ -104,7 +104,7 @@ object Mock {
   val tripC = Trip(
     "tripC",
     "xxx",
-    None,
+    Calendar.off,
     None,
     List(
       StopTime(

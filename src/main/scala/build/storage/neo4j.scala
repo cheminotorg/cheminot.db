@@ -214,10 +214,8 @@ object Neo4j {
 
     def writeTrip2Calendar(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(Calendar)", ":TYPE")
-      val data = db.trips.values.toList.flatMap { trip =>
-        trip.calendar.map { calendar =>
-          List(trip.id, calendar.serviceId, "SCHEDULED_AT")
-        }
+      val data = db.trips.values.toList.map { trip =>
+        List(trip.id, trip.calendar.serviceId, "SCHEDULED_AT")
       }
       write(outdir, name = "trip2calendar", headers = headers, data = data)
     }

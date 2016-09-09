@@ -37,15 +37,15 @@ object DB {
     val (graph: Map[VerticeId, Vertice], trips: Map[TripId, Trip]) =
       Builder.build(gtfsBundle)
 
-    val tripsByServiceId = trips.toSeq.flatMap {
+    val tripsByServiceId = trips.toSeq.map {
       case (_, trip) =>
-        trip.calendar.map(_.serviceId -> trip)
+        trip.calendar.serviceId -> trip
     }.toMap
 
     val calendar: List[Calendar] =
       gtfsBundle.data.calendar.map(Calendar.fromRecord).filter { c =>
         tripsByServiceId.get(c.serviceId).isDefined
-      }
+      } :+ Calendar.off
 
     val calendarDates: List[CalendarDate] =
       gtfsBundle.data.calendarDates.map(CalendarDate.fromRecord)
@@ -70,11 +70,11 @@ object DB {
     }
 
     val calendarDates = db.calendarDates.filter { calendarDate =>
-      trips.values.toList.exists(_.calendar.exists(c => c.serviceId == calendarDate.serviceId))
+      trips.values.toList.exists(_.calendar.serviceId == calendarDate.serviceId)
     }
 
     val calendar = db.calendar.filter { calendar =>
-      trips.values.toList.exists(_.calendar.exists(c => c.serviceId == calendar.serviceId))
+      trips.values.toList.exists(_.calendar.serviceId == calendar.serviceId)
     }
 
     val id = verticeIds.sortBy(identity).mkString("#")
