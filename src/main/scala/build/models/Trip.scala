@@ -1,6 +1,6 @@
 package org.cheminot.db
 
-case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]) {
+case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDates: List[CalendarDate], stopTimes: Seq[StopTime]) {
 
   lazy val stops: Seq[String] = {
     stopTimes.map(_.stopId).distinct
@@ -50,7 +50,7 @@ case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDate:
 
 object Trip {
 
-  def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], calendarDate: Option[CalendarDate], stopTimes: Seq[StopTime]): Trip = {
-    Trip(record.tripId, record.serviceId, calendar.getOrElse(Calendar.off), calendarDate, stopTimes)
+  def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], calendarDates: List[CalendarDate], stopTimes: Seq[StopTime]): Trip = {
+    Trip(record.tripId, record.serviceId, calendar.getOrElse(Calendar.on), calendarDates, stopTimes)
   }
 }

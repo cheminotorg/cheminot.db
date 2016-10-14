@@ -177,9 +177,9 @@ object Neo4j {
     }
 
     def writeCalendarDates(outdir: FsUrl, db: DB): Unit = {
-      val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", ":LABEL")
+      val headers = List("calendardateid:ID(CalendarDate)", "serviceid:string", "date:int", "type:string", ":LABEL")
       val data = db.calendarDates.map { calendarDate =>
-        List(calendarDate.id, calendarDate.serviceId, formatDate(calendarDate.date), "CalendarDate")
+        List(calendarDate.id, calendarDate.serviceId, formatDate(calendarDate.date), calendarDate.exceptionType.toString, "CalendarDate")
       }
       write(outdir, name = "calendardates", headers = headers, data = data)
     }
@@ -223,7 +223,7 @@ object Neo4j {
     def writeTrip2CalendarDates(outdir: FsUrl, db: DB): Unit = {
       val headers = List(":START_ID(Trip)", ":END_ID(CalendarDate)", ":TYPE")
       val data = db.trips.values.toList.flatMap { trip =>
-        trip.calendarDate.map { calendarDate =>
+        trip.calendarDates.map { calendarDate =>
           val `type` = if(calendarDate.exceptionType == 1) "ON" else "OFF"
           List(trip.id, calendarDate.id, `type`)
         }

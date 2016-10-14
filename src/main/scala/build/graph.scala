@@ -92,12 +92,12 @@ object Builder {
       Logger.info("Building trips")
       misc.Future.par(parsed.trips, progress = true) { tripRecord =>
         val maybeCalendar = parsed.calendar.view.find(_.serviceId == tripRecord.serviceId).map(Calendar.fromRecord)
-        val maybeCalendarDate = parsed.calendarDates.view.find(_.serviceId == tripRecord.serviceId).map(CalendarDate.fromRecord)
+        val calendarDates = parsed.calendarDates.view.filter(_.serviceId == tripRecord.serviceId).map(CalendarDate.fromRecord).toList
         val stopTimesForTrip = parsed.stopTimes.collect {
           case stopTimeRecord if(stopTimeRecord.tripId == tripRecord.tripId) =>
             StopTime.fromRecord(stopTimeRecord)
         }.toList
-        Trip.fromRecord(tripRecord, tripRecord.routeId, maybeCalendar, maybeCalendarDate, stopTimesForTrip)
+        Trip.fromRecord(tripRecord, tripRecord.routeId, maybeCalendar, calendarDates, stopTimesForTrip)
       }.toList
     }(t => Logger.info(s"Trips built in $t ms"))
 }
