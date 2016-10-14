@@ -40,7 +40,9 @@ object Upgrade {
 
     val datasetId = record.datasetid.as[String]
 
-    val downloadId = record.fields.download.id.as[String]
+    val download = record.fields.download.as[Option[Json]].getOrElse(record.fields.file.as[Json])
+
+    val downloadId = download.id.as[String]
 
     val url = HttpQuery.parse(s"https://ressources.data.sncf.com/explore/dataset/${datasetId}/files/${downloadId}/download/")
 
