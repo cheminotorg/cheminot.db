@@ -17,17 +17,17 @@ case class Calendar(
 
 object Calendar {
 
-  lazy val off = {
+  lazy val on = {
     val now = DateTime.now
     Calendar(
       serviceId = "off",
-      monday = false,
-      tuesday = false,
-      wednesday = false,
-      thursday = false,
-      friday = false,
-      saturday = false,
-      sunday = false,
+      monday = true,
+      tuesday = true,
+      wednesday = true,
+      thursday = true,
+      friday = true,
+      saturday = true,
+      sunday = true,
       startDate = now.minusYears(1),
       endDate = now.plusYears(1)
     )

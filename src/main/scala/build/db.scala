@@ -45,7 +45,7 @@ object DB {
     val calendar: List[Calendar] =
       gtfsBundle.data.calendar.map(Calendar.fromRecord).filter { c =>
         tripsByServiceId.get(c.serviceId).isDefined
-      } :+ Calendar.off
+      } :+ Calendar.on
 
     val calendarDates: List[CalendarDate] =
       gtfsBundle.data.calendarDates.map(CalendarDate.fromRecord)
