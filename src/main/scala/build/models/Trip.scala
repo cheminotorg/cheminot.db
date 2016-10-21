@@ -20,7 +20,7 @@ case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDates
   }
 
   def contains(t: Trip): Boolean =
-    stopTimes.containsSlice(t.stopTimes)
+    calendar == t.calendar && stopTimes.containsSlice(t.stopTimes)
 
   override def equals(o: Any): Boolean =
     o match {
@@ -34,7 +34,9 @@ case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDates
           lastStopTime <- stopTimes.lastOption
           otherLastStopTime <- r.stopTimes.lastOption
           if lastStopTime == otherLastStopTime
-        } yield true).isDefined
+
+          if calendar == r.calendar
+        } yield true) getOrElse false
       case _ => false
     }
 
@@ -42,15 +44,15 @@ case class Trip(id: String, serviceId: String, calendar: Calendar, calendarDates
     (for {
       firstStopTime <- stopTimes.headOption
       lastStopTime <- stopTimes.lastOption
-      if firstStopTime != lastStopTime
     } yield {
-      List(firstStopTime, lastStopTime, calendar.serviceId).map(_.hashCode).mkString("").hashCode
+      List(firstStopTime, lastStopTime, calendar).map(_.hashCode).mkString.hashCode
     }) getOrElse id.hashCode
 }
 
 object Trip {
 
   def fromRecord(record: TripRecord, routeId: String, calendar: Option[Calendar], calendarDates: List[CalendarDate], stopTimes: Seq[StopTime]): Trip = {
-    Trip(record.tripId, record.serviceId, calendar.getOrElse(Calendar.on), calendarDates, stopTimes)
+    val c = calendar.getOrElse(Calendar.on)
+    Trip(record.tripId, c.serviceId, c, calendarDates, stopTimes)
   }
 }

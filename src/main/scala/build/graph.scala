@@ -55,7 +55,9 @@ object Builder {
       } yield {
         val tripsAB = tripsA ++: tripsB
         tripsAB.exists { t =>
-          trip != t && t.contains(trip)
+          val b = t != trip && t.contains(trip)
+          if(b) println(s"Trip [${trip.id}, ${trip.serviceId}] is a subtrip of [${t.id}, ${t.serviceId}]")
+          b
         }
       }) getOrElse false
     }

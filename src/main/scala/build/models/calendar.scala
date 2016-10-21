@@ -13,11 +13,41 @@ case class Calendar(
   sunday: Boolean,
   startDate: DateTime,
   endDate: DateTime
-)
+) {
+
+  override def equals(o: Any): Boolean =
+    o match {
+      case c: Calendar =>
+        monday == c.monday &&
+        tuesday == c.tuesday &&
+        wednesday == c.wednesday &&
+        thursday == c.thursday &&
+        friday == c.friday &&
+        saturday == c.saturday &&
+        sunday == c.sunday &&
+        startDate.equals(c.startDate) &&
+        endDate.equals(c.endDate)
+
+      case _ => false
+    }
+
+  override def hashCode =
+    List(
+      monday.toString,
+      tuesday.toString,
+      wednesday.toString,
+      thursday.toString,
+      friday.toString,
+      saturday.toString,
+      sunday.toString,
+      startDate.toString,
+      endDate.toString
+    ).mkString.hashCode
+}
 
 object Calendar {
 
-  lazy val on = {
+  lazy val on: Calendar = { 
     val now = DateTime.now
     Calendar(
       serviceId = "off",
