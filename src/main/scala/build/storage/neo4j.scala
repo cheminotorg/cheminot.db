@@ -28,6 +28,7 @@ object Neo4j {
       "CREATE INDEX ON :Station(stationid);",
       "CREATE INDEX ON :Station(parentid);",
       "CREATE INDEX ON :Stop(stationid);",
+      "CREATE INDEX ON :Stop(terminus);",
       "CREATE INDEX ON :Stop(stopid);",
       "CREATE INDEX ON :Stop(parentid);",
       "CREATE INDEX ON :Calendar(serviceid);",
@@ -126,11 +127,13 @@ object Neo4j {
     }
 
     def writeStops(outdir: FsUrl, db: DB): Unit = {
-      val headers = List("stopid:ID(Stop)", "stationid:string", "parentid:string", ":LABEL")
+      val headers = List("stopid:ID(Stop)", "stationid:string", "parentid:string", "terminus:boolean", ":LABEL")
       val data = db.trips.values.toList.flatMap { trip =>
-        trip.stopTimes.map { stopTime =>
-          val parentId = if(Stop.isParis(stopTime.stopId)) Stop.STOP_PARIS else ""
-          List(stopTime.id, stopTime.stopId, parentId, "Stop")
+        trip.stopTimes.zipWithIndex.map {
+          case (stopTime, index) =>
+            val parentId = if(Stop.isParis(stopTime.stopId)) Stop.STOP_PARIS else ""
+            val isTerminus = index == trip.stopTimes.size - 1
+            List(stopTime.id, stopTime.stopId, parentId, isTerminus.toString, "Stop")
         }
       }
       write(outdir, name = "stops", headers = headers, data = data)
